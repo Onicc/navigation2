@@ -210,6 +210,8 @@
 
     <Condition ID="GoalUpdated"/>
 
+    <Condition ID="GoalPathUpdated"/>
+
     <Condition ID="GlobalUpdatedGoal"/>
 
     <Condition ID="IsBatteryLow">

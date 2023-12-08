@@ -114,6 +114,9 @@ list(APPEND plugin_libs nav2_globally_updated_goal_condition_bt_node)
 add_library(nav2_goal_updated_condition_bt_node SHARED plugins/condition/goal_updated_condition.cpp)
 list(APPEND plugin_libs nav2_goal_updated_condition_bt_node)
 
+add_library(nav2_goal_path_updated_condition_bt_node SHARED plugins/condition/goal_path_updated_condition.cpp)
+list(APPEND plugin_libs nav2_goal_path_updated_condition_bt_node)
+
 add_library(nav2_is_path_valid_condition_bt_node SHARED plugins/condition/is_path_valid_condition.cpp)
 list(APPEND plugin_libs nav2_is_path_valid_condition_bt_node)
 
