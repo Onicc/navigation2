@@ -54,6 +54,13 @@ NavigateToPathNavigator::configure(
 
   path_blackboard_id_ = node->get_parameter("path_blackboard_id").as_string();
 
+  if (!node->has_parameter("navigation_state_blackboard_id")) {
+    node->declare_parameter("navigation_state_blackboard_id", std::string("navigation_state"));
+  }
+  navigation_state_blackboard_id_ = node->get_parameter("navigation_state_blackboard_id").as_string();
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(navigation_state_blackboard_id_, "path");
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 

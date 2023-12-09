@@ -128,6 +128,7 @@ protected:
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
   std::string path_local_blackboard_id_;
+  std::string navigation_state_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
