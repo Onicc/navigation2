@@ -30,6 +30,18 @@ NavigateToPathNavigator::configure(
   start_time_ = rclcpp::Time(0);
   auto node = parent_node.lock();
 
+  if (!node->has_parameter("goals_blackboard_id")) {
+    node->declare_parameter("goals_blackboard_id", std::string("goals"));
+  }
+
+  goals_blackboard_id_ = node->get_parameter("goals_blackboard_id").as_string();
+
+  if (!node->has_parameter("path_local_blackboard_id")) {
+    node->declare_parameter("path_local_blackboard_id", std::string("path_local"));
+  }
+
+  path_local_blackboard_id_ = node->get_parameter("path_local_blackboard_id").as_string();
+
   if (!node->has_parameter("goal_blackboard_id")) {
     node->declare_parameter("goal_blackboard_id", std::string("goal_path"));
   }

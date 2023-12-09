@@ -125,7 +125,9 @@ protected:
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
   std::string goal_blackboard_id_;
+  std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
+  std::string path_local_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
