@@ -198,6 +198,12 @@ list(APPEND plugin_libs nav2_goal_checker_selector_bt_node)
 add_library(nav2_goal_updated_controller_bt_node SHARED plugins/decorator/goal_updated_controller.cpp)
 list(APPEND plugin_libs nav2_goal_updated_controller_bt_node)
 
+add_library(nav2_path_clipping_action_bt_node SHARED plugins/action/path_clipping_action.cpp)
+list(APPEND plugin_libs nav2_path_clipping_action_bt_node)
+
+add_library(nav2_truncate_path_local_to_poses_action_bt_node SHARED plugins/action/truncate_path_local_to_poses_action.cpp)
+list(APPEND plugin_libs nav2_truncate_path_local_to_poses_action_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)

@@ -83,6 +83,8 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_drive_on_heading_cancel_bt_node",
     "nav2_is_battery_charging_condition_bt_node",
     "nav2_goal_path_updated_condition_bt_node",
+    "nav2_path_clipping_action_bt_node",
+    "nav2_truncate_path_local_to_poses_action_bt_node",
   };
 
   declare_parameter_if_not_declared(
