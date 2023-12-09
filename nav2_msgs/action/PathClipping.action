@@ -1,0 +1,9 @@
+#goal definition
+float32 path_length
+nav_msgs/Path goal_path
+---
+#result definition
+nav_msgs/Path clipped_path
+builtin_interfaces/Duration planning_time
+---
+#feedback definition
