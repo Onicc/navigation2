@@ -53,6 +53,10 @@ inline BT::NodeStatus TruncatePathLocalToPoses::tick()
   geometry_msgs::msg::PoseStamped pose;
   double angular_distance_weight;
   double max_robot_pose_search_dist;
+  // int input_path_index;
+  // int output_path_index;
+
+  // TODO: 如果input_goal_path_index<0就在全局搜索最近点，如果input_goal_path_index>0就在input_goal_path_index附近搜索最近点
 
   getInput("distance_forward", distance_forward);
   getInput("distance_backward", distance_backward);
@@ -117,6 +121,16 @@ inline BT::NodeStatus TruncatePathLocalToPoses::tick()
   }
   // goal_poses.push_back(output_path.poses[output_path.poses.size()-1]);
   setOutput("output_goals", goal_poses);
+
+  geometry_msgs::msg::PoseStamped target_pose = output_path.poses[0];
+  auto it = std::find(new_path.poses.begin(), new_path.poses.end(), target_pose);
+  if (it != new_path.poses.end()) {
+      int path_index = std::distance(new_path.poses.begin(), it);
+      setOutput("output_path_index", path_index);
+      std::cout << "Element found at index: " << std::distance(new_path.poses.begin(), it) << std::endl;
+  } else {
+      std::cout << "Element not found in the vector." << std::endl;
+  }
 
   return BT::NodeStatus::SUCCESS;
 }

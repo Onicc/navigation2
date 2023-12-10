@@ -81,6 +81,8 @@ public:
         "Maximum forward integrated distance along the path (starting from the last detected pose) "
         "to bound the search for the closest pose to the robot. When set to infinity (default), "
         "whole path is searched every time"),
+      BT::InputPort<int>("input_path_index", -1, "Input goal path index"),
+      BT::OutputPort<int>("output_path_index", "Outpuut goal path index"),
     };
   }
 
