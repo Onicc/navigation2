@@ -29,6 +29,7 @@ NavigateToPathNavigator::configure(
 {
   start_time_ = rclcpp::Time(0);
   auto node = parent_node.lock();
+  auto blackboard = bt_action_server_->getBlackboard();
 
   if (!node->has_parameter("goals_blackboard_id")) {
     node->declare_parameter("goals_blackboard_id", std::string("goals"));
@@ -58,8 +59,24 @@ NavigateToPathNavigator::configure(
     node->declare_parameter("navigation_state_blackboard_id", std::string("navigation_state"));
   }
   navigation_state_blackboard_id_ = node->get_parameter("navigation_state_blackboard_id").as_string();
-  auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(navigation_state_blackboard_id_, "path");
+
+  if (!node->has_parameter("goal_path_index_blackboard_id")) {
+    node->declare_parameter("goal_path_index_blackboard_id", std::string("goal_path_index"));
+  }
+  goal_path_index_blackboard_id_ = node->get_parameter("goal_path_index_blackboard_id").as_string();
+  blackboard->set<int>(goal_path_index_blackboard_id_, -1);
+
+  if (!node->has_parameter("goal_pose_index_blackboard_id")) {
+    node->declare_parameter("goal_pose_index_blackboard_id", std::string("goal_pose"));
+  }
+  goal_pose_index_blackboard_id_ = node->get_parameter("goal_pose_index_blackboard_id").as_string();
+
+  if (!node->has_parameter("replanning_count_blackboard_id")) {
+    node->declare_parameter("replanning_count_blackboard_id", std::string("replanning_count"));
+  }
+  replanning_count_blackboard_id_ = node->get_parameter("replanning_count_blackboard_id").as_string();
+  blackboard->set<int>(replanning_count_blackboard_id_, 0);
 
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
