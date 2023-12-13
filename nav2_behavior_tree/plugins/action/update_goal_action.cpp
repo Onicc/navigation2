@@ -51,7 +51,7 @@ inline BT::NodeStatus UpdateGoalAction::tick()
     for (size_t i = input_index; i < path.poses.size(); i++) {
       double curr_dist = nav2_util::geometry_utils::euclidean_distance(
                   path.poses[input_index], path.poses[i]);
-      if (curr_dist > 6+increment*replanning_count) {
+      if (curr_dist > 6.5+(increment+1)*replanning_count) {
         output_goal = path.poses[i];
         output_index = i;
         break;

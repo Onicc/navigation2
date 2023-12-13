@@ -8,14 +8,14 @@
   <BehaviorTree ID="MainTree">
     <RecoveryNode number_of_retries="6" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
-        <RateController hz="2.0">
+        <RateController hz="5.0">
           <Fallback name="PathSelection">
             <Sequence name="FollowPath">
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path"/>
               <Fallback name="ComputePathToPathAndSwitchState">
                 <RecoveryNode number_of_retries="1" name="ComputePathToPath">
                   <PipelineSequence name="ComputePathThroughPoses">
-                    <TruncatePathLocalToPoses input_path="{goal_path}" input_path_index="{goal_path_index}" output_path="{path_local}" output_goals="{goals}" output_path_index="{goal_path_index}" distance_forward="5.0" distance_backward="0.0" robot_frame="base_link"/>
+                    <TruncatePathLocalToPoses input_path="{goal_path}" input_path_index="{goal_path_index}" output_path="{path_local}" output_goals="{goals}" output_path_index="{goal_path_index}" distance_forward="6.0" distance_backward="0.0" robot_frame="base_link"/>
                     <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
                   </PipelineSequence>
                   <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
@@ -27,11 +27,11 @@
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="obstacle"/>
               <RecoveryWithOutputNode number_of_retries="10" retry_count="{replanning_count}" name="ComputePathToPath">
                 <Sequence name="ComputePathToPose">
+                  <UpdateGoal input_path="{goal_path}" input_index="{goal_path_index}" output_goal="{goal_pose}" output_index="{goal_path_index_temp}" increment="4.0" replanning_count="{replanning_count}"/>
                   <ComputePathToPose goal="{goal_pose}" path="{path_local}" planner_id="Point"/>
                   <ComputePathToPose goal="{goal_pose}" path="{path}" planner_id="Navfn"/>
                 </Sequence>
                 <Sequence name="ClearCostmapAndChangePose">
-                  <UpdateGoal input_path="{goal_path}" input_index="{goal_path_index}" output_goal="{goal_pose}" output_index="{goal_path_index_temp}" increment="2.0" replanning_count="{replanning_count}"/>
                   <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                 </Sequence>
               </RecoveryWithOutputNode>
