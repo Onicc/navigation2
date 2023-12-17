@@ -216,6 +216,12 @@ list(APPEND plugin_libs nav2_update_goal_action_bt_node)
 add_library(nav2_recovery_with_output_node_bt_node SHARED plugins/control/recovery_with_output_node.cpp)
 list(APPEND plugin_libs nav2_recovery_with_output_node_bt_node)
 
+add_library(nav2_find_nearest_point_index_action_bt_node SHARED plugins/action/find_nearest_point_index_action.cpp)
+list(APPEND plugin_libs nav2_find_nearest_point_index_action_bt_node)
+
+add_library(nav2_find_farthest_obstacle_point_action_bt_node SHARED plugins/action/find_farthest_obstacle_point.cpp)
+list(APPEND plugin_libs nav2_find_farthest_obstacle_point_action_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)

@@ -132,6 +132,7 @@ protected:
   std::string goal_path_index_blackboard_id_;
   std::string goal_pose_index_blackboard_id_;
   std::string replanning_count_blackboard_id_;
+  std::string farthest_obstacle_point_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

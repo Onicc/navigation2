@@ -78,6 +78,11 @@ NavigateToPathNavigator::configure(
   replanning_count_blackboard_id_ = node->get_parameter("replanning_count_blackboard_id").as_string();
   blackboard->set<int>(replanning_count_blackboard_id_, 0);
 
+  if (!node->has_parameter("farthest_obstacle_point_blackboard_id")) {
+    node->declare_parameter("farthest_obstacle_point_blackboard_id", std::string("farthest_obstacle_point"));
+  }
+  farthest_obstacle_point_blackboard_id_ = node->get_parameter("farthest_obstacle_point_blackboard_id").as_string();
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 

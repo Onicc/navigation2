@@ -231,6 +231,31 @@
       <output_port name="output_goal">Destination to plan to</output_port>
       <output_port name="output_index">Output the index of the path corresponding to the goal</output_port>
     </Action>
+
+    <Action ID="FindClosestPointIndex">
+      <input_port name="input_path">Distance in forward direction</input_port>
+      <input_port name="angular_distance_weight">Weight of angular distance relative to positional distance when finding which path pose is closest to robot. Not applicable on paths without orientations assigned</input_port>
+      <input_port name="max_search_dist">Maximum forward integrated distance along the path (starting from the last detected pose) to bound the search for the closest pose to the robot. When set to infinity (default), whole path is searched every time</input_port>
+      <input_port name="input_closest_index">Input closest waypoint index</input_port>
+      <input_port name="robot_frame">Robot base frame id</input_port>
+      <input_port name="transform_tolerance">Transform lookup tolerance</input_port>
+      <input_port name="distance_forward">Distance in forward direction</input_port>
+      <input_port name="distance_backward">Distance in backward direction</input_port>
+      <output_port name="output_goals">Set of goals after removing any passed</output_port>
+      <output_port name="output_closest_index">Outpuut closest waypoint index</output_port>
+    </Action>
+
+    <Action ID="FindFarthestObstaclePoint">
+      <input_port name="input_path">Distance in forward direction</input_port>
+      <input_port name="input_index">Weight of angular distance relative to positional distance when finding which path pose is closest to robot. Not applicable on paths without orientations assigned</input_port>
+      <input_port name="resolution">Maximum forward integrated distance along the path (starting from the last detected pose) to bound the search for the closest pose to the robot. When set to infinity (default), whole path is searched every time</input_port>
+      <input_port name="replanning_count">Input closest waypoint index</input_port>
+      <input_port name="find_distance">Robot base frame id</input_port>
+      <input_port name="back_find_distance">Robot base frame id</input_port>
+      <input_port name="safe_distance">Transform lookup tolerance</input_port>
+      <output_port name="farthest_obstacle_point">Outpuut closest waypoint index</output_port>
+      <output_port name="recovery_point">Outpuut closest waypoint index</output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
