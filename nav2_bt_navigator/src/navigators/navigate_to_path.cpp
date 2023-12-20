@@ -34,25 +34,21 @@ NavigateToPathNavigator::configure(
   if (!node->has_parameter("goals_blackboard_id")) {
     node->declare_parameter("goals_blackboard_id", std::string("goals"));
   }
-
   goals_blackboard_id_ = node->get_parameter("goals_blackboard_id").as_string();
 
   if (!node->has_parameter("path_local_blackboard_id")) {
     node->declare_parameter("path_local_blackboard_id", std::string("path_local"));
   }
-
   path_local_blackboard_id_ = node->get_parameter("path_local_blackboard_id").as_string();
 
   if (!node->has_parameter("goal_blackboard_id")) {
     node->declare_parameter("goal_blackboard_id", std::string("goal_path"));
   }
-
   goal_blackboard_id_ = node->get_parameter("goal_blackboard_id").as_string();
 
   if (!node->has_parameter("path_blackboard_id")) {
     node->declare_parameter("path_blackboard_id", std::string("path"));
   }
-
   path_blackboard_id_ = node->get_parameter("path_blackboard_id").as_string();
 
   if (!node->has_parameter("navigation_state_blackboard_id")) {
@@ -67,10 +63,11 @@ NavigateToPathNavigator::configure(
   goal_path_index_blackboard_id_ = node->get_parameter("goal_path_index_blackboard_id").as_string();
   blackboard->set<int>(goal_path_index_blackboard_id_, -1);
 
-  if (!node->has_parameter("goal_pose_index_blackboard_id")) {
-    node->declare_parameter("goal_pose_index_blackboard_id", std::string("goal_pose"));
+  if (!node->has_parameter("goal_pose_blackboard_id")) {
+    node->declare_parameter("goal_pose_blackboard_id", std::string("goal_pose"));
   }
-  goal_pose_index_blackboard_id_ = node->get_parameter("goal_pose_index_blackboard_id").as_string();
+  goal_pose_blackboard_id_ = node->get_parameter("goal_pose_blackboard_id").as_string();
+  blackboard->set<geometry_msgs::msg::PoseStamped>(goal_pose_blackboard_id_, geometry_msgs::msg::PoseStamped());
 
   if (!node->has_parameter("replanning_count_blackboard_id")) {
     node->declare_parameter("replanning_count_blackboard_id", std::string("replanning_count"));

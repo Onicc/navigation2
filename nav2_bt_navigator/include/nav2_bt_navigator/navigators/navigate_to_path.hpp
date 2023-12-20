@@ -130,7 +130,7 @@ protected:
   std::string path_local_blackboard_id_;
   std::string navigation_state_blackboard_id_;
   std::string goal_path_index_blackboard_id_;
-  std::string goal_pose_index_blackboard_id_;
+  std::string goal_pose_blackboard_id_;
   std::string replanning_count_blackboard_id_;
   std::string farthest_obstacle_point_blackboard_id_;
 
