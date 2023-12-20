@@ -41,7 +41,6 @@
 #include <cmath>
 #include <string>
 #include <memory>
-#include <gsl/gsl_fit.h>
 #include "nav2_util/node_utils.hpp"
 
 #include "nav2_curb_planner/curb_planner.hpp"
