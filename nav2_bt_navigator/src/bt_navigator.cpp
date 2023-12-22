@@ -91,6 +91,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_recovery_with_output_node_bt_node",
     "nav2_find_nearest_point_index_action_bt_node",
     "nav2_find_farthest_obstacle_point_action_bt_node",
+    "nav2_generate_goal_for_following_curbs_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

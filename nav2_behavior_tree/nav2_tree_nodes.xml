@@ -256,6 +256,18 @@
       <output_port name="farthest_obstacle_point">Outpuut closest waypoint index</output_port>
       <output_port name="recovery_point">Outpuut closest waypoint index</output_port>
     </Action>
+
+    <Action ID="GenerateGoalForFollowingCurbs">
+      <input_port name="input_path">Distance in forward direction</input_port>
+      <input_port name="input_path_index">Weight of angular distance relative to positional distance when finding which path pose is closest to robot. Not applicable on paths without orientations assigned</input_port>
+      <input_port name="x">Maximum forward integrated distance along the path (starting from the last detected pose) to bound the search for the closest pose to the robot. When set to infinity (default), whole path is searched every time</input_port>
+      <input_port name="y">Input closest waypoint index</input_port>
+      <input_port name="angular_distance_weight">Robot base frame id</input_port>
+      <input_port name="off_path_tolerance">Robot base frame id</input_port>
+      <input_port name="robot_frame">Transform lookup tolerance</input_port>
+      <input_port name="transform_tolerance">Outpuut closest waypoint index</input_port>
+      <output_port name="output_goal">Outpuut closest waypoint index</output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>

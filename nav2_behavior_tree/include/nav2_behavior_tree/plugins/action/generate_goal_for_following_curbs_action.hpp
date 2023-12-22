@@ -106,7 +106,7 @@ private:
   nav_msgs::msg::Path path_;
   nav_msgs::msg::Path::_poses_type::iterator closest_pose_detection_begin_;
 
-  // rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_local_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr curb_goal_pub_;
 };
 
 }  // namespace nav2_behavior_tree

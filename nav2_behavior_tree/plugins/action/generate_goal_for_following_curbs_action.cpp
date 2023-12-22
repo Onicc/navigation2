@@ -26,6 +26,14 @@
 
 #include "nav2_behavior_tree/plugins/action/generate_goal_for_following_curbs_action.hpp"
 
+double quaternionToYaw(const geometry_msgs::msg::Quaternion & quat)
+{
+  tf2::Quaternion tf_q(quat.x, quat.y, quat.z, quat.w);
+  double roll, pitch, yaw;
+  tf2::Matrix3x3(tf_q).getRPY(roll, pitch, yaw);
+  return yaw;
+}
+
 namespace nav2_behavior_tree
 {
 
@@ -38,11 +46,10 @@ GenerateGoalForFollowingCurbs::GenerateGoalForFollowingCurbs(
     config().blackboard->template get<std::shared_ptr<tf2_ros::Buffer>>(
     "tf_buffer");
 
-  // auto node = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
-  // rclcpp::QoS qos(rclcpp::KeepLast(1));
-  // qos.transient_local().reliable();
-  // path_local_pub_ =
-  //   node->create_publisher<nav_msgs::msg::Path>("/goal/path_local", qos);
+  auto node = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
+  rclcpp::QoS qos(rclcpp::KeepLast(1));
+  qos.transient_local().reliable();
+  curb_goal_pub_ = node->create_publisher<nav_msgs::msg::Path>("/curb/goal", qos);
 }
 
 inline BT::NodeStatus GenerateGoalForFollowingCurbs::tick()
@@ -63,101 +70,30 @@ inline BT::NodeStatus GenerateGoalForFollowingCurbs::tick()
   getInput("off_path_tolerance", off_path_tolerance);
 
   geometry_msgs::msg::PoseStamped pose;
-  if (!getRobotPose(path_.header.frame_id, pose)) {
+  if (!getRobotPose(path.header.frame_id, pose)) {
     return BT::NodeStatus::FAILURE;
   }
 
+  // 当离路径的距离小的时候才使用路牙,此距离不只是欧式距离,还包含角度距离
   geometry_msgs::msg::PoseStamped nearest_pose_inpath = path.poses[input_path_index];
   double off_path_distance = poseDistance(pose, nearest_pose_inpath, angular_distance_weight);
+  if(off_path_distance < off_path_tolerance) {
+    geometry_msgs::msg::PoseStamped output_goal;
+    double yaw = quaternionToYaw(pose.pose.orientation);
+    output_goal.pose.position.x = pose.pose.position.x + local_x * std::cos(yaw) + std::cos(yaw + M_PI/2.0)*local_y;
+    output_goal.pose.position.y = pose.pose.position.y + local_x * std::sin(yaw) + std::sin(yaw + M_PI/2.0)*local_y;
+    setOutput("output_goal", output_goal);
 
+    // 发布当前点到路牙目标点的连线
+    nav_msgs::msg::Path curb_goal;
+    curb_goal.header = path.header;
+    curb_goal.poses.push_back(pose);
+    curb_goal.poses.push_back(output_goal);
+    curb_goal_pub_->publish(curb_goal);
 
-
-
-
-  double distance_forward, distance_backward;
-  geometry_msgs::msg::PoseStamped pose;
-  double angular_distance_weight;
-  double max_robot_pose_search_dist;
-  // int input_path_index;
-  // int output_path_index;
-
-  // TODO: 如果input_goal_path_index<0就在全局搜索最近点，如果input_goal_path_index>0就在input_goal_path_index附近搜索最近点
-
-  getInput("distance_forward", distance_forward);
-  getInput("distance_backward", distance_backward);
-  getInput("angular_distance_weight", angular_distance_weight);
-  getInput("max_robot_pose_search_dist", max_robot_pose_search_dist);
-
-  Goals goal_poses;
-
-  bool path_pruning = std::isfinite(max_robot_pose_search_dist);
-  nav_msgs::msg::Path new_path;
-  getInput("input_path", new_path);
-  if (!path_pruning || new_path != path_) {
-    path_ = new_path;
-    closest_pose_detection_begin_ = path_.poses.begin();
-  }
-
-  if (!getRobotPose(path_.header.frame_id, pose)) {
-    return BT::NodeStatus::FAILURE;
-  }
-
-  if (path_.poses.empty()) {
-    setOutput("output_path", path_);
-    setOutput("output_goals", goal_poses);
     return BT::NodeStatus::SUCCESS;
   }
-
-  auto closest_pose_detection_end = path_.poses.end();
-  if (path_pruning) {
-    closest_pose_detection_end = nav2_util::geometry_utils::first_after_integrated_distance(
-      closest_pose_detection_begin_, path_.poses.end(), max_robot_pose_search_dist);
-  }
-
-  // find the closest pose on the path
-  auto current_pose = nav2_util::geometry_utils::min_by(
-    closest_pose_detection_begin_, closest_pose_detection_end,
-    [&pose, angular_distance_weight](const geometry_msgs::msg::PoseStamped & ps) {
-      return poseDistance(pose, ps, angular_distance_weight);
-    });
-
-  if (path_pruning) {
-    closest_pose_detection_begin_ = current_pose;
-  }
-
-  // expand forwards to extract desired length
-  auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-    current_pose, path_.poses.end(), distance_forward);
-
-  // expand backwards to extract desired length
-  // Note: current_pose + 1 is used because reverse iterator points to a cell before it
-  auto backward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-    std::reverse_iterator(current_pose + 1), path_.poses.rend(), distance_backward);
-
-  nav_msgs::msg::Path output_path;
-  output_path.header = path_.header;
-  output_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(
-    backward_pose_it.base(), forward_pose_it);
-  setOutput("output_path", output_path);
-  path_local_pub_->publish(output_path);
-
-  for (size_t curr_idx = 0; curr_idx < output_path.poses.size(); ++curr_idx) {
-    goal_poses.push_back(output_path.poses[curr_idx]);
-  }
-  // goal_poses.push_back(output_path.poses[output_path.poses.size()-1]);
-  setOutput("output_goals", goal_poses);
-
-  geometry_msgs::msg::PoseStamped target_pose = output_path.poses[0];
-  auto it = std::find(new_path.poses.begin(), new_path.poses.end(), target_pose);
-  if (it != new_path.poses.end()) {
-      int path_index = std::distance(new_path.poses.begin(), it);
-      setOutput("output_path_index", path_index);
-      std::cout << "Element found at index: " << std::distance(new_path.poses.begin(), it) << std::endl;
-  } else {
-      std::cout << "Element not found in the vector." << std::endl;
-  }
-
-  return BT::NodeStatus::SUCCESS;
+  return BT::NodeStatus::FAILURE;
 }
 
 inline bool GenerateGoalForFollowingCurbs::getRobotPose(

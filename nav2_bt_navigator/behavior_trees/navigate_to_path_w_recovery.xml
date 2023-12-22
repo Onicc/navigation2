@@ -14,7 +14,8 @@
         <RateController hz="5.0">
           <Fallback name="PathSelection">
             <Sequence name="FollowCurb">
-              <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
+              <!-- <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/> -->
+              <GenerateGoalForFollowingCurbs input_path="{goal_path}" input_path_index="{goal_path_index}" x="5.0" y="-2.0" angular_distance_weight="0.0" off_path_tolerance="0.5" robot_frame="base_link" output_goal="{farthest_obstacle_point}"/>
               <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="CurbPlanner"/>
               <!-- <ComputePathThroughPoses goals="{goals}" path="{path_local}" planner_id="CurbPlanner"/> -->
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="curb"/>

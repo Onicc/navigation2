@@ -168,7 +168,7 @@ nav_msgs::msg::Path CurbPlanner::createPlan(
   // goal_pose.header.frame_id = global_frame_;
   // global_path.poses.push_back(goal_pose);
 
-  double yaw = quaternionToYaw(goal.pose.orientation);
+  double yaw = quaternionToYaw(start.pose.orientation);
   double roi_local_x = roi_x_;
   double roi_local_y = roi_y_;
   double roi_center_x = start.pose.position.x + cos(yaw)*roi_local_x + cos(yaw + M_PI/2.0)*roi_local_y;
