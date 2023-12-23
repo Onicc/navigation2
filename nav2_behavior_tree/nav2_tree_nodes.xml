@@ -328,6 +328,12 @@
     </Condition>
 
     <Condition ID="ManualGoalUpdated"/>
+
+    <Condition ID="BetweenWaypointIndex">
+      <input_port name="closest_index"> Closest waypoint index </input_port>
+      <input_port name="upper_index"> Upper waypoint index </input_port>
+      <input_port name="lower_index"> Lower waypoint index </input_port>
+    </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>
 
