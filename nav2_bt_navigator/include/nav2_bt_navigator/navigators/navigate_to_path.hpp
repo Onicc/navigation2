@@ -67,6 +67,7 @@ public:
    * @param path Path received via atopic
    */
   void onGoalPathReceived(const nav_msgs::msg::Path::SharedPtr path);
+  void onGoalPoseReceived(const geometry_msgs::msg::PoseStamped::SharedPtr pose);
 
   /**
    * @brief Get action name for this navigator
@@ -122,6 +123,7 @@ protected:
   rclcpp::Time start_time_;
 
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr goal_path_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
   std::string goal_blackboard_id_;
@@ -133,6 +135,7 @@ protected:
   std::string goal_pose_blackboard_id_;
   std::string replanning_count_blackboard_id_;
   std::string farthest_obstacle_point_blackboard_id_;
+  std::string manual_goal_pose_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

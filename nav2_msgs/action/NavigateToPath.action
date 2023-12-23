@@ -1,5 +1,6 @@
 #goal definition
 nav_msgs/Path goal_path
+geometry_msgs/PoseStamped manual_goal
 string behavior_tree
 ---
 #result definition

@@ -80,6 +80,12 @@ NavigateToPathNavigator::configure(
   }
   farthest_obstacle_point_blackboard_id_ = node->get_parameter("farthest_obstacle_point_blackboard_id").as_string();
 
+  if (!node->has_parameter("manual_goal_pose_blackboard_id")) {
+    node->declare_parameter("manual_goal_pose_blackboard_id", std::string("manual_goal"));
+  }
+  manual_goal_pose_blackboard_id_ = node->get_parameter("goal_pose_blackboard_id").as_string();
+  blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, geometry_msgs::msg::PoseStamped());
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -89,6 +95,11 @@ NavigateToPathNavigator::configure(
     "/goal/path",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onGoalPathReceived, this, std::placeholders::_1));
+
+  goal_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+    "goal_pose",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onGoalPoseReceived, this, std::placeholders::_1));
   return true;
 }
 
@@ -267,6 +278,7 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
 
   // Update the goal path on the blackboard
   blackboard->set<nav_msgs::msg::Path>(goal_blackboard_id_, goal->goal_path);
+  blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
 }
 
 void
@@ -274,6 +286,14 @@ NavigateToPathNavigator::onGoalPathReceived(const nav_msgs::msg::Path::SharedPtr
 {
   ActionT::Goal goal;
   goal.goal_path = *path;
+  self_client_->async_send_goal(goal);
+}
+
+void
+NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStamped::SharedPtr pose)
+{
+  ActionT::Goal goal;
+  goal.manual_goal = *pose;
   self_client_->async_send_goal(goal);
 }
 

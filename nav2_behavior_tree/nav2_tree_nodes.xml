@@ -326,6 +326,8 @@
       <input_port name="current_navigation_state"> Current navigation state (path or obstacle) </input_port>
       <input_port name="navigation_state"> Navigation state (path or obstacle) </input_port>
     </Condition>
+
+    <Condition ID="ManualGoalUpdated"/>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>
 

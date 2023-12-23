@@ -8,17 +8,26 @@
   <BehaviorTree ID="MainTree">
     <RecoveryNode number_of_retries="6" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
+        <!-- <RateController hz="1.0">
+          <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+        </RateController> -->
         <RateController hz="10.0">
           <FindClosestPointIndex input_path="{goal_path}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{goal_path_index}" robot_frame="base_link" distance_forward="6.0" distance_backward="0.0" output_goals="{goals}" output_closest_index="{goal_path_index}"/>
         </RateController>
-        <RateController hz="5.0">
+        <RateController hz="10.0">
           <Fallback name="PathSelection">
-            <Sequence name="FollowCurb">
-              <!-- <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/> -->
+            <!-- <Sequence name="FollowCurb">
+              <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
               <GenerateGoalForFollowingCurbs input_path="{goal_path}" input_path_index="{goal_path_index}" x="5.0" y="-2.0" angular_distance_weight="0.0" off_path_tolerance="0.5" robot_frame="base_link" output_goal="{farthest_obstacle_point}"/>
               <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="CurbPlanner"/>
-              <!-- <ComputePathThroughPoses goals="{goals}" path="{path_local}" planner_id="CurbPlanner"/> -->
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="curb"/>
+            </Sequence> -->
+            <Sequence name="ManualControl">
+              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
+              <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+              </RecoveryNode>
             </Sequence>
             <Sequence name="FollowPath">
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path"/>
