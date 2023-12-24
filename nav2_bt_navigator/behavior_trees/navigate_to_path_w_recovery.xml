@@ -14,6 +14,33 @@
         <RateController hz="10.0">
           <FindClosestPointIndex input_path="{goal_path}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{goal_path_index}" robot_frame="base_link" distance_forward="6.0" distance_backward="0.0" output_goals="{goals}" output_closest_index="{goal_path_index}"/>
         </RateController>
+        <Fallback name="CommandCleanCostmap">
+          <Inverter>
+            <CommandMatch command="{command}" match_command="clean_costmap"/>
+          </Inverter>
+          <Sequence name="CleanCostmap">
+            <SetCommandAction input_command="none" output_command="{command}"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+        </Fallback>
+        <Fallback name="SwitchManual">
+          <Inverter>
+            <CommandMatch command="{command}" match_command="manual"/>
+          </Inverter>
+          <Sequence name="SetNavigationStateAction">
+            <SetCommandAction input_command="none" output_command="{command}"/>
+            <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
+          </Sequence>
+        </Fallback>
+        <Fallback name="SwitchPath">
+          <Inverter>
+            <CommandMatch command="{command}" match_command="path"/>
+          </Inverter>
+          <Sequence name="SetNavigationStateAction">
+            <SetCommandAction input_command="none" output_command="{command}"/>
+            <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
+          </Sequence>
+        </Fallback>
         <RateController hz="10.0">
           <Fallback name="PathSelection">
             <!-- <Sequence name="FollowCurb">
@@ -23,6 +50,12 @@
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="curb"/>
             </Sequence> -->
             <Sequence name="ManualControl">
+              <!-- <Fallback name="SwitchManual">
+                <Inverter>
+                  <ManualGoalUpdated/>
+                </Inverter>
+                <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
+              </Fallback> -->
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
               <RecoveryNode number_of_retries="1" name="ComputePathToPose">
                 <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
@@ -95,6 +128,7 @@
       </PipelineSequence>
       <ReactiveFallback name="RecoveryFallback">
         <GoalPathUpdated/>
+        <ManualGoalUpdated/>
         <RoundRobin name="RecoveryActions">
           <Sequence name="ClearingActions">
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>

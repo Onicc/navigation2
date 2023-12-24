@@ -27,6 +27,7 @@
 #include "nav2_util/robot_utils.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "nav2_util/odometry_utils.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace nav2_bt_navigator
 {
@@ -68,6 +69,7 @@ public:
    */
   void onGoalPathReceived(const nav_msgs::msg::Path::SharedPtr path);
   void onGoalPoseReceived(const geometry_msgs::msg::PoseStamped::SharedPtr pose);
+  void onCommandReceived(const std_msgs::msg::String::SharedPtr command);
 
   /**
    * @brief Get action name for this navigator
@@ -124,6 +126,7 @@ protected:
 
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr goal_path_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
   std::string goal_path_blackboard_id_;
@@ -136,6 +139,7 @@ protected:
   std::string replanning_count_blackboard_id_;
   std::string farthest_obstacle_point_blackboard_id_;
   std::string manual_goal_pose_blackboard_id_;
+  std::string command_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

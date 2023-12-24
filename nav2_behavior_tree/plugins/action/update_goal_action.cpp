@@ -60,9 +60,9 @@ inline BT::NodeStatus UpdateGoalAction::tick()
     setOutput("output_goal", output_goal);
     setOutput("output_index", output_index);
 
-    std::cout << "replanning_count: " << replanning_count << std::endl;
-    std::cout << "output_goal x: " << output_goal.pose.position.x << std::endl;
-    std::cout << "output_goal y: " << output_goal.pose.position.y << std::endl;
+    // std::cout << "replanning_count: " << replanning_count << std::endl;
+    // std::cout << "output_goal x: " << output_goal.pose.position.x << std::endl;
+    // std::cout << "output_goal y: " << output_goal.pose.position.y << std::endl;
 
     return BT::NodeStatus::SUCCESS;
   }

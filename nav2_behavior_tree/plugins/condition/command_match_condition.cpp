@@ -15,32 +15,32 @@
 
 #include <string>
 
-#include "nav2_behavior_tree/plugins/condition/navigation_state_comparison_condition.hpp"
+#include "nav2_behavior_tree/plugins/condition/command_match_condition.hpp"
 
 namespace nav2_behavior_tree
 {
 
-NavigationStateComparisonCondition::NavigationStateComparisonCondition(
+CommandMatchCondition::CommandMatchCondition(
   const std::string & condition_name,
   const BT::NodeConfiguration & conf)
-: BT::ConditionNode(condition_name, conf),
-  current_navigation_state_("none"),
-  navigation_state_("none")
+: BT::ConditionNode(condition_name, conf)
 {
-  getInput("current_navigation_state", current_navigation_state_);
-  getInput("navigation_state", navigation_state_);
+  command_.data = "none0";
+  match_command_ = "none1";
 
+  getInput("command", command_);
+  getInput("match_command", match_command_);
 }
 
-BT::NodeStatus NavigationStateComparisonCondition::tick()
+BT::NodeStatus CommandMatchCondition::tick()
 {
-  getInput("current_navigation_state", current_navigation_state_);
-  getInput("navigation_state", navigation_state_);
+  getInput("command", command_);
+  getInput("match_command", match_command_);
 
-  std::cout << "current_navigation_state: " << current_navigation_state_ << std::endl;
-  // std::cout << "navigation_state: " << navigation_state_ << std::endl;
+  // std::cout << "command: " << command_.data << std::endl;
+  // std::cout << "match_command: " << match_command_ << std::endl;
 
-  if (current_navigation_state_ == navigation_state_) {
+  if (command_.data == match_command_) {
     return BT::NodeStatus::SUCCESS;
   }
   return BT::NodeStatus::FAILURE;
@@ -51,5 +51,5 @@ BT::NodeStatus NavigationStateComparisonCondition::tick()
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<nav2_behavior_tree::NavigationStateComparisonCondition>("NavigationStateComparison");
+  factory.registerNodeType<nav2_behavior_tree::CommandMatchCondition>("CommandMatch");
 }

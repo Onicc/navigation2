@@ -106,7 +106,7 @@ inline BT::NodeStatus FindFarthestObstaclePoint::tick()
                 path.poses[i], path.poses[i+1]);
     sum_dis += curr_dist;
     if (sum_dis > safe_distance) {
-      std::cout << "recovery_point_index:" << i << std::endl;
+      // std::cout << "recovery_point_index:" << i << std::endl;
       recovery_point = path.poses[i];
       break;
     }
@@ -114,14 +114,14 @@ inline BT::NodeStatus FindFarthestObstaclePoint::tick()
   
   setOutput("recovery_point", recovery_point);
 
-  std::cout << "recovery_point:" << recovery_point.pose.position.x << "," << recovery_point.pose.position.y << std::endl;
-  std::cout << "distance:" << nav2_util::geometry_utils::euclidean_distance(
-                path.poses[input_index], recovery_point) << std::endl;
-  std::cout << "input_index:" << input_index << std::endl;
-  std::cout << "back_distance_index:" << back_distance_index << std::endl;
-  std::cout << "find_distance_index:" << find_distance_index << std::endl;
-  std::cout << "farthest_obstacle_index:" << farthest_obstacle_index << std::endl;
-  std::cout << "backoff_distance:" << backoff_distance << std::endl;
+  // std::cout << "recovery_point:" << recovery_point.pose.position.x << "," << recovery_point.pose.position.y << std::endl;
+  // std::cout << "distance:" << nav2_util::geometry_utils::euclidean_distance(
+  //               path.poses[input_index], recovery_point) << std::endl;
+  // std::cout << "input_index:" << input_index << std::endl;
+  // std::cout << "back_distance_index:" << back_distance_index << std::endl;
+  // std::cout << "find_distance_index:" << find_distance_index << std::endl;
+  // std::cout << "farthest_obstacle_index:" << farthest_obstacle_index << std::endl;
+  // std::cout << "backoff_distance:" << backoff_distance << std::endl;
 
   return BT::NodeStatus::SUCCESS;
 }

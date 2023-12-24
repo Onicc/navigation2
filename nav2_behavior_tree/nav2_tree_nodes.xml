@@ -268,6 +268,11 @@
       <input_port name="transform_tolerance">Outpuut closest waypoint index</input_port>
       <output_port name="output_goal">Outpuut closest waypoint index</output_port>
     </Action>
+
+    <Action ID="SetCommandAction">
+      <input_port name="input_command">Input command</input_port>
+      <output_port name="output_command">Output command</output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
@@ -333,6 +338,11 @@
       <input_port name="closest_index"> Closest waypoint index </input_port>
       <input_port name="upper_index"> Upper waypoint index </input_port>
       <input_port name="lower_index"> Lower waypoint index </input_port>
+    </Condition>
+
+    <Condition ID="CommandMatch">
+      <input_port name="command"> Command to match </input_port>
+      <input_port name="match_command"> Command to match </input_port>
     </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>

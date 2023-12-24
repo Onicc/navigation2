@@ -127,9 +127,9 @@ inline BT::NodeStatus TruncatePathLocalToPoses::tick()
   if (it != new_path.poses.end()) {
       int path_index = std::distance(new_path.poses.begin(), it);
       setOutput("output_path_index", path_index);
-      std::cout << "Element found at index: " << std::distance(new_path.poses.begin(), it) << std::endl;
+      // std::cout << "Element found at index: " << std::distance(new_path.poses.begin(), it) << std::endl;
   } else {
-      std::cout << "Element not found in the vector." << std::endl;
+      // std::cout << "Element not found in the vector." << std::endl;
   }
 
   return BT::NodeStatus::SUCCESS;

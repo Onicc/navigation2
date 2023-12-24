@@ -231,6 +231,12 @@ list(APPEND plugin_libs nav2_manual_goal_updated_condition_bt_node)
 add_library(nav2_between_waypoint_index_condition_bt_node SHARED plugins/condition/between_waypoint_index_condition.cpp)
 list(APPEND plugin_libs nav2_between_waypoint_index_condition_bt_node)
 
+add_library(nav2_match_command_condition_bt_node SHARED plugins/condition/command_match_condition.cpp)
+list(APPEND plugin_libs nav2_match_command_condition_bt_node)
+
+add_library(nav2_set_command_action_bt_node SHARED plugins/action/set_command_action.cpp)
+list(APPEND plugin_libs nav2_set_command_action_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)

@@ -83,8 +83,18 @@ NavigateToPathNavigator::configure(
   if (!node->has_parameter("manual_goal_pose_blackboard_id")) {
     node->declare_parameter("manual_goal_pose_blackboard_id", std::string("manual_goal"));
   }
-  manual_goal_pose_blackboard_id_ = node->get_parameter("goal_pose_blackboard_id").as_string();
-  blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, geometry_msgs::msg::PoseStamped());
+  manual_goal_pose_blackboard_id_ = node->get_parameter("manual_goal_pose_blackboard_id").as_string();
+  geometry_msgs::msg::PoseStamped manual_goal_pose;
+  manual_goal_pose.header.frame_id = "odom";
+  manual_goal_pose.pose.position.x = 0.0;
+  manual_goal_pose.pose.position.y = 0.1;
+  blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, manual_goal_pose);
+
+
+  if (!node->has_parameter("command_blackboard_id")) {
+    node->declare_parameter("command_blackboard_id", std::string("command"));
+  }
+  command_blackboard_id_ = node->get_parameter("command_blackboard_id").as_string();
 
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
@@ -97,9 +107,15 @@ NavigateToPathNavigator::configure(
     std::bind(&NavigateToPathNavigator::onGoalPathReceived, this, std::placeholders::_1));
 
   goal_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-    "goal/pose",
+    "goal_pose",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onGoalPoseReceived, this, std::placeholders::_1));
+
+  command_sub_ = node->create_subscription<std_msgs::msg::String>(
+    "command",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
+
   return true;
 }
 
@@ -129,6 +145,8 @@ NavigateToPathNavigator::cleanup()
 {
   goal_path_sub_.reset();
   self_client_.reset();
+  goal_sub_.reset();
+  command_sub_.reset();
   return true;
 }
 
@@ -258,27 +276,55 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
     current_pose, *feedback_utils_.tf,
     feedback_utils_.global_frame, feedback_utils_.robot_frame,
     feedback_utils_.transform_tolerance);
+  auto blackboard = bt_action_server_->getBlackboard();
+  
+  if(goal->manual_goal.header.frame_id != "") {
+    RCLCPP_INFO(
+      logger_, "Begin navigating from current location (%.2f, %.2f) to manual goal (%.2f, %.2f)", 
+        current_pose.pose.position.x, current_pose.pose.position.y,
+        goal->manual_goal.pose.position.x, goal->manual_goal.pose.position.y);
 
-  // 计算goal_path总里程
-  double total_distance = 0.0;
-  for (size_t i = 0; i < goal->goal_path.poses.size() - 1; ++i) {
-    total_distance += nav2_util::geometry_utils::euclidean_distance(
-      goal->goal_path.poses[i], goal->goal_path.poses[i + 1]);
+    // Reset state for new action feedback
+    start_time_ = clock_->now();
+    blackboard->set<int>("number_recoveries", 0);  // NOLINT
+
+    // Update the goal path on the blackboard
+    blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
   }
 
-  RCLCPP_INFO(
-    logger_, "Begin navigating from current location (%.2f, %.2f) to path with %zu poses and total distance of %.2f meters", 
-      current_pose.pose.position.x, current_pose.pose.position.y,
-      goal->goal_path.poses.size(), total_distance);
+  if(!goal->goal_path.poses.empty()) {
+    // 计算goal_path总里程
+    double total_distance = 0.0;
+    for (size_t i = 0; i < goal->goal_path.poses.size() - 1; ++i) {
+      total_distance += nav2_util::geometry_utils::euclidean_distance(
+        goal->goal_path.poses[i], goal->goal_path.poses[i + 1]);
+    }
 
-  // Reset state for new action feedback
-  start_time_ = clock_->now();
-  auto blackboard = bt_action_server_->getBlackboard();
-  blackboard->set<int>("number_recoveries", 0);  // NOLINT
+    RCLCPP_INFO(
+      logger_, "Begin navigating from current location (%.2f, %.2f) to path with %zu poses and total distance of %.2f meters", 
+        current_pose.pose.position.x, current_pose.pose.position.y,
+        goal->goal_path.poses.size(), total_distance);
 
-  // Update the goal path on the blackboard
-  blackboard->set<nav_msgs::msg::Path>(goal_path_blackboard_id_, goal->goal_path);
-  blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
+    // Reset state for new action feedback
+    start_time_ = clock_->now();
+    blackboard->set<int>("number_recoveries", 0);  // NOLINT
+
+    // Update the goal path on the blackboard
+    blackboard->set<nav_msgs::msg::Path>(goal_path_blackboard_id_, goal->goal_path);
+  }
+
+  if(goal->command.data != "") {
+    RCLCPP_INFO(
+      logger_, "Begin navigating from current location (%.2f, %.2f) to command %s", 
+        current_pose.pose.position.x, current_pose.pose.position.y,
+        goal->command.data.c_str());
+
+    // Reset state for new action feedback
+    start_time_ = clock_->now();
+
+    // Update the goal path on the blackboard
+    blackboard->set<std_msgs::msg::String>(command_blackboard_id_, goal->command);
+  }
 }
 
 void
@@ -294,6 +340,14 @@ NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStampe
 {
   ActionT::Goal goal;
   goal.manual_goal = *pose;
+  self_client_->async_send_goal(goal);
+}
+
+void
+NavigateToPathNavigator::onCommandReceived(const std_msgs::msg::String::SharedPtr command)
+{
+  ActionT::Goal goal;
+  goal.command = *command;
   self_client_->async_send_goal(goal);
 }
 

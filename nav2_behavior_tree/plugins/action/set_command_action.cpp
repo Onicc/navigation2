@@ -19,28 +19,28 @@
 #include "nav_msgs/msg/path.hpp"
 #include "nav2_util/geometry_utils.hpp"
 
-#include "nav2_behavior_tree/plugins/action/set_navigation_state_action.hpp"
+#include "nav2_behavior_tree/plugins/action/set_command_action.hpp"
 
 namespace nav2_behavior_tree
 {
 
-SetNavigationStateAction::SetNavigationStateAction(
+SetCommandAction::SetCommandAction(
   const std::string & name,
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(name, conf)
 {
-  getInput("input_state", input_state_);
+  getInput("input_command", input_command_);
 }
 
-inline BT::NodeStatus SetNavigationStateAction::tick()
+inline BT::NodeStatus SetCommandAction::tick()
 {
   setStatus(BT::NodeStatus::RUNNING);
 
-  getInput("input_state", input_state_);
-  // std::cout << "set output_state :" << input_state_ << std::endl;
+  getInput("input_command", input_command_);
 
-  output_state_ = input_state_;
-  setOutput("output_state", output_state_);
+  output_command_.data = input_command_;
+  
+  setOutput("output_command", output_command_);
 
   return BT::NodeStatus::SUCCESS;
 }
@@ -50,5 +50,5 @@ inline BT::NodeStatus SetNavigationStateAction::tick()
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<nav2_behavior_tree::SetNavigationStateAction>("SetNavigationStateAction");
+  factory.registerNodeType<nav2_behavior_tree::SetCommandAction>("SetCommandAction");
 }
