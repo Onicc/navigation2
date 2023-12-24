@@ -41,10 +41,10 @@ NavigateToPathNavigator::configure(
   }
   path_local_blackboard_id_ = node->get_parameter("path_local_blackboard_id").as_string();
 
-  if (!node->has_parameter("goal_blackboard_id")) {
-    node->declare_parameter("goal_blackboard_id", std::string("goal_path"));
+  if (!node->has_parameter("goal_path_blackboard_id")) {
+    node->declare_parameter("goal_path_blackboard_id", std::string("goal_path"));
   }
-  goal_blackboard_id_ = node->get_parameter("goal_blackboard_id").as_string();
+  goal_path_blackboard_id_ = node->get_parameter("goal_path_blackboard_id").as_string();
 
   if (!node->has_parameter("path_blackboard_id")) {
     node->declare_parameter("path_blackboard_id", std::string("path"));
@@ -97,7 +97,7 @@ NavigateToPathNavigator::configure(
     std::bind(&NavigateToPathNavigator::onGoalPathReceived, this, std::placeholders::_1));
 
   goal_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
-    "goal_pose",
+    "goal/pose",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onGoalPoseReceived, this, std::placeholders::_1));
   return true;
@@ -277,7 +277,7 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
   blackboard->set<int>("number_recoveries", 0);  // NOLINT
 
   // Update the goal path on the blackboard
-  blackboard->set<nav_msgs::msg::Path>(goal_blackboard_id_, goal->goal_path);
+  blackboard->set<nav_msgs::msg::Path>(goal_path_blackboard_id_, goal->goal_path);
   blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
 }
 
