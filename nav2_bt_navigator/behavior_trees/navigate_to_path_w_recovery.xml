@@ -32,6 +32,15 @@
             <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
           </Sequence>
         </Fallback>
+        <Fallback name="SwitchManual">
+          <Inverter>
+            <CommandMatch command="{command}" match_command="manual2"/>
+          </Inverter>
+          <Sequence name="SetNavigationStateAction">
+            <SetCommandAction input_command="none" output_command="{command}"/>
+            <SetNavigationStateAction input_state="manual2" output_state="{navigation_state}"/>
+          </Sequence>
+        </Fallback>
         <Fallback name="SwitchPath">
           <Inverter>
             <CommandMatch command="{command}" match_command="path"/>
@@ -39,6 +48,15 @@
           <Sequence name="SetNavigationStateAction">
             <SetCommandAction input_command="none" output_command="{command}"/>
             <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
+          </Sequence>
+        </Fallback>
+        <Fallback name="SwitchStop">
+          <Inverter>
+            <CommandMatch command="{command}" match_command="stop"/>
+          </Inverter>
+          <Sequence name="SetNavigationStateAction">
+            <SetCommandAction input_command="none" output_command="{command}"/>
+            <SetNavigationStateAction input_state="stop" output_state="{navigation_state}"/>
           </Sequence>
         </Fallback>
         <RateController hz="10.0">
@@ -59,6 +77,19 @@
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
               <RecoveryNode number_of_retries="1" name="ComputePathToPose">
                 <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+              </RecoveryNode>
+            </Sequence>
+            <Sequence name="ManualControl2">
+              <!-- <Fallback name="SwitchManual">
+                <Inverter>
+                  <ManualGoalUpdated/>
+                </Inverter>
+                <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
+              </Fallback> -->
+              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual2"/>
+              <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+                <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
                 <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
               </RecoveryNode>
             </Sequence>
