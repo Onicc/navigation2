@@ -104,7 +104,7 @@
                   <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                 </RecoveryNode>
                 <Sequence name="SwitchState">
-                  <BetweenWaypointIndex closest_index="{goal_path_index}" upper_index="999999" lower_index = "0"/>
+                  <BetweenWaypointIndex closest_index="{goal_path_index}" upper_index="0" lower_index = "0"/>
                   <SetNavigationStateAction input_state="obstacle" output_state="{navigation_state}"/>
                 </Sequence>
               </Fallback>
