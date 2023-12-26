@@ -96,6 +96,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_between_waypoint_index_condition_bt_node",
     "nav2_match_command_condition_bt_node",
     "nav2_set_command_action_bt_node",
+    "nav2_voice_broadcast_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

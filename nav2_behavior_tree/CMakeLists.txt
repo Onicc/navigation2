@@ -237,6 +237,9 @@ list(APPEND plugin_libs nav2_match_command_condition_bt_node)
 add_library(nav2_set_command_action_bt_node SHARED plugins/action/set_command_action.cpp)
 list(APPEND plugin_libs nav2_set_command_action_bt_node)
 
+add_library(nav2_voice_broadcast_action_bt_node SHARED plugins/action/voice_broadcast_action.cpp)
+list(APPEND plugin_libs nav2_voice_broadcast_action_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)

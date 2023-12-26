@@ -273,6 +273,10 @@
       <input_port name="input_command">Input command</input_port>
       <output_port name="output_command">Output command</output_port>
     </Action>
+
+    <Action ID="VoiceBroadcast">
+      <input_port name="text">Voice text</input_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
