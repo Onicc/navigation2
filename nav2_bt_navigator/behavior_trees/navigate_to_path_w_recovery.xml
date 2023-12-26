@@ -77,7 +77,10 @@
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
               <RecoveryNode number_of_retries="3" name="ComputePathToPose">
                 <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
-                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                <Sequence name="recovery">
+                  <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                </Sequence>
               </RecoveryNode>
             </Sequence>
             <Sequence name="ManualControl2">
@@ -90,7 +93,10 @@
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual2"/>
               <RecoveryNode number_of_retries="3" name="ComputePathToPose">
                 <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
-                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                <Sequence name="recovery">
+                  <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                </Sequence>
               </RecoveryNode>
             </Sequence>
             <Sequence name="FollowPath">
@@ -101,7 +107,10 @@
                     <!-- <TruncatePathLocalToPoses input_path="{goal_path}" input_path_index="{goal_path_index}" output_path="{path_local}" output_goals="{goals}" output_path_index="{goal_path_index}" distance_forward="6.0" distance_backward="0.0" robot_frame="base_link"/> -->
                     <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
                   </PipelineSequence>
-                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                  <Sequence name="recovery">
+                    <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                    <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                  </Sequence>
                 </RecoveryNode>
                 <Sequence name="SwitchState">
                   <BetweenWaypointIndex closest_index="{goal_path_index}" upper_index="0" lower_index = "0"/>
@@ -166,7 +175,7 @@
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
           </Sequence>
           <!-- <Spin spin_dist="1.57"/> -->
-          <Wait wait_duration="5"/>
+          <Wait wait_duration="2"/>
           <!-- <BackUp backup_dist="0.30" backup_speed="0.05"/> -->
         </RoundRobin>
       </ReactiveFallback>
