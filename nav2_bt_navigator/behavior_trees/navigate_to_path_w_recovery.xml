@@ -75,7 +75,7 @@
                 <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
               </Fallback> -->
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
-              <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+              <RecoveryNode number_of_retries="3" name="ComputePathToPose">
                 <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
                 <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
               </RecoveryNode>
@@ -88,7 +88,7 @@
                 <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
               </Fallback> -->
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual2"/>
-              <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+              <RecoveryNode number_of_retries="3" name="ComputePathToPose">
                 <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
                 <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
               </RecoveryNode>
@@ -96,7 +96,7 @@
             <Sequence name="FollowPath">
               <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path"/>
               <Fallback name="ComputePathToPathAndSwitchState">
-                <RecoveryNode number_of_retries="1" name="ComputePathToPath">
+                <RecoveryNode number_of_retries="3" name="ComputePathToPath">
                   <PipelineSequence name="ComputePathThroughPoses">
                     <!-- <TruncatePathLocalToPoses input_path="{goal_path}" input_path_index="{goal_path_index}" output_path="{path_local}" output_goals="{goals}" output_path_index="{goal_path_index}" distance_forward="6.0" distance_backward="0.0" robot_frame="base_link"/> -->
                     <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
@@ -148,7 +148,7 @@
             </RetryUntilSuccessful>
           </PathLongerOnApproach> -->
           <!-- <IsPathValid server_timeout="0.1" path="{path}"/>  -->
-          <RecoveryNode number_of_retries="1" name="FollowPath">
+          <RecoveryNode number_of_retries="2" name="FollowPath">
             <FollowPath path="{path}" controller_id="FollowPath"/>
             <Sequence name="ClearingActions">
               <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
