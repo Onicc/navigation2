@@ -1,0 +1,4 @@
+# File: SetString.srv
+string data
+---
+bool success    # 操作是否成功

@@ -96,6 +96,12 @@ NavigateToPathNavigator::configure(
   }
   command_blackboard_id_ = node->get_parameter("command_blackboard_id").as_string();
 
+  if (!node->has_parameter("start_blackboard_id")) {
+    node->declare_parameter("start_blackboard_id", std::string("start"));
+  }
+  start_blackboard_id_ = node->get_parameter("start_blackboard_id").as_string();
+  blackboard->set<std::string>(start_blackboard_id_, "false");
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -115,6 +121,19 @@ NavigateToPathNavigator::configure(
     "command",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
+
+  bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
+    "/bt_navigator/start",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onBTNavigatorStartReceived, this, std::placeholders::_1));
+
+  bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/bt/command",
+    std::bind(&NavigateToPathNavigator::onBTCommandReceived, this, std::placeholders::_1, std::placeholders::_2));
+
+  bt_start_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/bt/start",
+    std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   return true;
 }
@@ -349,6 +368,36 @@ NavigateToPathNavigator::onCommandReceived(const std_msgs::msg::String::SharedPt
   ActionT::Goal goal;
   goal.command = *command;
   self_client_->async_send_goal(goal);
+}
+
+void
+NavigateToPathNavigator::onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(start_blackboard_id_, msg->data);
+}
+
+void
+NavigateToPathNavigator::onBTCommandReceived(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  RCLCPP_INFO(logger_, "Received command request: %s", request->data.c_str());
+  ActionT::Goal goal;
+  goal.command.data = request->data;
+  self_client_->async_send_goal(goal);
+  response->success = true;
+}
+
+void
+NavigateToPathNavigator::onBTStartReceived(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  RCLCPP_INFO(logger_, "Received start request: %s", request->data.c_str());
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(start_blackboard_id_, request->data);
+  response->success = true;
 }
 
 }  // namespace nav2_bt_navigator
