@@ -383,9 +383,10 @@ NavigateToPathNavigator::onBTCommandReceived(
     std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
 {
   RCLCPP_INFO(logger_, "Received command request: %s", request->data.c_str());
-  ActionT::Goal goal;
-  goal.command.data = request->data;
-  self_client_->async_send_goal(goal);
+  std_msgs::msg::String command;
+  command.data = request->data;
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std_msgs::msg::String>(command_blackboard_id_, command);
   response->success = true;
 }
 

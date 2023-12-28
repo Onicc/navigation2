@@ -6,179 +6,191 @@
 -->
 <root main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
-      <PipelineSequence name="NavigateWithReplanning">
-        <!-- <RateController hz="1.0">
-          <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-        </RateController> -->
-        <RateController hz="10.0">
-          <FindClosestPointIndex input_path="{goal_path}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{goal_path_index}" robot_frame="base_link" distance_forward="6.0" distance_backward="0.0" output_goals="{goals}" output_closest_index="{goal_path_index}"/>
-        </RateController>
-        <Fallback name="CommandCleanCostmap">
-          <Inverter>
-            <CommandMatch command="{command}" match_command="clean_costmap"/>
-          </Inverter>
-          <Sequence name="CleanCostmap">
-            <SetCommandAction input_command="none" output_command="{command}"/>
+    <Fallback name="MainSwitch">
+      <Inverter>
+        <NavigationStateComparison current_navigation_state="{start}" navigation_state="true"/>
+      </Inverter>
+      <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+        <PipelineSequence name="NavigateWithReplanning">
+          <!-- <RateController hz="1.0">
             <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-          </Sequence>
-        </Fallback>
-        <Fallback name="SwitchManual">
-          <Inverter>
-            <CommandMatch command="{command}" match_command="manual"/>
-          </Inverter>
-          <Sequence name="SetNavigationStateAction">
-            <SetCommandAction input_command="none" output_command="{command}"/>
-            <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
-          </Sequence>
-        </Fallback>
-        <Fallback name="SwitchManual">
-          <Inverter>
-            <CommandMatch command="{command}" match_command="manual2"/>
-          </Inverter>
-          <Sequence name="SetNavigationStateAction">
-            <SetCommandAction input_command="none" output_command="{command}"/>
-            <SetNavigationStateAction input_state="manual2" output_state="{navigation_state}"/>
-          </Sequence>
-        </Fallback>
-        <Fallback name="SwitchPath">
-          <Inverter>
-            <CommandMatch command="{command}" match_command="path"/>
-          </Inverter>
-          <Sequence name="SetNavigationStateAction">
-            <SetCommandAction input_command="none" output_command="{command}"/>
-            <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
-          </Sequence>
-        </Fallback>
-        <Fallback name="SwitchStop">
-          <Inverter>
-            <CommandMatch command="{command}" match_command="stop"/>
-          </Inverter>
-          <Sequence name="SetNavigationStateAction">
-            <SetCommandAction input_command="none" output_command="{command}"/>
-            <SetNavigationStateAction input_state="stop" output_state="{navigation_state}"/>
-          </Sequence>
-        </Fallback>
-        <RateController hz="10.0">
-          <Fallback name="PathSelection">
-            <!-- <Sequence name="FollowCurb">
-              <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
-              <GenerateGoalForFollowingCurbs input_path="{goal_path}" input_path_index="{goal_path_index}" x="5.0" y="-2.0" angular_distance_weight="0.0" off_path_tolerance="0.5" robot_frame="base_link" output_goal="{farthest_obstacle_point}"/>
-              <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="CurbPlanner"/>
-              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="curb"/>
-            </Sequence> -->
-            <Sequence name="ManualControl">
-              <!-- <Fallback name="SwitchManual">
-                <Inverter>
-                  <ManualGoalUpdated/>
-                </Inverter>
-                <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
-              </Fallback> -->
-              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
-              <RecoveryNode number_of_retries="3" name="ComputePathToPose">
-                <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
-                <Sequence name="recovery">
-                  <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
-                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-                </Sequence>
-              </RecoveryNode>
+          </RateController> -->
+          <RateController hz="10.0">
+            <FindClosestPointIndex input_path="{goal_path}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{goal_path_index}" robot_frame="base_link" distance_forward="6.0" distance_backward="0.0" output_goals="{goals}" output_closest_index="{goal_path_index}"/>
+          </RateController>
+          <Fallback name="CommandCleanCostmap">
+            <Inverter>
+              <CommandMatch command="{command}" match_command="clean_costmap"/>
+            </Inverter>
+            <Sequence name="CleanCostmap">
+              <SetCommandAction input_command="none" output_command="{command}"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
             </Sequence>
-            <Sequence name="ManualControl2">
-              <!-- <Fallback name="SwitchManual">
-                <Inverter>
-                  <ManualGoalUpdated/>
-                </Inverter>
-                <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
-              </Fallback> -->
-              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual2"/>
-              <RecoveryNode number_of_retries="3" name="ComputePathToPose">
-                <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
-                <Sequence name="recovery">
-                  <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
-                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-                </Sequence>
-              </RecoveryNode>
+          </Fallback>
+          <Fallback name="SwitchManual">
+            <Inverter>
+              <CommandMatch command="{command}" match_command="manual"/>
+            </Inverter>
+            <Sequence name="SetNavigationStateAction">
+              <SetCommandAction input_command="none" output_command="{command}"/>
+              <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
             </Sequence>
-            <Sequence name="FollowPath">
-              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path"/>
-              <Fallback name="ComputePathToPathAndSwitchState">
-                <RecoveryNode number_of_retries="3" name="ComputePathToPath">
-                  <PipelineSequence name="ComputePathThroughPoses">
-                    <!-- <TruncatePathLocalToPoses input_path="{goal_path}" input_path_index="{goal_path_index}" output_path="{path_local}" output_goals="{goals}" output_path_index="{goal_path_index}" distance_forward="6.0" distance_backward="0.0" robot_frame="base_link"/> -->
-                    <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
+          </Fallback>
+          <Fallback name="SwitchManual">
+            <Inverter>
+              <CommandMatch command="{command}" match_command="manual2"/>
+            </Inverter>
+            <Sequence name="SetNavigationStateAction">
+              <SetCommandAction input_command="none" output_command="{command}"/>
+              <SetNavigationStateAction input_state="manual2" output_state="{navigation_state}"/>
+            </Sequence>
+          </Fallback>
+          <Fallback name="SwitchPath">
+            <Inverter>
+              <CommandMatch command="{command}" match_command="path"/>
+            </Inverter>
+            <Sequence name="SetNavigationStateAction">
+              <SetCommandAction input_command="none" output_command="{command}"/>
+              <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
+            </Sequence>
+          </Fallback>
+          <Fallback name="SwitchStop">
+            <Inverter>
+              <CommandMatch command="{command}" match_command="stop"/>
+            </Inverter>
+            <Sequence name="SetNavigationStateAction">
+              <SetCommandAction input_command="none" output_command="{command}"/>
+              <SetNavigationStateAction input_state="stop" output_state="{navigation_state}"/>
+            </Sequence>
+          </Fallback>
+          <RateController hz="10.0">
+            <Fallback name="PathSelection">
+              <!-- <Sequence name="FollowCurb">
+                <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
+                <GenerateGoalForFollowingCurbs input_path="{goal_path}" input_path_index="{goal_path_index}" x="5.0" y="-2.0" angular_distance_weight="0.0" off_path_tolerance="0.5" robot_frame="base_link" output_goal="{farthest_obstacle_point}"/>
+                <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="CurbPlanner"/>
+                <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="curb"/>
+              </Sequence> -->
+              <Sequence name="ManualControl">
+                <!-- <Fallback name="SwitchManual">
+                  <Inverter>
+                    <ManualGoalUpdated/>
+                  </Inverter>
+                  <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
+                </Fallback> -->
+                <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
+                <RecoveryNode number_of_retries="3" name="ComputePathToPose">
+                  <PipelineSequence name="ComputePathToPose">
+                    <!-- <VoiceBroadcast text="clear"/> -->
+                    <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
                   </PipelineSequence>
                   <Sequence name="recovery">
                     <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
                     <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                   </Sequence>
                 </RecoveryNode>
-                <Sequence name="SwitchState">
-                  <BetweenWaypointIndex closest_index="{goal_path_index}" upper_index="0" lower_index = "0"/>
-                  <SetNavigationStateAction input_state="obstacle" output_state="{navigation_state}"/>
-                </Sequence>
-              </Fallback>
-            </Sequence>
-            <Sequence name="ObstacleNavigation">
-              <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="obstacle"/>
-              <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
-              <Fallback name="ComputePoseToPathAndSwitchState">
-                <RecoveryWithOutputNode number_of_retries="70" retry_count="{replanning_count}" name="ComputePathToPath">
-                  <Sequence name="ComputePathToPose">
-                    <Inverter>
-                      <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="Point"/>
-                    </Inverter>
+              </Sequence>
+              <Sequence name="ManualControl2">
+                <!-- <Fallback name="SwitchManual">
+                  <Inverter>
+                    <ManualGoalUpdated/>
+                  </Inverter>
+                  <SetNavigationStateAction input_state="manual" output_state="{navigation_state}"/>
+                </Fallback> -->
+                <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual2"/>
+                <RecoveryNode number_of_retries="3" name="ComputePathToPose">
+                  <PipelineSequence name="ComputePathToPose">
+                    <!-- <VoiceBroadcast text="clear"/> -->
+                    <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
+                  </PipelineSequence>
+                  <Sequence name="recovery">
+                    <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                    <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                   </Sequence>
-                  <Sequence name="ClearCostmapAndChangePose">
-                    <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="{replanning_count}" find_distance="10.0" back_find_distance="4.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
+                </RecoveryNode>
+              </Sequence>
+              <Sequence name="FollowPath">
+                <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path"/>
+                <Fallback name="ComputePathToPathAndSwitchState">
+                  <RecoveryNode number_of_retries="3" name="ComputePathToPath">
+                    <PipelineSequence name="ComputePathThroughPoses">
+                      <!-- <TruncatePathLocalToPoses input_path="{goal_path}" input_path_index="{goal_path_index}" output_path="{path_local}" output_goals="{goals}" output_path_index="{goal_path_index}" distance_forward="6.0" distance_backward="0.0" robot_frame="base_link"/> -->
+                      <!-- <VoiceBroadcast text="clear"/> -->
+                      <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
+                    </PipelineSequence>
+                    <Sequence name="recovery">
+                      <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                      <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    </Sequence>
+                  </RecoveryNode>
+                  <Sequence name="SwitchState">
+                    <BetweenWaypointIndex closest_index="{goal_path_index}" upper_index="0" lower_index = "0"/>
+                    <SetNavigationStateAction input_state="obstacle" output_state="{navigation_state}"/>
                   </Sequence>
-                </RecoveryWithOutputNode>
-                <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
-              </Fallback>
-              <RecoveryNode number_of_retries="3" name="ComputePathToPath">
-                <ComputePathToPose goal="{goal_pose}" path="{path}" planner_id="Navfn"/>
+                </Fallback>
+              </Sequence>
+              <Sequence name="ObstacleNavigation">
+                <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="obstacle"/>
+                <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
+                <Fallback name="ComputePoseToPathAndSwitchState">
+                  <RecoveryWithOutputNode number_of_retries="70" retry_count="{replanning_count}" name="ComputePathToPath">
+                    <Sequence name="ComputePathToPose">
+                      <Inverter>
+                        <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="Point"/>
+                      </Inverter>
+                    </Sequence>
+                    <Sequence name="ClearCostmapAndChangePose">
+                      <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{goal_path_index}" resolution="0.2" replanning_count="{replanning_count}" find_distance="10.0" back_find_distance="4.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
+                    </Sequence>
+                  </RecoveryWithOutputNode>
+                  <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
+                </Fallback>
+                <RecoveryNode number_of_retries="3" name="ComputePathToPath">
+                  <ComputePathToPose goal="{goal_pose}" path="{path}" planner_id="Navfn"/>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                </RecoveryNode>
+                <!-- <Fallback name="ComputePoseToPathAndSwitchState">
+                  <Inverter>
+                    <GoalReached goal="{goal_pose}" robot_base_frame="base_link"/>
+                  </Inverter>
+                  <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
+                </Fallback> -->
+              </Sequence>
+            </Fallback>
+          </RateController>
+          <Sequence name="MonitorAndFollowPath">
+            <!-- <PathLongerOnApproach path="{path}" prox_len="1.0" length_factor="1.2">
+              <RetryUntilSuccessful num_attempts="1">
+                <SequenceStar name="CancelingControlAndWait">
+                  <CancelControl name="ControlCancel"/>
+                  <Wait wait_duration="5"/>
+                </SequenceStar>
+              </RetryUntilSuccessful>
+            </PathLongerOnApproach> -->
+            <!-- <IsPathValid server_timeout="0.1" path="{path}"/>  -->
+            <RecoveryNode number_of_retries="2" name="FollowPath">
+              <FollowPath path="{path}" controller_id="FollowPath"/>
+              <Sequence name="ClearingActions">
+                <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
                 <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-              </RecoveryNode>
-              <!-- <Fallback name="ComputePoseToPathAndSwitchState">
-                <Inverter>
-                  <GoalReached goal="{goal_pose}" robot_base_frame="base_link"/>
-                </Inverter>
-                <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
-              </Fallback> -->
-            </Sequence>
-          </Fallback>
-        </RateController>
-        <Sequence name="MonitorAndFollowPath">
-          <!-- <PathLongerOnApproach path="{path}" prox_len="1.0" length_factor="1.2">
-            <RetryUntilSuccessful num_attempts="1">
-              <SequenceStar name="CancelingControlAndWait">
-                <CancelControl name="ControlCancel"/>
-                <Wait wait_duration="5"/>
-              </SequenceStar>
-            </RetryUntilSuccessful>
-          </PathLongerOnApproach> -->
-          <!-- <IsPathValid server_timeout="0.1" path="{path}"/>  -->
-          <RecoveryNode number_of_retries="2" name="FollowPath">
-            <FollowPath path="{path}" controller_id="FollowPath"/>
-            <Sequence name="ClearingActions">
-              <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
-              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-            </Sequence>
-          </RecoveryNode>
-        </Sequence>
-      </PipelineSequence>
-      <ReactiveFallback name="RecoveryFallback">
-        <GoalPathUpdated/>
-        <ManualGoalUpdated/>
-        <RoundRobin name="RecoveryActions">
-          <Sequence name="ClearingActions">
-            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+              </Sequence>
+            </RecoveryNode>
           </Sequence>
-          <!-- <Spin spin_dist="1.57"/> -->
-          <Wait wait_duration="2"/>
-          <!-- <BackUp backup_dist="0.30" backup_speed="0.05"/> -->
-        </RoundRobin>
-      </ReactiveFallback>
-    </RecoveryNode>
+        </PipelineSequence>
+        <ReactiveFallback name="RecoveryFallback">
+          <GoalPathUpdated/>
+          <ManualGoalUpdated/>
+          <RoundRobin name="RecoveryActions">
+            <Sequence name="ClearingActions">
+              <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+            </Sequence>
+            <!-- <Spin spin_dist="1.57"/> -->
+            <Wait wait_duration="2"/>
+            <!-- <BackUp backup_dist="0.30" backup_speed="0.05"/> -->
+          </RoundRobin>
+        </ReactiveFallback>
+      </RecoveryNode>
+    </Fallback>
   </BehaviorTree>
 </root>
