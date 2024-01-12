@@ -43,6 +43,8 @@ FindClosestPointIndex::FindClosestPointIndex(
   qos.transient_local().reliable();
   path_local_pub_ =
     node->create_publisher<nav_msgs::msg::Path>("/goal/path_local", qos);
+  closest_index_pub_ = 
+    node->create_publisher<std_msgs::msg::Int32>("/goal/closest_index", qos);
 }
 
 inline BT::NodeStatus FindClosestPointIndex::tick()
@@ -77,6 +79,9 @@ inline BT::NodeStatus FindClosestPointIndex::tick()
       });
     closest_pose_index = std::distance(path.poses.begin(), closest_pose);
     setOutput("output_closest_index", closest_pose_index);
+    std_msgs::msg::Int32 closest_index;
+    closest_index.data = closest_pose_index;
+    closest_index_pub_->publish(closest_index);
 
     auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
       closest_pose, path.poses.end(), distance_forward);
@@ -132,6 +137,9 @@ inline BT::NodeStatus FindClosestPointIndex::tick()
       });
     closest_pose_index = std::distance(path.poses.begin(), closest_pose);
     setOutput("output_closest_index", closest_pose_index);
+    std_msgs::msg::Int32 closest_index;
+    closest_index.data = closest_pose_index;
+    closest_index_pub_->publish(closest_index);
     
     auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
       closest_pose, path.poses.end(), distance_forward);

@@ -22,6 +22,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "std_msgs/msg/int32.hpp"
 
 #include "behaviortree_cpp_v3/action_node.h"
 #include "tf2_ros/buffer.h"
@@ -115,6 +116,7 @@ private:
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
 
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_local_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_index_pub_;
 };
 
 }  // namespace nav2_behavior_tree
