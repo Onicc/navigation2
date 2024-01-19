@@ -1,0 +1,8 @@
+std_msgs/Header header
+geometry_msgs/Pose pose
+float64 curb_distance
+float64 curb_direction
+float64 curb_residual
+bool option_curb_direction_fix
+bool option_curb_horizontal_fix
+bool option_curb_traction_fix
