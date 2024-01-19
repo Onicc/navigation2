@@ -277,6 +277,20 @@
     <Action ID="VoiceBroadcast">
       <input_port name="text">Voice text</input_port>
     </Action>
+
+    <Action ID="FindNearestWaypoint">
+      <input_port name="waypoints">waypoints</input_port>
+      <input_port name="angular_distance_weight">Weight of angular distance relative to positional distance when finding which path pose is closest to robot. Not applicable on paths without orientations assigned</input_port>
+      <input_port name="max_search_dist">Maximum forward integrated distance along the path (starting from the last detected pose) to bound the search for the closest pose to the robot. When set to infinity (default), whole path is searched every time</input_port>
+      <input_port name="input_closest_index">Input closest waypoint index</input_port>
+      <input_port name="robot_frame">Robot base frame id</input_port>
+      <input_port name="transform_tolerance">Transform lookup tolerance</input_port>
+      <input_port name="distance_forward">Distance in forward direction</input_port>
+      <input_port name="distance_backward">Distance in backward direction</input_port>
+      <output_port name="waypoint_index">Outpuut closest waypoint index</output_port>
+      <output_port name="goals">Set of goals after removing any passed</output_port>
+      <output_port name="waypoint">Nearest waypoint</output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
@@ -347,6 +361,14 @@
     <Condition ID="CommandMatch">
       <input_port name="command"> Command to match </input_port>
       <input_port name="match_command"> Command to match </input_port>
+    </Condition>
+
+    <Condition ID="PathToCurbFollow">
+      <input_port name="odometry_gps"> GPS position</input_port>
+      <input_port name="max_position_covariance"> Maximum value of GPS position covariance </input_port>
+      <input_port name="max_angle_covariance"> Maximum value of GPS angle covariance </input_port>
+      <input_port name="waypoint"> The nearest waypoint </input_port>
+      <input_port name="curb_traction_point"> Curb traction points in the odom frame </input_port>
     </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>
