@@ -66,17 +66,18 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
 
   Goals goal_poses;
 
-  geometry_msgs::msg::PoseStamped pose;
-  if (!getRobotPose(path.header.frame_id, pose)) {
-    return BT::NodeStatus::FAILURE;
-  }
-
   // waypoints to path
+  path.header = waypoints.header;
   for (const auto &waypoint : waypoints.waypoints) {
     geometry_msgs::msg::PoseStamped pose;
     pose.header = waypoint.header;
     pose.pose = waypoint.pose;
     path.poses.push_back(pose);
+  }
+
+  geometry_msgs::msg::PoseStamped pose;
+  if (!getRobotPose(path.header.frame_id, pose)) {
+    return BT::NodeStatus::FAILURE;
   }
 
   if (input_closest_index == -1) {
