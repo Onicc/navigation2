@@ -97,6 +97,8 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_match_command_condition_bt_node",
     "nav2_set_command_action_bt_node",
     "nav2_voice_broadcast_action_bt_node",
+    "nav2_path_to_curb_follow_condition_bt_node",
+    "nav2_find_nearest_waypoint_action_bt_node",
   };
 
   declare_parameter_if_not_declared(
