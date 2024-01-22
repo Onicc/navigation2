@@ -370,6 +370,8 @@
       <input_port name="waypoint"> The nearest waypoint </input_port>
       <input_port name="curb_traction_point"> Curb traction points in the odom frame </input_port>
     </Condition>
+
+    <Condition ID="WaypointUpdated"/>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>
 
