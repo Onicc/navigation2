@@ -102,6 +102,26 @@ NavigateToPathNavigator::configure(
   start_blackboard_id_ = node->get_parameter("start_blackboard_id").as_string();
   blackboard->set<std::string>(start_blackboard_id_, "false");
 
+  if (!node->has_parameter("waypoints_blackboard_id")) {
+    node->declare_parameter("waypoints_blackboard_id", std::string("waypoints"));
+  }
+  waypoints_blackboard_id_ = node->get_parameter("waypoints_blackboard_id").as_string();
+
+  if (!node->has_parameter("waypoint_blackboard_id")) {
+    node->declare_parameter("waypoint_blackboard_id", std::string("waypoint"));
+  }
+  waypoint_blackboard_id_ = node->get_parameter("waypoint_blackboard_id").as_string();
+
+  if (!node->has_parameter("odometry_gps_blackboard_id")) {
+    node->declare_parameter("odometry_gps_blackboard_id", std::string("odometry_gps"));
+  }
+  odometry_gps_blackboard_id_ = node->get_parameter("odometry_gps_blackboard_id").as_string();
+
+  if (!node->has_parameter("curb_traction_point_blackboard_id")) {
+    node->declare_parameter("curb_traction_point_blackboard_id", std::string("curb_traction_point"));
+  }
+  curb_traction_point_blackboard_id_ = node->get_parameter("curb_traction_point_blackboard_id").as_string();
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -121,6 +141,21 @@ NavigateToPathNavigator::configure(
     "command",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
+
+  waypoints_sub_ = node->create_subscription<nav2_msgs::msg::WaypointArray>(
+    "/waypoints",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onWaypointsReceived, this, std::placeholders::_1));
+
+  odometry_gps_sub_ = node->create_subscription<nav_msgs::msg::Odometry>(
+    "/odometry/gps",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onOdometryGPSReceived, this, std::placeholders::_1));
+
+  curb_traction_point_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
+    "/curb/traction_point",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onCurbTractionPointReceived, this, std::placeholders::_1));
 
   bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
     "/bt_navigator/start",
@@ -375,6 +410,27 @@ NavigateToPathNavigator::onBTNavigatorStartReceived(const std_msgs::msg::String:
 {
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(start_blackboard_id_, msg->data);
+}
+
+void
+NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<nav2_msgs::msg::WaypointArray>(waypoints_blackboard_id_, *msg);
+}
+
+void
+NavigateToPathNavigator::onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<nav_msgs::msg::Odometry>(odometry_gps_blackboard_id_, *msg);
+}
+
+void
+NavigateToPathNavigator::onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<geometry_msgs::msg::PoseStamped>(curb_traction_point_blackboard_id_, *msg);
 }
 
 void

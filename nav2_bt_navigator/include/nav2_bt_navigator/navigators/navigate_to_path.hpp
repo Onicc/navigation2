@@ -26,9 +26,11 @@
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_util/robot_utils.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "nav2_util/odometry_utils.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "nav2_msgs/srv/set_string.hpp"
+#include "nav2_msgs/msg/waypoint_array.hpp"
 
 namespace nav2_bt_navigator
 {
@@ -72,6 +74,9 @@ public:
   void onGoalPoseReceived(const geometry_msgs::msg::PoseStamped::SharedPtr pose);
   void onCommandReceived(const std_msgs::msg::String::SharedPtr command);
   void onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg);
+  void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
+  void onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
   void onBTCommandReceived(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
@@ -137,6 +142,9 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr bt_navigator_start_sub_;
+  rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_gps_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
@@ -155,6 +163,10 @@ protected:
   std::string manual_goal_pose_blackboard_id_;
   std::string command_blackboard_id_;
   std::string start_blackboard_id_;
+  std::string waypoints_blackboard_id_;
+  std::string waypoint_blackboard_id_;
+  std::string odometry_gps_blackboard_id_;
+  std::string curb_traction_point_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
