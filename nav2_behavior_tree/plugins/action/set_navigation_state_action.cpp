@@ -37,7 +37,6 @@ inline BT::NodeStatus SetNavigationStateAction::tick()
   setStatus(BT::NodeStatus::RUNNING);
 
   getInput("input_state", input_state_);
-  // std::cout << "set output_state :" << input_state_ << std::endl;
 
   output_state_ = input_state_;
   setOutput("output_state", output_state_);

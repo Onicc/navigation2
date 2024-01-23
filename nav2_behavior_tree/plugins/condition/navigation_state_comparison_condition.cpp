@@ -37,8 +37,7 @@ BT::NodeStatus NavigationStateComparisonCondition::tick()
   getInput("current_navigation_state", current_navigation_state_);
   getInput("navigation_state", navigation_state_);
 
-  std::cout << "current_navigation_state: " << current_navigation_state_ << std::endl;
-  // std::cout << "navigation_state: " << navigation_state_ << std::endl;
+  std::cout << "current mode: " << current_navigation_state_ << " | compare mode: " << navigation_state_ << std::endl;
 
   if (current_navigation_state_ == navigation_state_) {
     return BT::NodeStatus::SUCCESS;
