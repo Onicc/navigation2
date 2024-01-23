@@ -50,7 +50,7 @@ NavigateToPathNavigator::configure(
     node->declare_parameter("navigation_state_blackboard_id", std::string("navigation_state"));
   }
   navigation_state_blackboard_id_ = node->get_parameter("navigation_state_blackboard_id").as_string();
-  blackboard->set<std::string>(navigation_state_blackboard_id_, "path");
+  blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
 
   if (!node->has_parameter("waypoint_index_blackboard_id")) {
     node->declare_parameter("waypoint_index_blackboard_id", std::string("waypoint_index"));
