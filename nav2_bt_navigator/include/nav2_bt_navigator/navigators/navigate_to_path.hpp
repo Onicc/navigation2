@@ -30,6 +30,7 @@
 #include "nav2_util/odometry_utils.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "nav2_msgs/srv/set_string.hpp"
+#include "nav2_msgs/srv/set_waypoints.hpp"
 #include "nav2_msgs/msg/waypoint_array.hpp"
 
 namespace nav2_bt_navigator
@@ -74,7 +75,6 @@ public:
   void onGoalPoseReceived(const geometry_msgs::msg::PoseStamped::SharedPtr pose);
   void onCommandReceived(const std_msgs::msg::String::SharedPtr command);
   void onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg);
-  void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
@@ -84,6 +84,11 @@ public:
   void onBTStartReceived(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+
+  void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
+  void onWaypointsReceivedSrv(
+    const std::shared_ptr<nav2_msgs::srv::SetWaypoints::Request> request, 
+    std::shared_ptr<nav2_msgs::srv::SetWaypoints::Response> response);
 
   /**
    * @brief Get action name for this navigator
@@ -138,7 +143,6 @@ protected:
 
   rclcpp::Time start_time_;
 
-  rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr goal_path_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr bt_navigator_start_sub_;
@@ -150,13 +154,13 @@ protected:
 
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_command_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_start_service_;
+  rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;
 
-  std::string goal_path_blackboard_id_;
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
   std::string path_local_blackboard_id_;
   std::string navigation_state_blackboard_id_;
-  std::string goal_path_index_blackboard_id_;
+  std::string waypoint_index_blackboard_id_;
   std::string goal_pose_blackboard_id_;
   std::string replanning_count_blackboard_id_;
   std::string farthest_obstacle_point_blackboard_id_;

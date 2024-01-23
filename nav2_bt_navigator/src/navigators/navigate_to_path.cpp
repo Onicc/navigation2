@@ -41,11 +41,6 @@ NavigateToPathNavigator::configure(
   }
   path_local_blackboard_id_ = node->get_parameter("path_local_blackboard_id").as_string();
 
-  if (!node->has_parameter("goal_path_blackboard_id")) {
-    node->declare_parameter("goal_path_blackboard_id", std::string("goal_path"));
-  }
-  goal_path_blackboard_id_ = node->get_parameter("goal_path_blackboard_id").as_string();
-
   if (!node->has_parameter("path_blackboard_id")) {
     node->declare_parameter("path_blackboard_id", std::string("path"));
   }
@@ -57,11 +52,11 @@ NavigateToPathNavigator::configure(
   navigation_state_blackboard_id_ = node->get_parameter("navigation_state_blackboard_id").as_string();
   blackboard->set<std::string>(navigation_state_blackboard_id_, "path");
 
-  if (!node->has_parameter("goal_path_index_blackboard_id")) {
-    node->declare_parameter("goal_path_index_blackboard_id", std::string("goal_path_index"));
+  if (!node->has_parameter("waypoint_index_blackboard_id")) {
+    node->declare_parameter("waypoint_index_blackboard_id", std::string("waypoint_index"));
   }
-  goal_path_index_blackboard_id_ = node->get_parameter("goal_path_index_blackboard_id").as_string();
-  blackboard->set<int>(goal_path_index_blackboard_id_, -1);
+  waypoint_index_blackboard_id_ = node->get_parameter("waypoint_index_blackboard_id").as_string();
+  blackboard->set<int>(waypoint_index_blackboard_id_, -1);
 
   if (!node->has_parameter("goal_pose_blackboard_id")) {
     node->declare_parameter("goal_pose_blackboard_id", std::string("goal_pose"));
@@ -90,17 +85,16 @@ NavigateToPathNavigator::configure(
   manual_goal_pose.pose.position.y = 0.1;
   blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, manual_goal_pose);
 
+  // if (!node->has_parameter("command_blackboard_id")) {
+  //   node->declare_parameter("command_blackboard_id", std::string("command"));
+  // }
+  // command_blackboard_id_ = node->get_parameter("command_blackboard_id").as_string();
 
-  if (!node->has_parameter("command_blackboard_id")) {
-    node->declare_parameter("command_blackboard_id", std::string("command"));
-  }
-  command_blackboard_id_ = node->get_parameter("command_blackboard_id").as_string();
-
-  if (!node->has_parameter("start_blackboard_id")) {
-    node->declare_parameter("start_blackboard_id", std::string("start"));
-  }
-  start_blackboard_id_ = node->get_parameter("start_blackboard_id").as_string();
-  blackboard->set<std::string>(start_blackboard_id_, "false");
+  // if (!node->has_parameter("start_blackboard_id")) {
+  //   node->declare_parameter("start_blackboard_id", std::string("start"));
+  // }
+  // start_blackboard_id_ = node->get_parameter("start_blackboard_id").as_string();
+  // blackboard->set<std::string>(start_blackboard_id_, "false");
 
   if (!node->has_parameter("waypoints_blackboard_id")) {
     node->declare_parameter("waypoints_blackboard_id", std::string("waypoints"));
@@ -127,20 +121,15 @@ NavigateToPathNavigator::configure(
 
   self_client_ = rclcpp_action::create_client<ActionT>(node, getName());
 
-  goal_path_sub_ = node->create_subscription<nav_msgs::msg::Path>(
-    "/goal/path",
-    rclcpp::SystemDefaultsQoS(),
-    std::bind(&NavigateToPathNavigator::onGoalPathReceived, this, std::placeholders::_1));
-
   goal_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
     "goal_pose",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onGoalPoseReceived, this, std::placeholders::_1));
 
-  command_sub_ = node->create_subscription<std_msgs::msg::String>(
-    "command",
-    rclcpp::SystemDefaultsQoS(),
-    std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
+  // command_sub_ = node->create_subscription<std_msgs::msg::String>(
+  //   "command",
+  //   rclcpp::SystemDefaultsQoS(),
+  //   std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
 
   waypoints_sub_ = node->create_subscription<nav2_msgs::msg::WaypointArray>(
     "/waypoints",
@@ -157,18 +146,22 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onCurbTractionPointReceived, this, std::placeholders::_1));
 
-  bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
-    "/bt_navigator/start",
-    rclcpp::SystemDefaultsQoS(),
-    std::bind(&NavigateToPathNavigator::onBTNavigatorStartReceived, this, std::placeholders::_1));
+  // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
+  //   "/bt_navigator/start",
+  //   rclcpp::SystemDefaultsQoS(),
+  //   std::bind(&NavigateToPathNavigator::onBTNavigatorStartReceived, this, std::placeholders::_1));
 
-  bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
-    "/bt/command",
-    std::bind(&NavigateToPathNavigator::onBTCommandReceived, this, std::placeholders::_1, std::placeholders::_2));
+  waypoints_service_ = node->create_service<nav2_msgs::srv::SetWaypoints>(
+    "/waypoints",
+    std::bind(&NavigateToPathNavigator::onWaypointsReceivedSrv, this, std::placeholders::_1, std::placeholders::_2));
 
-  bt_start_service_ = node->create_service<nav2_msgs::srv::SetString>(
-    "/bt/start",
-    std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
+  // bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
+  //   "/bt/command",
+  //   std::bind(&NavigateToPathNavigator::onBTCommandReceived, this, std::placeholders::_1, std::placeholders::_2));
+
+  // bt_start_service_ = node->create_service<nav2_msgs::srv::SetString>(
+  //   "/bt/start",
+  //   std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   return true;
 }
@@ -197,7 +190,7 @@ NavigateToPathNavigator::getDefaultBTFilepath(
 bool
 NavigateToPathNavigator::cleanup()
 {
-  goal_path_sub_.reset();
+  waypoints_sub_.reset();
   self_client_.reset();
   goal_sub_.reset();
   command_sub_.reset();
@@ -346,47 +339,39 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
     blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
   }
 
-  if(!goal->goal_path.poses.empty()) {
-    // 计算goal_path总里程
+  if(!goal->waypoints.waypoints.empty()) {
+    // Calculate total distance of the path
     double total_distance = 0.0;
-    for (size_t i = 0; i < goal->goal_path.poses.size() - 1; ++i) {
+    for (size_t i = 0; i < goal->waypoints.waypoints.size() - 1; ++i) {
       total_distance += nav2_util::geometry_utils::euclidean_distance(
-        goal->goal_path.poses[i], goal->goal_path.poses[i + 1]);
+        goal->waypoints.waypoints[i].pose, goal->waypoints.waypoints[i + 1].pose);
     }
 
     RCLCPP_INFO(
       logger_, "Begin navigating from current location (%.2f, %.2f) to path with %zu poses and total distance of %.2f meters", 
         current_pose.pose.position.x, current_pose.pose.position.y,
-        goal->goal_path.poses.size(), total_distance);
+        goal->waypoints.waypoints.size(), total_distance);
 
     // Reset state for new action feedback
     start_time_ = clock_->now();
     blackboard->set<int>("number_recoveries", 0);  // NOLINT
 
-    // Update the goal path on the blackboard
-    blackboard->set<nav_msgs::msg::Path>(goal_path_blackboard_id_, goal->goal_path);
+    // Update the waypoints on the blackboard
+    blackboard->set<nav2_msgs::msg::WaypointArray>(waypoints_blackboard_id_, goal->waypoints);
   }
 
-  if(goal->command.data != "") {
-    RCLCPP_INFO(
-      logger_, "Begin navigating from current location (%.2f, %.2f) to command %s", 
-        current_pose.pose.position.x, current_pose.pose.position.y,
-        goal->command.data.c_str());
+  // if(goal->command.data != "") {
+  //   RCLCPP_INFO(
+  //     logger_, "Begin navigating from current location (%.2f, %.2f) to command %s", 
+  //       current_pose.pose.position.x, current_pose.pose.position.y,
+  //       goal->command.data.c_str());
 
-    // Reset state for new action feedback
-    start_time_ = clock_->now();
+  //   // Reset state for new action feedback
+  //   start_time_ = clock_->now();
 
-    // Update the goal path on the blackboard
-    blackboard->set<std_msgs::msg::String>(command_blackboard_id_, goal->command);
-  }
-}
-
-void
-NavigateToPathNavigator::onGoalPathReceived(const nav_msgs::msg::Path::SharedPtr path)
-{
-  ActionT::Goal goal;
-  goal.goal_path = *path;
-  self_client_->async_send_goal(goal);
+  //   // Update the goal path on the blackboard
+  //   blackboard->set<std_msgs::msg::String>(command_blackboard_id_, goal->command);
+  // }
 }
 
 void
@@ -397,26 +382,39 @@ NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStampe
   self_client_->async_send_goal(goal);
 }
 
-void
-NavigateToPathNavigator::onCommandReceived(const std_msgs::msg::String::SharedPtr command)
-{
-  ActionT::Goal goal;
-  goal.command = *command;
-  self_client_->async_send_goal(goal);
-}
+// void
+// NavigateToPathNavigator::onCommandReceived(const std_msgs::msg::String::SharedPtr command)
+// {
+//   ActionT::Goal goal;
+//   goal.command = *command;
+//   self_client_->async_send_goal(goal);
+// }
 
-void
-NavigateToPathNavigator::onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg)
-{
-  auto blackboard = bt_action_server_->getBlackboard();
-  blackboard->set<std::string>(start_blackboard_id_, msg->data);
-}
+// void
+// NavigateToPathNavigator::onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg)
+// {
+//   auto blackboard = bt_action_server_->getBlackboard();
+//   blackboard->set<std::string>(start_blackboard_id_, msg->data);
+// }
 
 void
 NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg)
 {
-  auto blackboard = bt_action_server_->getBlackboard();
-  blackboard->set<nav2_msgs::msg::WaypointArray>(waypoints_blackboard_id_, *msg);
+  ActionT::Goal goal;
+  goal.waypoints = *msg;
+  self_client_->async_send_goal(goal);
+}
+
+void 
+NavigateToPathNavigator::onWaypointsReceivedSrv(
+  const std::shared_ptr<nav2_msgs::srv::SetWaypoints::Request> request, 
+  std::shared_ptr<nav2_msgs::srv::SetWaypoints::Response> response)
+{
+  RCLCPP_INFO(logger_, "Received waypoints request, The path has %ld waypoints.", request->data.waypoints.size());
+  ActionT::Goal goal;
+  goal.waypoints = request->data;
+  self_client_->async_send_goal(goal);
+  response->success = true;
 }
 
 void
@@ -433,28 +431,28 @@ NavigateToPathNavigator::onCurbTractionPointReceived(const geometry_msgs::msg::P
   blackboard->set<geometry_msgs::msg::PoseStamped>(curb_traction_point_blackboard_id_, *msg);
 }
 
-void
-NavigateToPathNavigator::onBTCommandReceived(
-    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
-    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
-{
-  RCLCPP_INFO(logger_, "Received command request: %s", request->data.c_str());
-  std_msgs::msg::String command;
-  command.data = request->data;
-  auto blackboard = bt_action_server_->getBlackboard();
-  blackboard->set<std_msgs::msg::String>(command_blackboard_id_, command);
-  response->success = true;
-}
+// void
+// NavigateToPathNavigator::onBTCommandReceived(
+//     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+//     std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+// {
+//   RCLCPP_INFO(logger_, "Received command request: %s", request->data.c_str());
+//   std_msgs::msg::String command;
+//   command.data = request->data;
+//   auto blackboard = bt_action_server_->getBlackboard();
+//   blackboard->set<std_msgs::msg::String>(command_blackboard_id_, command);
+//   response->success = true;
+// }
 
-void
-NavigateToPathNavigator::onBTStartReceived(
-    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
-    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
-{
-  RCLCPP_INFO(logger_, "Received start request: %s", request->data.c_str());
-  auto blackboard = bt_action_server_->getBlackboard();
-  blackboard->set<std::string>(start_blackboard_id_, request->data);
-  response->success = true;
-}
+// void
+// NavigateToPathNavigator::onBTStartReceived(
+//     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+//     std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+// {
+//   RCLCPP_INFO(logger_, "Received start request: %s", request->data.c_str());
+//   auto blackboard = bt_action_server_->getBlackboard();
+//   blackboard->set<std::string>(start_blackboard_id_, request->data);
+//   response->success = true;
+// }
 
 }  // namespace nav2_bt_navigator
