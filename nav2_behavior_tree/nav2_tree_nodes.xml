@@ -371,7 +371,7 @@
       <input_port name="curb_traction_point"> Curb traction points in the odom frame </input_port>
     </Condition>
 
-    <Condition ID="WaypointUpdated"/>
+    <Condition ID="WaypointsUpdated"/>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>
 
