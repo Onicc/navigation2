@@ -1,0 +1,4 @@
+# File: SetWaypoints.srv
+nav2_msgs/WaypointArray data
+---
+bool success

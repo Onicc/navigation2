@@ -1,5 +1,5 @@
 #goal definition
-nav_msgs/Path goal_path
+nav2_msgs/WaypointArray waypoints
 geometry_msgs/PoseStamped manual_goal
 std_msgs/String command
 string behavior_tree
