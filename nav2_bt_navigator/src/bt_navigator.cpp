@@ -102,6 +102,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_waypoints_updated_condition_bt_node",
     "nav2_curb_to_path_follow_condition_bt_node",
     "nav2_is_path_empty_condition_bt_node",
+    "nav2_exception_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

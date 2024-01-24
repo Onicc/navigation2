@@ -291,6 +291,10 @@
       <output_port name="goals">Set of goals after removing any passed</output_port>
       <output_port name="waypoint">Nearest waypoint</output_port>
     </Action>
+
+    <Action ID="Exception">
+      <input_port name="content">Exception content</input_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
