@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <chrono>
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -174,6 +175,8 @@ protected:
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
+
+  std::chrono::high_resolution_clock::time_point last_loop_time_;
 };
 
 }  // namespace nav2_bt_navigator

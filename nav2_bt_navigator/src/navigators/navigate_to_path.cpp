@@ -163,6 +163,8 @@ NavigateToPathNavigator::configure(
   //   "/bt/start",
   //   std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
 
+  last_loop_time_ = std::chrono::high_resolution_clock::now();
+
   return true;
 }
 
@@ -224,6 +226,11 @@ NavigateToPathNavigator::goalCompleted(
 void
 NavigateToPathNavigator::onLoop()
 {
+  // std::chrono::high_resolution_clock::time_point now_time = std::chrono::high_resolution_clock::now();
+  // std::chrono::microseconds duration = std::chrono::duration_cast<std::chrono::microseconds>(now_time - last_loop_time_);
+  // last_loop_time_ = now_time;
+  // RCLCPP_INFO(logger_, "onLoop: %ld ms", duration.count()/1000.0);  
+
   // action server feedback (pose, duration of task,
   // number of recoveries, and distance remaining to goal)
   auto feedback_msg = std::make_shared<ActionT::Feedback>();
@@ -237,9 +244,20 @@ NavigateToPathNavigator::onLoop()
   auto blackboard = bt_action_server_->getBlackboard();
 
   try {
+    // Get current waypoints
+    nav2_msgs::msg::WaypointArray current_waypoints;
+    blackboard->get<nav2_msgs::msg::WaypointArray>(waypoints_blackboard_id_, current_waypoints);
+
     // Get current path points
     nav_msgs::msg::Path current_path;
-    blackboard->get<nav_msgs::msg::Path>(path_blackboard_id_, current_path);
+    // blackboard->get<nav_msgs::msg::Path>(path_blackboard_id_, current_path);
+    current_path.header = current_waypoints.header;
+    for (size_t i = 0; i < current_waypoints.waypoints.size(); ++i) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.header = current_waypoints.waypoints[i].header;
+      pose.pose = current_waypoints.waypoints[i].pose;
+      current_path.poses.push_back(pose);
+    }
 
     // Find the closest pose to current pose on global path
     auto find_closest_pose_idx =

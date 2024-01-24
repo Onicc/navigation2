@@ -441,7 +441,7 @@ void ControllerServer::computeControl()
   publishZeroVelocity();
 
   // TODO(orduno) #861 Handle a pending preemption and set controller name
-  action_server_->succeeded_current();
+  // action_server_->succeeded_current();
 }
 
 void ControllerServer::setPlannerPath(const nav_msgs::msg::Path & path)
