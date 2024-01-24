@@ -381,6 +381,10 @@
       <input_port name="curb_traction_point"> Curb traction points in the odom frame </input_port>
       <input_port name="gps_recovery_hold_time"> Seconds to hold position when recovering from a bad GPS reading </input_port>
     </Condition>
+
+    <Condition ID="IsPathEmpty">
+      <input_port name="path"> Path to Check</input_port>
+    </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>
 

@@ -252,6 +252,9 @@ list(APPEND plugin_libs nav2_waypoints_updated_condition_bt_node)
 add_library(nav2_curb_to_path_follow_condition_bt_node SHARED plugins/condition/curb_to_path_follow_condition.cpp)
 list(APPEND plugin_libs nav2_curb_to_path_follow_condition_bt_node)
 
+add_library(nav2_is_path_empty_condition_bt_node SHARED plugins/condition/is_path_empty_condition.cpp)
+list(APPEND plugin_libs nav2_is_path_empty_condition_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
