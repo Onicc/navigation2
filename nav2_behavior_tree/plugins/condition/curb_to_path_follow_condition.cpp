@@ -48,13 +48,13 @@ BT::NodeStatus CurbToPathFollowCondition::tick()
 
   /* ------------------------------------------------------------ */
   if(waypoint.option_curb_traction_fix == false) {
-    std::cout << "[curb->path] 当前路径不支持路牙跟随" << std::endl;
+    RCLCPP_INFO(node_->get_logger(), "[CurbToPathFollowCondition] 当前路径不支持路牙跟随");
     return BT::NodeStatus::SUCCESS;
   }
 
   /* ------------------------------------------------------------ */
   if(curb_traction_point == last_curb_traction_point_) {
-    RCLCPP_INFO(node_->get_logger(), "[curb->path] 实时路牙没有更新");
+    RCLCPP_INFO(node_->get_logger(), "[CurbToPathFollowCondition] 实时路牙没有更新");
 
     // Get the current position in the odom frame.
     geometry_msgs::msg::PoseStamped current_pose;
@@ -62,14 +62,14 @@ BT::NodeStatus CurbToPathFollowCondition::tick()
     robot_base_frame_ = "base_link";
     if (!nav2_util::getCurrentPose(
         current_pose, *tf_, global_frame_, robot_base_frame_, transform_tolerance_)) {
-      RCLCPP_INFO(node_->get_logger(), "[curb->path] Current robot pose is not available.");
+      RCLCPP_INFO(node_->get_logger(), "[CurbToPathFollowCondition] Current robot pose is not available.");
       return BT::NodeStatus::SUCCESS;
     }
 
     double dx = current_pose.pose.position.x - curb_traction_point.pose.position.x;
     double dy = current_pose.pose.position.y - curb_traction_point.pose.position.y;
     if((dx * dx + dy * dy) <= (goal_reached_tol_ * goal_reached_tol_)) {
-      RCLCPP_INFO(node_->get_logger(), "[curb->path] 到达路牙引导点并且没有更新新的路牙引导点");
+      RCLCPP_INFO(node_->get_logger(), "[CurbToPathFollowCondition] 到达路牙引导点并且没有更新新的路牙引导点");
       return BT::NodeStatus::SUCCESS;
     }
   }
@@ -85,9 +85,9 @@ BT::NodeStatus CurbToPathFollowCondition::tick()
     auto now_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now_time - gps_lost_time_);
 
-    RCLCPP_INFO(node_->get_logger(), "[curb->path] 检测到GPS恢复，持续恢复时间为 %f 秒", duration.count() / 1000.0);
+    RCLCPP_INFO(node_->get_logger(), "[CurbToPathFollowCondition] 检测到GPS恢复，持续恢复时间为 %f 秒", duration.count() / 1000.0);
     if(duration.count() > gps_recovery_hold_time * 1000) {
-      RCLCPP_INFO(node_->get_logger(), "[curb->path] GPS恢复时间超过 %f 秒，切换到路径跟随", gps_recovery_hold_time);
+      RCLCPP_INFO(node_->get_logger(), "[CurbToPathFollowCondition] GPS恢复时间超过 %f 秒，切换到路径跟随", gps_recovery_hold_time);
       return BT::NodeStatus::SUCCESS;
     }
   } else {

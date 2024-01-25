@@ -14,6 +14,7 @@
 
 #include <string>
 #include <vector>
+#include "rclcpp/rclcpp.hpp"
 #include "nav2_behavior_tree/plugins/condition/path_to_curb_follow_condition.hpp"
 
 namespace nav2_behavior_tree
@@ -23,7 +24,9 @@ PathToCurbFollowCondition::PathToCurbFollowCondition(
   const std::string & condition_name,
   const BT::NodeConfiguration & conf)
 : BT::ConditionNode(condition_name, conf)
-{}
+{
+  node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
+}
 
 BT::NodeStatus PathToCurbFollowCondition::tick()
 {
@@ -46,25 +49,23 @@ BT::NodeStatus PathToCurbFollowCondition::tick()
     odometry_gps.pose.covariance[21] < max_angle_covariance &&
     odometry_gps.pose.covariance[28] < max_angle_covariance &&
     odometry_gps.pose.covariance[35] < max_angle_covariance) {
-    std::cout << "[path->curb] GPS质量不满足切换条件" << std::endl;
     return BT::NodeStatus::FAILURE;
   }
-  std::cout << "[path->curb] GPS质量满足切换条件" << std::endl;
+  RCLCPP_INFO(node_->get_logger(), "[PathToCurbFollowCondition] Poor GPS quality, meets switching conditions.");
 
   // Check if the curb following option for the waypoint points is turned on.
   if(waypoint.option_curb_traction_fix == false) {
-    std::cout << "[path->curb] 路径不满足切换条件" << std::endl;
     return BT::NodeStatus::FAILURE;
   }
-  std::cout << "[path->curb] 路径满足切换条件" << std::endl;
+  RCLCPP_INFO(node_->get_logger(), "[PathToCurbFollowCondition] Curb traction option is on at the waypoints, meets switching conditions.");
 
   // Check if the real-time curb traction points are being updated.
   if(curb_traction_point == last_curb_traction_point_) {
-    std::cout << "[path->curb] 实时路牙不满足切换条件" << std::endl;
+    RCLCPP_INFO(node_->get_logger(), "[PathToCurbFollowCondition] 实时路牙不满足切换条件");
     return BT::NodeStatus::FAILURE;
   }
   last_curb_traction_point_ = curb_traction_point;
-  std::cout << "[path->curb] 实时路牙满足切换条件" << std::endl;
+  RCLCPP_INFO(node_->get_logger(), "[PathToCurbFollowCondition] 实时路牙满足切换条件");
 
   return BT::NodeStatus::SUCCESS;
 }

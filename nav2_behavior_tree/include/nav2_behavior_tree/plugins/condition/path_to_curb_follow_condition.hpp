@@ -67,6 +67,7 @@ public:
   
 
 private:
+  rclcpp::Node::SharedPtr node_;
   geometry_msgs::msg::PoseStamped last_curb_traction_point_;
 
 };
