@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Samsung Research
+// Copyright (c) 2023 星熔科技技术（武汉）有限责任公司
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -154,6 +154,10 @@ NavigateToPathNavigator::configure(
   waypoints_service_ = node->create_service<nav2_msgs::srv::SetWaypoints>(
     "/waypoints",
     std::bind(&NavigateToPathNavigator::onWaypointsReceivedSrv, this, std::placeholders::_1, std::placeholders::_2));
+
+  load_waypoints_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/command/load_waypoints",
+    std::bind(&NavigateToPathNavigator::onLoadWaypointsSrv, this, std::placeholders::_1, std::placeholders::_2));
 
   // bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
   //   "/bt/command",
@@ -435,6 +439,21 @@ NavigateToPathNavigator::onWaypointsReceivedSrv(
   response->success = true;
 }
 
+void 
+NavigateToPathNavigator::onLoadWaypointsSrv(
+  const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
+  std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
+  auto waypoints = loadWaypoints(request->data);
+  RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
+
+  ActionT::Goal goal;
+  goal.waypoints = waypoints;
+  self_client_->async_send_goal(goal);
+  response->success = true;
+}
+
 void
 NavigateToPathNavigator::onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
@@ -472,5 +491,53 @@ NavigateToPathNavigator::onCurbTractionPointReceived(const geometry_msgs::msg::P
 //   blackboard->set<std::string>(start_blackboard_id_, request->data);
 //   response->success = true;
 // }
+
+nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::string& waypointsFile)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  auto node = blackboard->get<rclcpp::Node::SharedPtr>("node");
+
+  std::vector<nav2_msgs::msg::Waypoint> waypoints;
+
+  try {
+      YAML::Node yamlData = YAML::LoadFile(waypointsFile);
+      const YAML::Node& waypointsNode = yamlData["waypoints"];
+
+      for (const YAML::Node& transform : waypointsNode) {
+          geometry_msgs::msg::Pose pose;
+          pose.position.x = transform["position"]["x"].as<double>();
+          pose.position.y = transform["position"]["y"].as<double>();
+          pose.position.z = transform["position"]["z"].as<double>();
+          pose.orientation.x = transform["orientation"]["x"].as<double>();
+          pose.orientation.y = transform["orientation"]["y"].as<double>();
+          pose.orientation.z = transform["orientation"]["z"].as<double>();
+          pose.orientation.w = transform["orientation"]["w"].as<double>();
+
+          nav2_msgs::msg::Waypoint waypoint;
+          waypoint.header.frame_id = "map";
+          waypoint.header.stamp = node->get_clock()->now();
+          waypoint.pose = pose;
+          waypoint.curb_distance = transform["curb"]["distance"].as<double>();
+          waypoint.curb_direction = transform["curb"]["direction"].as<double>();
+          waypoint.curb_residual = transform["curb"]["residual"].as<double>();
+          waypoint.option_curb_direction_fix = transform["option"]["curb_direction_fix"].as<bool>();
+          waypoint.option_curb_horizontal_fix = transform["option"]["curb_horizontal_fix"].as<bool>();
+          waypoint.option_curb_traction_fix = transform["option"]["curb_traction"].as<bool>();
+
+          waypoints.push_back(waypoint);
+      }
+      RCLCPP_INFO(logger_, "Waypoints loaded, total: %zu", waypoints.size());
+  } catch (const std::exception& e) {
+      RCLCPP_INFO(logger_, "Failed to load waypoints: %s", e.what());
+  }
+
+  nav2_msgs::msg::WaypointArray waypointsMsg;
+  waypointsMsg.header.frame_id = "map";
+  waypointsMsg.header.stamp = node->get_clock()->now();
+  waypointsMsg.waypoints = waypoints;
+
+  return waypointsMsg;
+}
+
 
 }  // namespace nav2_bt_navigator

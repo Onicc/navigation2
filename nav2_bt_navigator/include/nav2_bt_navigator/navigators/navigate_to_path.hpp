@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Samsung Research
+// Copyright (c) 2023 星熔科技技术（武汉）有限责任公司
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <yaml-cpp/yaml.h>
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 #include "nav2_bt_navigator/navigator.hpp"
 #include "nav2_msgs/action/navigate_to_path.hpp"
 #include "nav2_util/geometry_utils.hpp"
@@ -32,6 +34,7 @@
 #include "std_msgs/msg/string.hpp"
 #include "nav2_msgs/srv/set_string.hpp"
 #include "nav2_msgs/srv/set_waypoints.hpp"
+#include "nav2_msgs/msg/waypoint.hpp"
 #include "nav2_msgs/msg/waypoint_array.hpp"
 
 namespace nav2_bt_navigator
@@ -78,18 +81,21 @@ public:
   void onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg);
   void onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
-
-  void onBTCommandReceived(
-      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
-      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
-  void onBTStartReceived(
-      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
-      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
-
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
+
+  // ros service
+  // void onBTCommandReceived(
+  //     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+  //     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  // void onBTStartReceived(
+  //     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+  //     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   void onWaypointsReceivedSrv(
     const std::shared_ptr<nav2_msgs::srv::SetWaypoints::Request> request, 
     std::shared_ptr<nav2_msgs::srv::SetWaypoints::Response> response);
+  void onLoadWaypointsSrv(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
 
   /**
    * @brief Get action name for this navigator
@@ -142,6 +148,8 @@ protected:
    */
   void initializeGoalPath(ActionT::Goal::ConstSharedPtr goal);
 
+  nav2_msgs::msg::WaypointArray loadWaypoints(const std::string& waypointsFile);
+
   rclcpp::Time start_time_;
 
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
@@ -156,6 +164,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_command_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_start_service_;
   rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr load_waypoints_service_;
 
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
