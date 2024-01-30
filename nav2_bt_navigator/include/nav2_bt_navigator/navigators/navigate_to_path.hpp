@@ -181,6 +181,8 @@ protected:
   std::string waypoint_blackboard_id_;
   std::string odometry_gps_blackboard_id_;
   std::string curb_traction_point_blackboard_id_;
+  std::string curb_traction_point_extension_blackboard_id_;
+  std::string curb_path_extension_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

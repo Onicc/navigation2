@@ -31,11 +31,13 @@
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>
+                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="4.0" pose_on_extension="{curb_traction_point_extension}"/>
                   <Fallback name="GeneratePath">
                     <RecoveryNode number_of_retries="2" name="ComputePath">
-                      <PipelineSequence name="ComputePath">
+                      <Sequence name="ComputePath">
                         <ComputePathToPose goal="{curb_traction_point}" path="{path}" planner_id="StraightLine"/>
-                      </PipelineSequence>
+                        <ComputePathToPose goal="{curb_traction_point_extension}" path="{curb_path_extension}" planner_id="StraightLine"/>
+                      </Sequence>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>

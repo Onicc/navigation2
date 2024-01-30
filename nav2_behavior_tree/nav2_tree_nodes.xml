@@ -295,6 +295,15 @@
     <Action ID="Exception">
       <input_port name="content">Exception content</input_port>
     </Action>
+
+    <Action ID="FindPoseOnExtension">
+      <input_port name="pose_on_path">Starting point of the path</input_port>
+      <input_port name="distance">The total length of the output path</input_port>
+      <input_port name="map_frame">Map frame id</input_port>
+      <input_port name="robot_frame">Robot base frame id</input_port>
+      <input_port name="transform_tolerance">Transform lookup tolerance</input_port>
+      <output_port name="pose_on_extension">Pose created by FindPoseOnExtension node</output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>

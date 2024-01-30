@@ -116,6 +116,17 @@ NavigateToPathNavigator::configure(
   }
   curb_traction_point_blackboard_id_ = node->get_parameter("curb_traction_point_blackboard_id").as_string();
 
+  if (!node->has_parameter("curb_traction_point_extension_blackboard_id")) {
+    node->declare_parameter("curb_traction_point_extension_blackboard_id", std::string("curb_traction_point_extension"));
+  }
+  curb_traction_point_extension_blackboard_id_ = node->get_parameter("curb_traction_point_extension_blackboard_id").as_string();
+
+  if (!node->has_parameter("curb_path_extension_blackboard_id")) {
+    node->declare_parameter("curb_path_extension_blackboard_id", std::string("curb_path_extension"));
+  }
+  curb_path_extension_blackboard_id_ = node->get_parameter("curb_path_extension_blackboard_id").as_string();
+
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
