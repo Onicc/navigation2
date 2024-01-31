@@ -53,17 +53,15 @@
                     <SetNavigationStateAction input_state="curb_following" output_state="{navigation_state}"/>
                   </Fallback>
                   <Fallback name="ComputePathToPathAndSwitchState">
-                    <RecoveryNode number_of_retries="1" name="ComputePathToPath">
-                      <PipelineSequence name="ComputePathThroughPoses">
-                        <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
-                        <!-- <SmoothPath unsmoothed_path="{path}" smoothed_path="{path}" max_smoothing_duration="3.0" smoother_id="simple_smoother" check_for_collisions="false" smoothing_duration="{smoothing_duration_used}" was_completed="{smoothing_completed}"/> -->
-                      </PipelineSequence>
+                    <RecoveryNode number_of_retries="2" name="ComputePathToPath">
+                      <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
                     <Fallback name="ComputePathToPathAndSwitchState">
                       <Sequence name="SwitchState">
-                        <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/>
-                        <SetNavigationStateAction input_state="obstacle" output_state="{navigation_state}"/>
+                        <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}"/>
+                        <!-- <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/> -->
+                        <SetNavigationStateAction input_state="bypass_obstacle" output_state="{navigation_state}"/>
                       </Sequence>
                       <Exception content="前方有障碍物但路径不支持绕障碍"/>
                     </Fallback>
@@ -71,7 +69,7 @@
                 </Sequence>
                 <!-- Path planning around obstacles mode. -->
                 <Sequence name="PathPlanningAroundObstaclesMode">
-                  <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="obstacle"/>
+                  <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
                   <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{waypoint_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
                   <Fallback name="ComputePoseToPathAndSwitchState">
                     <RecoveryWithOutputNode number_of_retries="70" retry_count="{replanning_count}" name="ComputePathToPath">
