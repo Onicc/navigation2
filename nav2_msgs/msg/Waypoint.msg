@@ -6,3 +6,5 @@ float64 curb_residual
 bool option_curb_direction_fix
 bool option_curb_horizontal_fix
 bool option_curb_traction_fix
+bool option_bypass_obstacle
+bool option_stop_obstacle

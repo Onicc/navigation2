@@ -534,6 +534,8 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
           waypoint.option_curb_direction_fix = transform["option"]["curb_direction_fix"].as<bool>();
           waypoint.option_curb_horizontal_fix = transform["option"]["curb_horizontal_fix"].as<bool>();
           waypoint.option_curb_traction_fix = transform["option"]["curb_traction"].as<bool>();
+          waypoint.option_bypass_obstacle = transform["option"]["bypass_obstacle"].as<bool>();
+          waypoint.option_stop_obstacle = transform["option"]["stop_obstacle"].as<bool>();
 
           waypoints.push_back(waypoint);
       }
