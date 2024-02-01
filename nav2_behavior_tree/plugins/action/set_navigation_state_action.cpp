@@ -29,6 +29,11 @@ SetNavigationStateAction::SetNavigationStateAction(
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(name, conf)
 {
+  node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
+  rclcpp::QoS qos(rclcpp::KeepLast(1));
+  qos.transient_local().reliable();
+  navigation_state_pub_ = node_->create_publisher<std_msgs::msg::String>("/bt/navigation_state", qos);
+
   getInput("input_state", input_state_);
 }
 
@@ -38,6 +43,10 @@ inline BT::NodeStatus SetNavigationStateAction::tick()
 
   getInput("input_state", input_state_);
 
+  std_msgs::msg::String msg;
+  msg.data = input_state_;
+  navigation_state_pub_->publish(msg);
+  
   output_state_ = input_state_;
   setOutput("output_state", output_state_);
 

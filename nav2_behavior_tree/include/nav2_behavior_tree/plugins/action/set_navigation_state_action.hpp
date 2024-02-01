@@ -21,6 +21,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_util/robot_utils.hpp"
@@ -49,7 +50,10 @@ private:
   void halt() override {}
   BT::NodeStatus tick() override;
 
+  rclcpp::Node::SharedPtr node_;
   std::string input_state_, output_state_;
+
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr navigation_state_pub_;
 };
 
 }  // namespace nav2_behavior_tree

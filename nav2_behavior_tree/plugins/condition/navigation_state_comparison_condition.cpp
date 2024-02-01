@@ -30,6 +30,10 @@ NavigationStateComparisonCondition::NavigationStateComparisonCondition(
   getInput("current_navigation_state", current_navigation_state_);
   getInput("navigation_state", navigation_state_);
 
+  node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
+  rclcpp::QoS qos(rclcpp::KeepLast(1));
+  qos.transient_local().reliable();
+  navigation_state_pub_ = node_->create_publisher<std_msgs::msg::String>("/bt/navigation_state", qos);
 }
 
 BT::NodeStatus NavigationStateComparisonCondition::tick()
@@ -37,7 +41,9 @@ BT::NodeStatus NavigationStateComparisonCondition::tick()
   getInput("current_navigation_state", current_navigation_state_);
   getInput("navigation_state", navigation_state_);
 
-  std::cout << "current mode: " << current_navigation_state_ << " | compare mode: " << navigation_state_ << std::endl;
+  std_msgs::msg::String msg;
+  msg.data = current_navigation_state_;
+  navigation_state_pub_->publish(msg);
 
   if (current_navigation_state_ == navigation_state_) {
     return BT::NodeStatus::SUCCESS;

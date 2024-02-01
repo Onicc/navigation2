@@ -22,6 +22,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "behaviortree_cpp_v3/condition_node.h"
+#include "std_msgs/msg/string.hpp"
 
 namespace nav2_behavior_tree
 {
@@ -67,6 +68,9 @@ public:
 private:
   std::string current_navigation_state_;
   std::string navigation_state_;
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr navigation_state_pub_;
 };
 
 }  // namespace nav2_behavior_tree
