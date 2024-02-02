@@ -36,6 +36,7 @@
 #include "nav2_msgs/srv/set_waypoints.hpp"
 #include "nav2_msgs/msg/waypoint.hpp"
 #include "nav2_msgs/msg/waypoint_array.hpp"
+#include "nav2_msgs/msg/costmap.hpp"
 
 namespace nav2_bt_navigator
 {
@@ -82,6 +83,7 @@ public:
   void onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
+  void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -158,6 +160,7 @@ protected:
   rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_gps_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
+  rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
@@ -183,6 +186,7 @@ protected:
   std::string curb_traction_point_blackboard_id_;
   std::string curb_traction_point_extension_blackboard_id_;
   std::string curb_path_extension_blackboard_id_;
+  std::string global_costmap_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

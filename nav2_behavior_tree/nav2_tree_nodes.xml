@@ -304,6 +304,15 @@
       <input_port name="transform_tolerance">Transform lookup tolerance</input_port>
       <output_port name="pose_on_extension">Pose created by FindPoseOnExtension node</output_port>
     </Action>
+
+    <Action ID="FindGoalFromCostmap">
+      <input_port name="goals"> GPS position</input_port>
+      <input_port name="costmap_msg"> Maximum value of GPS position covariance </input_port>
+      <input_port name="safe_distance"> Maximum value of GPS angle covariance </input_port>
+      <input_port name="robot_frame"> The nearest waypoint </input_port>
+      <input_port name="transform_tolerance"> The nearest waypoint </input_port>
+      <output_port name="goal"> The nearest waypoint </output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>

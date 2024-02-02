@@ -10,6 +10,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(nav2_costmap_2d REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(behaviortree_cpp_v3 REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -41,6 +42,7 @@ set(dependencies
   std_msgs
   std_srvs
   nav2_util
+  nav2_costmap_2d
 )
 
 add_library(${library_name} SHARED
@@ -263,6 +265,9 @@ list(APPEND plugin_libs nav2_find_pose_on_extension_action_bt_node)
 
 add_library(nav2_path_to_bypass_obstacle_condition_bt_node SHARED plugins/condition/path_to_bypass_obstacle_condition.cpp)
 list(APPEND plugin_libs nav2_path_to_bypass_obstacle_condition_bt_node)
+
+add_library(nav2_find_goal_from_costmap_action_bt_node SHARED plugins/action/find_goal_from_costmap.cpp)
+list(APPEND plugin_libs nav2_find_goal_from_costmap_action_bt_node)
 
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})

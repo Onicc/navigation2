@@ -126,6 +126,10 @@ NavigateToPathNavigator::configure(
   }
   curb_path_extension_blackboard_id_ = node->get_parameter("curb_path_extension_blackboard_id").as_string();
 
+  if (!node->has_parameter("global_costmap_blackboard_id")) {
+    node->declare_parameter("global_costmap_blackboard_id", std::string("global_costmap"));
+  }
+  global_costmap_blackboard_id_ = node->get_parameter("global_costmap_blackboard_id").as_string();
 
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
@@ -156,6 +160,11 @@ NavigateToPathNavigator::configure(
     "/curb/traction_point",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onCurbTractionPointReceived, this, std::placeholders::_1));
+
+  global_costmap_sub_ = node->create_subscription<nav2_msgs::msg::Costmap>(
+    "/global_costmap/costmap_raw",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onGlobalCostmapReceived, this, std::placeholders::_1));
 
   // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
   //   "/bt_navigator/start",
@@ -436,6 +445,13 @@ NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray
   ActionT::Goal goal;
   goal.waypoints = *msg;
   self_client_->async_send_goal(goal);
+}
+
+void
+NavigateToPathNavigator::onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<nav2_msgs::msg::Costmap>(global_costmap_blackboard_id_, *msg);
 }
 
 void 
