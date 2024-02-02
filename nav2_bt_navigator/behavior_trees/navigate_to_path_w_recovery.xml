@@ -10,7 +10,7 @@
       <PipelineSequence name="NavigateWithReplanning">
         <RateController hz="10.0">
           <Sequence name="Nav">
-            <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="base_link" distance_forward="6.0" distance_backward="0.0" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+            <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="base_link" distance_forward="10.0" distance_backward="0.0" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
             <Fallback name="PathSelection">
               <!-- Manual mode -->
               <Sequence name="ManualMode">
@@ -70,24 +70,26 @@
                 <!-- Path planning around obstacles mode. -->
                 <Sequence name="PathPlanningAroundObstaclesMode">
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
-                  <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{waypoint_index}" resolution="0.2" replanning_count="0" find_distance="10.0" back_find_distance="0.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
-                  <Fallback name="ComputePoseToPathAndSwitchState">
-                    <RecoveryWithOutputNode number_of_retries="70" retry_count="{replanning_count}" name="ComputePathToPath">
-                      <Sequence name="ComputePathToPose">
-                        <Inverter>
-                          <ComputePathToPose goal="{farthest_obstacle_point}" path="{path_local}" planner_id="Point"/>
-                        </Inverter>
-                      </Sequence>
-                      <Sequence name="ClearCostmapAndChangePose">
-                        <FindFarthestObstaclePoint input_path="{goal_path}" input_index="{waypoint_index}" resolution="0.2" replanning_count="{replanning_count}" find_distance="10.0" back_find_distance="4.0" safe_distance="5.0" farthest_obstacle_point="{farthest_obstacle_point}" recovery_point="{goal_pose}"/>
-                      </Sequence>
-                    </RecoveryWithOutputNode>
-                    <SetNavigationStateAction input_state="path" output_state="{navigation_state}"/>
+                  <Fallback name="FindGoal">
+                    <RecoveryNode number_of_retries="2" name="TryFindGoal">
+                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="3.0" goal="{farthest_obstacle_point}"/>
+                      <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    </RecoveryNode>
+                    <Exception content="无法生成绕障碍目标点"/>
                   </Fallback>
-                  <RecoveryNode number_of_retries="3" name="ComputePathToPath">
-                    <ComputePathToPose goal="{goal_pose}" path="{path}" planner_id="Navfn"/>
-                    <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-                  </RecoveryNode>
+                  <Fallback name="SwitchToPathFollowingMode">
+                    <Inverter>
+                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="base_link"/>
+                    </Inverter>
+                    <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                  </Fallback>
+                  <Fallback name="ComputePoseToPath">
+                    <RecoveryNode number_of_retries="2" name="ComputePoseToPath">
+                      <ComputePathToPose goal="{farthest_obstacle_point}" path="{path}" planner_id="GridBased"/>
+                      <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    </RecoveryNode>
+                    <Exception content="无法生成绕障碍路径"/>
+                  </Fallback>
                 </Sequence>
               </Fallback>
             </Fallback>
