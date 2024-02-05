@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__IS_PATH_EMPTY_CONDITION_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__IS_PATH_EMPTY_CONDITION_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__IS_EXCEPTION_UPDATED_CONDITION_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__IS_EXCEPTION_UPDATED_CONDITION_HPP_
 
 #include <string>
 #include <memory>
 #include <mutex>
 
 #include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/path.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "behaviortree_cpp_v3/condition_node.h"
+#include "nav2_msgs/msg/exception.hpp"
 
 namespace nav2_behavior_tree
 {
@@ -30,19 +31,19 @@ namespace nav2_behavior_tree
  * @brief A BT::ConditionNode that listens to a battery topic and
  * returns SUCCESS when battery is charging and FAILURE otherwise
  */
-class IsPathEmptyCondition : public BT::ConditionNode
+class IsExceptionUpdatedCondition : public BT::ConditionNode
 {
 public:
   /**
-   * @brief A constructor for nav2_behavior_tree::IsPathEmptyCondition
+   * @brief A constructor for nav2_behavior_tree::IsExceptionUpdatedCondition
    * @param condition_name Name for the XML tag for this node
    * @param conf BT node configuration
    */
-  IsPathEmptyCondition(
+  IsExceptionUpdatedCondition(
     const std::string & condition_name,
     const BT::NodeConfiguration & conf);
 
-  IsPathEmptyCondition() = delete;
+  IsExceptionUpdatedCondition() = delete;
 
   /**
    * @brief The main override required by a BT action
@@ -57,12 +58,14 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<nav_msgs::msg::Path>("path", "Path to Check"),
+      BT::InputPort<nav2_msgs::msg::Exception>("exception", "Exception message"),
+      BT::InputPort<double>("update_time", 1.0, "Maximum update time interval for the topic"),
     };
   }
 
 private:
   rclcpp::Node::SharedPtr node_;
+  rclcpp::Time last_update_time_;
 };
 
 }  // namespace nav2_behavior_tree
