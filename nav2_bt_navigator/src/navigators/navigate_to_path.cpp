@@ -131,6 +131,18 @@ NavigateToPathNavigator::configure(
   }
   global_costmap_blackboard_id_ = node->get_parameter("global_costmap_blackboard_id").as_string();
 
+  if (!node->has_parameter("exception_blackboard_id")) {
+    node->declare_parameter("exception_blackboard_id", std::string("exception"));
+  }
+  exception_blackboard_id_ = node->get_parameter("exception_blackboard_id").as_string();
+  nav2_msgs::msg::Exception default_exception;
+  blackboard->set<nav2_msgs::msg::Exception>(exception_blackboard_id_, default_exception);
+
+  if (!node->has_parameter("goals_truncate_blackboard_id")) {
+    node->declare_parameter("goals_truncate_blackboard_id", std::string("goals_truncated"));
+  }
+  goals_truncate_blackboard_id_ = node->get_parameter("goals_truncate_blackboard_id").as_string();
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 

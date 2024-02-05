@@ -293,7 +293,9 @@
     </Action>
 
     <Action ID="Exception">
-      <input_port name="content">Exception content</input_port>
+      <input_port name="message">Exception content</input_port>
+      <input_port name="error_code">Error code</input_port>
+      <output_port name="exception">Exception message</output_port>
     </Action>
 
     <Action ID="FindPoseOnExtension">
@@ -312,6 +314,12 @@
       <input_port name="robot_frame"> The nearest waypoint </input_port>
       <input_port name="transform_tolerance"> The nearest waypoint </input_port>
       <output_port name="goal"> The nearest waypoint </output_port>
+    </Action>
+
+    <Action ID="TruncatePoses">
+      <input_port name="input_poses"> Original Poses</input_port>
+      <input_port name="distance"> Poses truncated to a certain distance </input_port>
+      <output_port name="output_poses"> distance </output_port>
     </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
@@ -413,6 +421,11 @@
       <input_port name="max_position_covariance"> Maximum value of GPS position covariance </input_port>
       <input_port name="max_angle_covariance"> Maximum value of GPS angle covariance </input_port>
       <input_port name="waypoint"> The nearest waypoint </input_port>
+    </Condition>
+
+    <Condition ID="IsExceptionUpdated">
+      <input_port name="topic_name"> The input topic name that needs to be checked</input_port>
+      <input_port name="update_time"> Maximum update time interval for the topic </input_port>
     </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>

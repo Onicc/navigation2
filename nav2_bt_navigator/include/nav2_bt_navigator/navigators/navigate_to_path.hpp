@@ -37,6 +37,7 @@
 #include "nav2_msgs/msg/waypoint.hpp"
 #include "nav2_msgs/msg/waypoint_array.hpp"
 #include "nav2_msgs/msg/costmap.hpp"
+#include "nav2_msgs/msg/exception.hpp"
 
 namespace nav2_bt_navigator
 {
@@ -187,6 +188,8 @@ protected:
   std::string curb_traction_point_extension_blackboard_id_;
   std::string curb_path_extension_blackboard_id_;
   std::string global_costmap_blackboard_id_;
+  std::string exception_blackboard_id_;
+  std::string goals_truncate_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
