@@ -6,7 +6,7 @@
 -->
 <root main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+    <RecoveryNode number_of_retries="99999" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
         <RateController hz="10.0">
           <Sequence name="Nav">
@@ -31,7 +31,7 @@
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>
-                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="4.0" pose_on_extension="{curb_traction_point_extension}"/>
+                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="3.0" pose_on_extension="{curb_traction_point_extension}"/>
                   <Fallback name="GeneratePath">
                     <RecoveryNode number_of_retries="2" name="ComputePath">
                       <Sequence name="ComputePath">
@@ -54,7 +54,10 @@
                   </Fallback>
                   <Fallback name="ComputePathToPathAndSwitchState">
                     <RecoveryNode number_of_retries="2" name="ComputePathToPath">
-                      <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="StraightLine"/>
+                      <Sequence name="TurncatPoses">
+                        <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="4.0"/>
+                        <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
+                      </Sequence>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
                     <Fallback name="ComputePathToPathAndSwitchState">
@@ -63,19 +66,19 @@
                         <!-- <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/> -->
                         <SetNavigationStateAction input_state="bypass_obstacle" output_state="{navigation_state}"/>
                       </Sequence>
-                      <Exception content="前方有障碍物但路径不支持绕障碍"/>
+                      <Exception message="前方有障碍物但路径不支持绕障碍" error_code="1" exception="{exception}"/>
                     </Fallback>
                   </Fallback>
                 </Sequence>
-                <!-- Path planning around obstacles mode. -->
-                <Sequence name="PathPlanningAroundObstaclesMode">
+                <!-- Path planning bypass obstacles mode. -->
+                <Sequence name="PathPlanningBypassObstaclesMode">
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
                   <Fallback name="FindGoal">
                     <RecoveryNode number_of_retries="2" name="TryFindGoal">
                       <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="3.0" goal="{farthest_obstacle_point}"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
-                    <Exception content="无法生成绕障碍目标点"/>
+                    <Exception message="无法生成绕障碍目标点" error_code="1" exception="{exception}"/>
                   </Fallback>
                   <Fallback name="SwitchToPathFollowingMode">
                     <Inverter>
@@ -88,7 +91,7 @@
                       <ComputePathToPose goal="{farthest_obstacle_point}" path="{path}" planner_id="GridBased"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
-                    <Exception content="无法生成绕障碍路径"/>
+                    <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
                   </Fallback>
                 </Sequence>
               </Fallback>
@@ -96,7 +99,7 @@
           </Sequence>
         </RateController>
         <ReactiveSequence name="MonitorAndFollowPath">
-          <Fallback name="Pause">
+          <Fallback name="PathEmptyPause">
             <Inverter>
               <IsPathEmpty path="{path}"/>
             </Inverter>
@@ -107,8 +110,20 @@
               </SequenceStar>
             </RetryUntilSuccessful>
           </Fallback>
+          <Fallback name="ExceptionPause">
+            <Inverter>
+              <IsExceptionUpdated update_time="1.0"/>
+            </Inverter>
+            <RetryUntilSuccessful num_attempts="1">
+              <SequenceStar name="CancelingControlAndWait">
+                <CancelControl name="ControlCancel"/>
+                <Wait wait_duration="5"/>
+              </SequenceStar>
+            </RetryUntilSuccessful>
+          </Fallback>
           <Fallback name="FollowPath">
             <IsPathEmpty path="{path}"/>
+            <IsExceptionUpdated update_time="1.0"/>
             <RecoveryNode number_of_retries="1" name="FollowPath">
               <FollowPath path="{path}" controller_id="FollowPath"/>
               <Sequence name="ClearingActions">
@@ -118,17 +133,6 @@
             </RecoveryNode>
           </Fallback>
         </ReactiveSequence>
-        <!-- <Sequence name="MonitorAndFollowPath">
-          <RecoveryNode number_of_retries="1" name="FollowPath">
-            <Sequence name="FollowPath">
-              <FollowPath path="{path}" controller_id="FollowPath"/>
-            </Sequence>
-            <Sequence name="ClearingActions">
-              <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
-              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-            </Sequence>
-          </RecoveryNode>
-        </Sequence> -->
       </PipelineSequence>
       <ReactiveFallback name="RecoveryFallback">
         <WaypointsUpdated/>
