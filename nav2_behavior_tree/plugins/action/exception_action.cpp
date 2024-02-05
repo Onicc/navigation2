@@ -24,6 +24,8 @@
 
 #include "nav2_behavior_tree/plugins/action/exception_action.hpp"
 
+#define GET_INFO_STRING(file, line, func) ((std::string("File: ") + file + ", Line: " + std::to_string(line) + ", Function: " + func))
+
 namespace nav2_behavior_tree
 {
 
@@ -36,21 +38,29 @@ ExceptionAction::ExceptionAction(
   rclcpp::QoS qos(rclcpp::KeepLast(10));
   qos.transient_local().reliable();
   excption_pub_ = 
-    node_->create_publisher<std_msgs::msg::String>("/slv/excption", qos);
+    node_->create_publisher<nav2_msgs::msg::Exception>("/bt/excption", qos);
 }
 
 inline BT::NodeStatus ExceptionAction::tick()
 {
   setStatus(BT::NodeStatus::RUNNING);
 
-  std::string content;
-  getInput("content", content);
+  std::string message;
+  getInput("message", message);
 
-  RCLCPP_INFO(node_->get_logger(), "Exception: %s", content.c_str());
+  RCLCPP_INFO(node_->get_logger(), "Exception: %s", message.c_str());
 
-  std_msgs::msg::String msg;
-  msg.data = content;
-  excption_pub_->publish(msg);
+  nav2_msgs::msg::Exception exception;
+  exception.header.stamp = node_->now();
+  exception.message = message;
+  exception.error_code = 1;
+  const char* fileName = __FILE__;
+  int lineNumber = __LINE__;
+  const char* functionName = __func__;
+  exception.traceback_info = GET_INFO_STRING(fileName, lineNumber, functionName);
+
+  excption_pub_->publish(exception);
+  setOutput("exception", exception);
 
   return BT::NodeStatus::SUCCESS;
 }

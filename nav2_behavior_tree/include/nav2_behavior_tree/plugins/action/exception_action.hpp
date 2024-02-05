@@ -20,6 +20,7 @@
 #include <string>
 
 #include "std_msgs/msg/string.hpp"
+#include "nav2_msgs/msg/exception.hpp"
 #include "behaviortree_cpp_v3/action_node.h"
 
 namespace nav2_behavior_tree
@@ -44,7 +45,9 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<std::string>("content", "excption", "Exception content"),
+      BT::InputPort<std::string>("message", "excption", "Exception message"),
+      BT::InputPort<int>("error_code", 1, "Error code"),
+      BT::OutputPort<nav2_msgs::msg::Exception>("exception", "Exception message")
     };
   }
 
@@ -61,7 +64,7 @@ private:
   BT::NodeStatus tick() override;
 
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr excption_pub_;
+  rclcpp::Publisher<nav2_msgs::msg::Exception>::SharedPtr excption_pub_;
 };
 
 }  // namespace nav2_behavior_tree
