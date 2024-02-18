@@ -30,10 +30,7 @@ IsExceptionUpdatedCondition::IsExceptionUpdatedCondition(
 BT::NodeStatus IsExceptionUpdatedCondition::tick()
 {
   nav2_msgs::msg::Exception exception;
-  if (!config().blackboard->get("exception", exception)) {
-    RCLCPP_ERROR(node_->get_logger(), "Exception message not found");
-    return BT::NodeStatus::FAILURE;
-  }
+  getInput("exception", exception);
 
   double update_time;
   getInput("update_time", update_time);
