@@ -31,7 +31,7 @@
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>
-                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="3.0" pose_on_extension="{curb_traction_point_extension}"/>
+                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="4.0" pose_on_extension="{curb_traction_point_extension}"/>
                   <Fallback name="GeneratePath">
                     <RecoveryNode number_of_retries="2" name="ComputePath">
                       <Sequence name="ComputePath">
@@ -75,14 +75,14 @@
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
                   <Fallback name="FindGoal">
                     <RecoveryNode number_of_retries="2" name="TryFindGoal">
-                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="3.0" goal="{farthest_obstacle_point}"/>
+                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" goal="{farthest_obstacle_point}"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
                     <Exception message="无法生成绕障碍目标点" error_code="1" exception="{exception}"/>
                   </Fallback>
                   <Fallback name="SwitchToPathFollowingMode">
                     <Inverter>
-                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="base_link"/>
+                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="base_link" goal_reached_tol="0.8"/>
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>
@@ -110,7 +110,7 @@
               </SequenceStar>
             </RetryUntilSuccessful>
           </Fallback>
-          <Fallback name="ExceptionPause">
+          <!-- <Fallback name="ExceptionPause">
             <Inverter>
               <IsExceptionUpdated update_time="1.0"/>
             </Inverter>
@@ -120,10 +120,10 @@
                 <Wait wait_duration="5"/>
               </SequenceStar>
             </RetryUntilSuccessful>
-          </Fallback>
+          </Fallback> -->
           <Fallback name="FollowPath">
             <IsPathEmpty path="{path}"/>
-            <IsExceptionUpdated update_time="1.0"/>
+            <!-- <IsExceptionUpdated update_time="1.0"/> -->
             <RecoveryNode number_of_retries="1" name="FollowPath">
               <FollowPath path="{path}" controller_id="FollowPath"/>
               <Sequence name="ClearingActions">
@@ -137,11 +137,11 @@
       <ReactiveFallback name="RecoveryFallback">
         <WaypointsUpdated/>
         <RoundRobin name="RecoveryActions">
-          <Sequence name="ClearingActions">
+          <!-- <Sequence name="ClearingActions">
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
-          </Sequence>
-          <Wait wait_duration="5"/>
+          </Sequence> -->
+          <Wait wait_duration="0.5"/>
         </RoundRobin>
       </ReactiveFallback>
     </RecoveryNode>
