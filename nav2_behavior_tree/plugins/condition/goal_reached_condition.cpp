@@ -84,6 +84,8 @@ bool GoalReachedCondition::isGoalReached()
   double dx = goal.pose.position.x - current_pose.pose.position.x;
   double dy = goal.pose.position.y - current_pose.pose.position.y;
 
+  getInput("goal_reached_tol", goal_reached_tol_);
+
   return (dx * dx + dy * dy) <= (goal_reached_tol_ * goal_reached_tol_);
 }
 

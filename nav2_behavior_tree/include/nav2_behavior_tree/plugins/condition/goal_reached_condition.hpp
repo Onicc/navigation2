@@ -74,7 +74,8 @@ public:
     return {
       BT::InputPort<geometry_msgs::msg::PoseStamped>("goal", "Destination"),
       BT::InputPort<std::string>("global_frame", std::string("map"), "Global frame"),
-      BT::InputPort<std::string>("robot_base_frame", std::string("base_link"), "Robot base frame")
+      BT::InputPort<std::string>("robot_base_frame", std::string("base_link"), "Robot base frame"),
+      BT::InputPort<double>("goal_reached_tol", 1.0, "goal reached tol")
     };
   }
 
