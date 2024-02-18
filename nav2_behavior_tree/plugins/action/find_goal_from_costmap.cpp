@@ -108,6 +108,8 @@ inline BT::NodeStatus FindGoalFromCostmap::tick()
         frame_id.c_str());
       return BT::NodeStatus::FAILURE;
     }
+    transformed_pose.header.frame_id = frame_id;
+    transformed_pose.header.stamp = node_->now();
     transformed_goals.push_back(transformed_pose);
   }
 
