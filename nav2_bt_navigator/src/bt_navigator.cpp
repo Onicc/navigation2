@@ -108,6 +108,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_find_goal_from_costmap_action_bt_node",
     "nav2_is_exception_updated_condition_bt_node",
     "nav2_truncate_poses_action_bt_node",
+    "nav2_vehicle_control_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

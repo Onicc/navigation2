@@ -93,6 +93,9 @@ public:
   // void onBTStartReceived(
   //     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
   //     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  void onNavigationStateReceived(
+      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   void onWaypointsReceivedSrv(
     const std::shared_ptr<nav2_msgs::srv::SetWaypoints::Request> request, 
     std::shared_ptr<nav2_msgs::srv::SetWaypoints::Response> response);
@@ -165,6 +168,7 @@ protected:
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_navigation_state_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_command_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_start_service_;
   rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;

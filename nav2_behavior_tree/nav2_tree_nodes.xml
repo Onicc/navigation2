@@ -278,6 +278,10 @@
       <input_port name="text">Voice text</input_port>
     </Action>
 
+    <Action ID="VehicleControl">
+      <input_port name="control">0 or 1</input_port>
+    </Action>
+
     <Action ID="FindNearestWaypoint">
       <input_port name="waypoints">waypoints</input_port>
       <input_port name="angular_distance_weight">Weight of angular distance relative to positional distance when finding which path pose is closest to robot. Not applicable on paths without orientations assigned</input_port>

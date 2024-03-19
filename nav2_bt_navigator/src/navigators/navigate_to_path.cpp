@@ -50,7 +50,7 @@ NavigateToPathNavigator::configure(
     node->declare_parameter("navigation_state_blackboard_id", std::string("navigation_state"));
   }
   navigation_state_blackboard_id_ = node->get_parameter("navigation_state_blackboard_id").as_string();
-  blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+  blackboard->set<std::string>(navigation_state_blackboard_id_, "stop");
 
   if (!node->has_parameter("waypoint_index_blackboard_id")) {
     node->declare_parameter("waypoint_index_blackboard_id", std::string("waypoint_index"));
@@ -190,6 +190,10 @@ NavigateToPathNavigator::configure(
   load_waypoints_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/command/load_waypoints",
     std::bind(&NavigateToPathNavigator::onLoadWaypointsSrv, this, std::placeholders::_1, std::placeholders::_2));
+
+  bt_navigation_state_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/bt/navigation_state",
+    std::bind(&NavigateToPathNavigator::onNavigationStateReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   // bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
   //   "/bt/command",
@@ -491,6 +495,9 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
   goal.waypoints = waypoints;
   self_client_->async_send_goal(goal);
   response->success = true;
+
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
 }
 
 void
@@ -505,6 +512,17 @@ NavigateToPathNavigator::onCurbTractionPointReceived(const geometry_msgs::msg::P
 {
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<geometry_msgs::msg::PoseStamped>(curb_traction_point_blackboard_id_, *msg);
+}
+
+void
+NavigateToPathNavigator::onNavigationStateReceived(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  RCLCPP_INFO(logger_, "Received navigation state request: %s", request->data.c_str());
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(navigation_state_blackboard_id_, request->data);
+  response->success = true;
 }
 
 // void
@@ -564,6 +582,8 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
           waypoint.option_curb_traction_fix = transform["option"]["curb_traction"].as<bool>();
           waypoint.option_bypass_obstacle = transform["option"]["bypass_obstacle"].as<bool>();
           waypoint.option_stop_obstacle = transform["option"]["stop_obstacle"].as<bool>();
+          waypoint.option_speed = transform["option"]["speed"].as<float>();
+          waypoint.option_cleaning_mode = transform["option"]["cleaning_mode"].as<int>();
 
           waypoints.push_back(waypoint);
       }

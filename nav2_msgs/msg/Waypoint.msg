@@ -8,3 +8,5 @@ bool option_curb_horizontal_fix
 bool option_curb_traction_fix
 bool option_bypass_obstacle
 bool option_stop_obstacle
+float64 option_speed
+uint32 option_cleaning_mode

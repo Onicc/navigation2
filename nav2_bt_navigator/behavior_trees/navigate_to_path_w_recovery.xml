@@ -11,6 +11,22 @@
         <RateController hz="10.0">
           <Sequence name="Nav">
             <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="base_link" distance_forward="10.0" distance_backward="0.0" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+            <Inverter>
+              <Fallback name="CommandSelection">
+                <Sequence name="Stop">
+                  <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="stop"/>
+                  <VehicleControl control="0"/>
+                  <CancelControl name="ControlCancel"/>
+                  <Wait wait_duration="0.5"/>
+                </Sequence>
+                <Sequence name="RemoteControl">
+                  <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="remote_control"/>
+                  <VehicleControl control="0"/>
+                  <CancelControl name="ControlCancel"/>
+                  <Wait wait_duration="0.5"/>
+                </Sequence>
+              </Fallback>
+            </Inverter>
             <Fallback name="PathSelection">
               <!-- Manual mode -->
               <Sequence name="ManualMode">
@@ -86,13 +102,15 @@
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>
-                  <Fallback name="ComputePoseToPath">
-                    <RecoveryNode number_of_retries="2" name="ComputePoseToPath">
-                      <ComputePathToPose goal="{farthest_obstacle_point}" path="{path}" planner_id="GridBased"/>
-                      <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-                    </RecoveryNode>
-                    <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
-                  </Fallback>
+                  <RateController hz="2.0">
+                    <Fallback name="ComputePoseToPath">
+                      <RecoveryNode number_of_retries="2" name="ComputePoseToPath">
+                        <ComputePathToPose goal="{farthest_obstacle_point}" path="{path}" planner_id="GridBased"/>
+                        <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                      </RecoveryNode>
+                      <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
+                    </Fallback>
+                  </RateController>
                 </Sequence>
               </Fallback>
             </Fallback>
