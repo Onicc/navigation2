@@ -11,6 +11,7 @@
         <RateController hz="10.0">
           <Sequence name="Nav">
             <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="base_link" distance_forward="10.0" distance_backward="0.0" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+            <SetMaximumCruisingSpeedUsingWaypoint waypoint="{waypoint}"/>
             <Inverter>
               <Fallback name="CommandSelection">
                 <Sequence name="Stop">

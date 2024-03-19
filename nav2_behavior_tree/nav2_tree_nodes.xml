@@ -325,6 +325,10 @@
       <input_port name="distance"> Poses truncated to a certain distance </input_port>
       <output_port name="output_poses"> distance </output_port>
     </Action>
+
+    <Action ID="SetMaximumCruisingSpeedUsingWaypoint">
+      <input_port name="waypoint"> Nearest waypoint to robot</input_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>

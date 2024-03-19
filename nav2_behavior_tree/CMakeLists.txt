@@ -278,6 +278,9 @@ list(APPEND plugin_libs nav2_is_exception_updated_condition_bt_node)
 add_library(nav2_truncate_poses_action_bt_node SHARED plugins/action/truncate_poses_action.cpp)
 list(APPEND plugin_libs nav2_truncate_poses_action_bt_node)
 
+add_library(nav2_set_maximum_cruising_speed_using_waypoint_action_bt_node SHARED plugins/action/set_maximum_cruising_speed_using_waypoint.cpp)
+list(APPEND plugin_libs nav2_set_maximum_cruising_speed_using_waypoint_action_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
