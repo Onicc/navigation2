@@ -110,6 +110,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_truncate_poses_action_bt_node",
     "nav2_vehicle_control_action_bt_node",
     "nav2_set_maximum_cruising_speed_using_waypoint_action_bt_node",
+    "nav2_set_cleaning_mode_using_waypoint_action_bt_node",
   };
 
   declare_parameter_if_not_declared(
