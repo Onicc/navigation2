@@ -82,13 +82,16 @@
                     <RecoveryNode number_of_retries="2" name="ComputePathToPath">
                       <Sequence name="TurncatPoses">
                         <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
-                        <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
-
-                        <!-- <Fallback name="SwitchObs">
+                        <Fallback name="SwitchObs">
+                          <Inverter>
+                            <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
+                          </Inverter>
+                          <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="Navfn"/>
+                        </Fallback>
+                        <Fallback name="SwitchObs">
                           <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
                           <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
-                        </Fallback> -->
-                        <!-- <TrafficLight waypoint="{waypoint}" detect_traffic_light="{traffic_light}" goal_traffic_light="green"/> -->
+                        </Fallback>
                       </Sequence>
                       <Sequence name="VoiceAndClear">
                         <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
