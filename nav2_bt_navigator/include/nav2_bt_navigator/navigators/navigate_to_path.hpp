@@ -88,7 +88,7 @@ public:
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
-  // void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
+  void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -172,7 +172,7 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
   rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
-  // rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 

@@ -92,6 +92,7 @@
                           <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
                           <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                         </Fallback>
+                        <TrafficLight waypoint="{waypoint}" detect_traffic_light="{traffic_light}" goal_traffic_light="green"/>
                       </Sequence>
                       <Sequence name="VoiceAndClear">
                         <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>

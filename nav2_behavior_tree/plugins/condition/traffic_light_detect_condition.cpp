@@ -20,7 +20,7 @@
 namespace nav2_behavior_tree
 {
 
-TrafficLightCondition::TrafficLightCondition(
+TrafficLight::TrafficLight(
   const std::string & condition_name,
   const BT::NodeConfiguration & conf)
 : BT::ConditionNode(condition_name, conf)
@@ -28,7 +28,7 @@ TrafficLightCondition::TrafficLightCondition(
   node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
 }
 
-BT::NodeStatus TrafficLightCondition::tick()
+BT::NodeStatus TrafficLight::tick()
 {
   nav2_msgs::msg::Waypoint waypoint;
   std::string detect_traffic_light;
@@ -38,7 +38,7 @@ BT::NodeStatus TrafficLightCondition::tick()
   getInput("detect_traffic_light", detect_traffic_light);
   getInput("goal_traffic_light", goal_traffic_light);
 
-  // RCLCPP_INFO(node_->get_logger(), "[TrafficLightCondition] Current traffic light is %s", detect_traffic_light.c_str());
+  RCLCPP_INFO(node_->get_logger(), "[TrafficLight] Current traffic light is %s", detect_traffic_light.c_str());
 
   if(waypoint.option_traffic_light == true) {
     if(goal_traffic_light == goal_traffic_light) {
@@ -56,5 +56,5 @@ BT::NodeStatus TrafficLightCondition::tick()
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<nav2_behavior_tree::TrafficLightCondition>("TrafficLight");
+  factory.registerNodeType<nav2_behavior_tree::TrafficLight>("TrafficLight");
 }

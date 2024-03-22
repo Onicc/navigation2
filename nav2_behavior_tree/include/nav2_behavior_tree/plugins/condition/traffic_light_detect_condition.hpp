@@ -30,19 +30,19 @@ namespace nav2_behavior_tree
  * @brief A BT::ConditionNode that returns SUCCESS when goal is
  * updated on the blackboard and FAILURE otherwise
  */
-class TrafficLightCondition : public BT::ConditionNode
+class TrafficLight : public BT::ConditionNode
 {
 public:
   /**
-   * @brief A constructor for nav2_behavior_tree::TrafficLightCondition
+   * @brief A constructor for nav2_behavior_tree::TrafficLight
    * @param condition_name Name for the XML tag for this node
    * @param conf BT node configuration
    */
-  TrafficLightCondition(
+  TrafficLight(
     const std::string & condition_name,
     const BT::NodeConfiguration & conf);
 
-  TrafficLightCondition() = delete;
+  TrafficLight() = delete;
 
   /**
    * @brief The main override required by a BT action
@@ -58,8 +58,8 @@ public:
   {
     return {
       BT::InputPort<nav2_msgs::msg::Waypoint>("waypoint", "The nearest waypoint"),
-      BT::InputPort<std::string>("detect_traffic_light", 0, "Traffic light recognition results"),
-      BT::InputPort<std::string>("goal_traffic_light", 0, "Traffic light recognition results"),
+      BT::InputPort<std::string>("detect_traffic_light", std::string("none"), "Traffic light recognition results"),
+      BT::InputPort<std::string>("goal_traffic_light", std::string("none"), "Traffic light recognition results"),
     };
   }
   
