@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__OBSTACLE_OPTION_CONDITION_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__OBSTACLE_OPTION_CONDITION_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__TRAFFIC_LIGHT_CONDITION_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__CONDITION__TRAFFIC_LIGHT_CONDITION_HPP_
 
 #include <string>
 #include <vector>
@@ -30,19 +30,19 @@ namespace nav2_behavior_tree
  * @brief A BT::ConditionNode that returns SUCCESS when goal is
  * updated on the blackboard and FAILURE otherwise
  */
-class ObstacleOption : public BT::ConditionNode
+class TrafficLightCondition : public BT::ConditionNode
 {
 public:
   /**
-   * @brief A constructor for nav2_behavior_tree::ObstacleOption
+   * @brief A constructor for nav2_behavior_tree::TrafficLightCondition
    * @param condition_name Name for the XML tag for this node
    * @param conf BT node configuration
    */
-  ObstacleOption(
+  TrafficLightCondition(
     const std::string & condition_name,
     const BT::NodeConfiguration & conf);
 
-  ObstacleOption() = delete;
+  TrafficLightCondition() = delete;
 
   /**
    * @brief The main override required by a BT action
@@ -58,7 +58,8 @@ public:
   {
     return {
       BT::InputPort<nav2_msgs::msg::Waypoint>("waypoint", "The nearest waypoint"),
-      BT::InputPort<std::string>("obstacle_mode", std::string("auto"), "Mode selection when encountering obstacles"),
+      BT::InputPort<std::string>("detect_traffic_light", 0, "Traffic light recognition results"),
+      BT::InputPort<std::string>("goal_traffic_light", 0, "Traffic light recognition results"),
     };
   }
   

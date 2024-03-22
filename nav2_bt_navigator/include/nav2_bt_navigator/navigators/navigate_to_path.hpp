@@ -33,6 +33,7 @@
 #include "nav2_util/odometry_utils.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include "nav2_msgs/srv/set_string.hpp"
 #include "nav2_msgs/srv/set_waypoints.hpp"
 #include "nav2_msgs/msg/waypoint.hpp"
@@ -87,6 +88,7 @@ public:
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
+  // void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -170,6 +172,7 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
   rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
+  // rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
@@ -202,6 +205,7 @@ protected:
   std::string goals_truncate_blackboard_id_;
   std::string obstacle_mode_blackboard_id_;
   std::string detect_obstacle_distance_blackboard_id_;
+  std::string traffic_light_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

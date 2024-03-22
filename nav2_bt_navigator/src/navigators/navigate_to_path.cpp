@@ -155,6 +155,12 @@ NavigateToPathNavigator::configure(
   detect_obstacle_distance_blackboard_id_ = node->get_parameter("detect_obstacle_distance_blackboard_id").as_string();
   blackboard->set<double>(detect_obstacle_distance_blackboard_id_, 4.0);
 
+  // if (!node->has_parameter("traffic_light_blackboard_id")) {
+  //   node->declare_parameter("traffic_light_blackboard_id", std::string("traffic_light"));
+  // }
+  // traffic_light_blackboard_id_ = node->get_parameter("traffic_light_blackboard_id").as_string();
+  // blackboard->set<std::string>(traffic_light_blackboard_id_, "none");
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -194,6 +200,11 @@ NavigateToPathNavigator::configure(
     "/detect_obstacle_distance",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onDetectObstacleDistanceReceived, this, std::placeholders::_1));
+
+  // traffic_light_sub_ = node->create_subscription<std_msgs::msg::Int32>(
+  //   "/traffic_light_recognition/result",
+  //   rclcpp::SystemDefaultsQoS(),
+  //   std::bind(&NavigateToPathNavigator::onTrafficLightReceived, this, std::placeholders::_1));
 
   // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
   //   "/bt_navigator/start",
@@ -499,6 +510,16 @@ NavigateToPathNavigator::onDetectObstacleDistanceReceived(const std_msgs::msg::F
   blackboard->set<double>(detect_obstacle_distance_blackboard_id_, detect_obstacle_distance);
 }
 
+// void
+// NavigateToPathNavigator::onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg)
+// {
+//   int traffic_light = msg->data;
+//   auto blackboard = bt_action_server_->getBlackboard();
+//   if(traffic_light == 0) blackboard->set<std::string>(traffic_light_blackboard_id_, "none");
+//   if(traffic_light == 1) blackboard->set<std::string>(traffic_light_blackboard_id_, "red");
+//   if(traffic_light == 2) blackboard->set<std::string>(traffic_light_blackboard_id_, "yellow");
+//   if(traffic_light == 3) blackboard->set<std::string>(traffic_light_blackboard_id_, "green");
+// }
 
 void 
 NavigateToPathNavigator::onWaypointsReceivedSrv(
@@ -627,6 +648,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
           waypoint.option_stop_obstacle = transform["option"]["stop_obstacle"].as<bool>();
           waypoint.option_speed = transform["option"]["speed"].as<float>();
           waypoint.option_cleaning_mode = transform["option"]["cleaning_mode"].as<int>();
+          waypoint.option_traffic_light = transform["option"]["traffic_light"].as<bool>();
 
           waypoints.push_back(waypoint);
       }

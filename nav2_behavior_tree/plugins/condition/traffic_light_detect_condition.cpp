@@ -15,12 +15,12 @@
 #include <string>
 #include <vector>
 #include "rclcpp/rclcpp.hpp"
-#include "nav2_behavior_tree/plugins/condition/obstacle_option_condition.hpp"
+#include "nav2_behavior_tree/plugins/condition/traffic_light_detect_condition.hpp"
 
 namespace nav2_behavior_tree
 {
 
-ObstacleOption::ObstacleOption(
+TrafficLightCondition::TrafficLightCondition(
   const std::string & condition_name,
   const BT::NodeConfiguration & conf)
 : BT::ConditionNode(condition_name, conf)
@@ -28,39 +28,27 @@ ObstacleOption::ObstacleOption(
   node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
 }
 
-BT::NodeStatus ObstacleOption::tick()
+BT::NodeStatus TrafficLightCondition::tick()
 {
   nav2_msgs::msg::Waypoint waypoint;
-  std::string obstacle_mode;
+  std::string detect_traffic_light;
+  std::string goal_traffic_light;
 
   getInput("waypoint", waypoint);
-  getInput("obstacle_mode", obstacle_mode);
+  getInput("detect_traffic_light", detect_traffic_light);
+  getInput("goal_traffic_light", goal_traffic_light);
 
-  if(obstacle_mode == "auto") {
+  // RCLCPP_INFO(node_->get_logger(), "[TrafficLightCondition] Current traffic light is %s", detect_traffic_light.c_str());
+
+  if(waypoint.option_traffic_light == true) {
+    if(goal_traffic_light == goal_traffic_light) {
+      return BT::NodeStatus::SUCCESS;
+    } else {
+      return BT::NodeStatus::FAILURE;
+    }
+  } else {
     return BT::NodeStatus::SUCCESS;
-  } else if(obstacle_mode == "bypass") {
-    if(waypoint.option_bypass_obstacle == true) {
-      return BT::NodeStatus::SUCCESS;
-    } else {
-      return BT::NodeStatus::FAILURE;
-    }
-  } else if(obstacle_mode == "stop") {
-    if(waypoint.option_stop_obstacle == true) {
-      return BT::NodeStatus::SUCCESS;
-    } else {
-      return BT::NodeStatus::FAILURE;
-    }
-  } else if(obstacle_mode == "off") {
-    if(waypoint.option_stop_obstacle == false && waypoint.option_bypass_obstacle == false) {
-      return BT::NodeStatus::SUCCESS;
-    } else {
-      return BT::NodeStatus::FAILURE;
-    }
   }
-
-  // RCLCPP_INFO(node_->get_logger(), "[ObstacleOption] This waypoint allows obstacle avoidance.");
-
-  return BT::NodeStatus::FAILURE;
 }
 
 }  // namespace nav2_behavior_tree
@@ -68,5 +56,5 @@ BT::NodeStatus ObstacleOption::tick()
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<nav2_behavior_tree::ObstacleOption>("ObstacleOption");
+  factory.registerNodeType<nav2_behavior_tree::TrafficLightCondition>("TrafficLight");
 }

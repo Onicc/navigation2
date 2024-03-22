@@ -61,7 +61,7 @@ public:
       BT::InputPort<double>("max_position_covariance", 1.0, "Maximum value of GPS position covariance"),
       BT::InputPort<double>("max_angle_covariance", 1.0, "Maximum value of GPS angle covariance"),
       BT::InputPort<nav2_msgs::msg::Waypoint>("waypoint", "The nearest waypoint"),
-      BT::InputPort<std::string>("obstacle_mode", std::string("audo"), "Mode selection when encountering obstacles"),
+      BT::InputPort<std::string>("obstacle_mode", std::string("auto"), "Mode selection when encountering obstacles"),
     };
   }
   
