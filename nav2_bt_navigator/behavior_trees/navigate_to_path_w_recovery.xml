@@ -70,6 +70,7 @@
                 <!-- Path following mode -->
                 <Sequence name="PathFollowingMode">
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
+                  <SetTurnSignal turn_signal="off"/>
                   <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                   <Fallback name="SwitchToCurbFollowingMode">
                     <Inverter>
@@ -80,8 +81,11 @@
                   <Fallback name="ComputePathToPathAndSwitchState">
                     <RecoveryNode number_of_retries="2" name="ComputePathToPath">
                       <Sequence name="TurncatPoses">
-                        <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="4.0"/>
-                        <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
+                        <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
+                        <Fallback name="SwitchObs">
+                          <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
+                          <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
+                        </Fallback>
                       </Sequence>
                       <Sequence name="VoiceAndClear">
                         <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
@@ -90,24 +94,31 @@
                     </RecoveryNode>
                     <Fallback name="ComputePathToPathAndSwitchState">
                       <Sequence name="SwitchState">
-                        <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}"/>
+                        <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}" obstacle_mode="{obstacle_mode}"/>
                         <!-- <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/> -->
                         <SetNavigationStateAction input_state="bypass_obstacle" output_state="{navigation_state}"/>
                       </Sequence>
-                      <Exception message="前方有障碍物但路径不支持绕障碍" error_code="1" exception="{exception}"/>
+                      <Sequence name="Exception">
+                        <SetPathEmpty path="{path}"/>
+                        <Exception message="前方有障碍物但路径不支持绕障碍" error_code="1" exception="{exception}"/>
+                      </Sequence>
                     </Fallback>
                   </Fallback>
                 </Sequence>
                 <!-- Path planning bypass obstacles mode. -->
                 <Sequence name="PathPlanningBypassObstaclesMode">
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
+                  <SetTurnSignal turn_signal="left"/>
                   <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                   <Fallback name="FindGoal">
                     <RecoveryNode number_of_retries="2" name="TryFindGoal">
                       <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" goal="{farthest_obstacle_point}"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
-                    <Exception message="无法生成绕障碍目标点" error_code="1" exception="{exception}"/>
+                    <Sequence name="Exception">
+                      <SetPathEmpty path="{path}"/>
+                      <Exception message="无法生成绕障碍目标点" error_code="1" exception="{exception}"/>
+                    </Sequence>
                   </Fallback>
                   <Fallback name="SwitchToPathFollowingMode">
                     <Inverter>
@@ -124,7 +135,10 @@
                           <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                         </Sequence>
                       </RecoveryNode>
-                      <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
+                      <Sequence name="Exception">
+                        <SetPathEmpty path="{path}"/>
+                        <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
+                      </Sequence>
                     </Fallback>
                   </RateController>
                 </Sequence>
@@ -132,17 +146,18 @@
             </Fallback>
           </Sequence>
         </RateController>
-        <ReactiveSequence name="MonitorAndFollowPath">
+        <Sequence name="MonitorAndFollowPath">
           <Fallback name="PathEmptyPause">
             <Inverter>
               <IsPathEmpty path="{path}"/>
             </Inverter>
-            <RetryUntilSuccessful num_attempts="1">
-              <SequenceStar name="CancelingControlAndWait">
-                <CancelControl name="ControlCancel"/>
-                <Wait wait_duration="5"/>
-              </SequenceStar>
-            </RetryUntilSuccessful>
+            <Sequence name="CancelingControlAndWait">
+              <CancelControl name="ControlCancel"/>
+              <Wait wait_duration="1"/>
+              <Inverter>
+                <IsPathEmpty path="{path}"/>
+              </Inverter>
+            </Sequence>
           </Fallback>
           <!-- <Fallback name="ExceptionPause">
             <Inverter>
@@ -166,7 +181,7 @@
               </Sequence>
             </RecoveryNode>
           </Fallback>
-        </ReactiveSequence>
+        </Sequence>
       </PipelineSequence>
       <ReactiveFallback name="RecoveryFallback">
         <WaypointsUpdated/>

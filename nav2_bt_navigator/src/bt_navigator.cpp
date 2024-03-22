@@ -111,6 +111,10 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_vehicle_control_action_bt_node",
     "nav2_set_maximum_cruising_speed_using_waypoint_action_bt_node",
     "nav2_set_cleaning_mode_using_waypoint_action_bt_node",
+    "nav2_set_path_empty_action_bt_node",
+    "nav2_set_turn_signal_action_bt_node",
+    "nav2_set_path_action_bt_node",
+    "nav2_obstacle_option_condition_bt_node",
   };
 
   declare_parameter_if_not_declared(

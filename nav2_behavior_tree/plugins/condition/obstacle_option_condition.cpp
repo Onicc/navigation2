@@ -15,12 +15,12 @@
 #include <string>
 #include <vector>
 #include "rclcpp/rclcpp.hpp"
-#include "nav2_behavior_tree/plugins/condition/path_to_bypass_obstacle_condition.hpp"
+#include "nav2_behavior_tree/plugins/condition/obstacle_option_condition.hpp"
 
 namespace nav2_behavior_tree
 {
 
-PathToBypassObstacleCondition::PathToBypassObstacleCondition(
+ObstacleOptionCondition::ObstacleOptionCondition(
   const std::string & condition_name,
   const BT::NodeConfiguration & conf)
 : BT::ConditionNode(condition_name, conf)
@@ -28,33 +28,37 @@ PathToBypassObstacleCondition::PathToBypassObstacleCondition(
   node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
 }
 
-BT::NodeStatus PathToBypassObstacleCondition::tick()
+BT::NodeStatus ObstacleOptionCondition::tick()
 {
-  nav_msgs::msg::Odometry odometry_gps;
-  double max_position_covariance;
-  double max_angle_covariance;
   nav2_msgs::msg::Waypoint waypoint;
   std::string obstacle_mode;
 
-  getInput("odometry_gps", odometry_gps);
-  getInput("max_position_covariance", max_position_covariance);
-  getInput("max_angle_covariance", max_angle_covariance);
   getInput("waypoint", waypoint);
   getInput("obstacle_mode", obstacle_mode);
 
   if(obstacle_mode == "auto") {
-    if(waypoint.option_stop_obstacle == true) {
-      return BT::NodeStatus::FAILURE;
-    } else if(waypoint.option_bypass_obstacle == true) {
-      return BT::NodeStatus::SUCCESS;
-    } 
-  } else if(obstacle_mode == "bypass") {
     return BT::NodeStatus::SUCCESS;
+  } else if(obstacle_mode == "bypass") {
+    if(waypoint.option_bypass_obstacle == true) {
+      return BT::NodeStatus::SUCCESS;
+    } else {
+      return BT::NodeStatus::FAILURE;
+    }
   } else if(obstacle_mode == "stop") {
-    return BT::NodeStatus::FAILURE;
+    if(waypoint.option_stop_obstacle == true) {
+      return BT::NodeStatus::SUCCESS;
+    } else {
+      return BT::NodeStatus::FAILURE;
+    }
+  } else if(obstacle_mode == "off") {
+    if(waypoint.option_stop_obstacle == false && waypoint.option_bypass_obstacle == false) {
+      return BT::NodeStatus::SUCCESS;
+    } else {
+      return BT::NodeStatus::FAILURE;
+    }
   }
 
-  // RCLCPP_INFO(node_->get_logger(), "[PathToBypassObstacleCondition] This waypoint allows obstacle avoidance.");
+  // RCLCPP_INFO(node_->get_logger(), "[ObstacleOptionCondition] This waypoint allows obstacle avoidance.");
 
   return BT::NodeStatus::FAILURE;
 }
@@ -64,5 +68,5 @@ BT::NodeStatus PathToBypassObstacleCondition::tick()
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<nav2_behavior_tree::PathToBypassObstacleCondition>("PathToBypassObstacle");
+  factory.registerNodeType<nav2_behavior_tree::ObstacleOptionCondition>("ObstacleOption");
 }

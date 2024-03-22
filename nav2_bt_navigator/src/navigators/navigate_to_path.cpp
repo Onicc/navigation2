@@ -143,6 +143,18 @@ NavigateToPathNavigator::configure(
   }
   goals_truncate_blackboard_id_ = node->get_parameter("goals_truncate_blackboard_id").as_string();
 
+  if (!node->has_parameter("obstacle_mode_blackboard_id")) {
+    node->declare_parameter("obstacle_mode_blackboard_id", std::string("obstacle_mode"));
+  }
+  obstacle_mode_blackboard_id_ = node->get_parameter("obstacle_mode_blackboard_id").as_string();
+  blackboard->set<std::string>(obstacle_mode_blackboard_id_, "auto");
+
+  if (!node->has_parameter("detect_obstacle_distance_blackboard_id")) {
+    node->declare_parameter("detect_obstacle_distance_blackboard_id", std::string("detect_obstacle_distance"));
+  }
+  detect_obstacle_distance_blackboard_id_ = node->get_parameter("detect_obstacle_distance_blackboard_id").as_string();
+  blackboard->set<double>(detect_obstacle_distance_blackboard_id_, 4.0);
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -178,6 +190,11 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onGlobalCostmapReceived, this, std::placeholders::_1));
 
+  detect_obstacle_distance_sub_ = node->create_subscription<std_msgs::msg::Float32>(
+    "/detect_obstacle_distance",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onDetectObstacleDistanceReceived, this, std::placeholders::_1));
+
   // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
   //   "/bt_navigator/start",
   //   rclcpp::SystemDefaultsQoS(),
@@ -194,6 +211,10 @@ NavigateToPathNavigator::configure(
   bt_navigation_state_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/bt/navigation_state",
     std::bind(&NavigateToPathNavigator::onNavigationStateReceived, this, std::placeholders::_1, std::placeholders::_2));
+
+  bt_obstacle_mode_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/bt/obstacle_mode",
+    std::bind(&NavigateToPathNavigator::onObstacleModeReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   // bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
   //   "/bt/command",
@@ -470,6 +491,15 @@ NavigateToPathNavigator::onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::
   blackboard->set<nav2_msgs::msg::Costmap>(global_costmap_blackboard_id_, *msg);
 }
 
+void
+NavigateToPathNavigator::onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg)
+{
+  double detect_obstacle_distance = msg->data;
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<double>(detect_obstacle_distance_blackboard_id_, detect_obstacle_distance);
+}
+
+
 void 
 NavigateToPathNavigator::onWaypointsReceivedSrv(
   const std::shared_ptr<nav2_msgs::srv::SetWaypoints::Request> request, 
@@ -498,6 +528,7 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
 
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+  blackboard->set<int>(waypoint_index_blackboard_id_, -1);
 }
 
 void
@@ -524,6 +555,18 @@ NavigateToPathNavigator::onNavigationStateReceived(
   blackboard->set<std::string>(navigation_state_blackboard_id_, request->data);
   response->success = true;
 }
+
+void
+NavigateToPathNavigator::onObstacleModeReceived(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  RCLCPP_INFO(logger_, "Received obstacle mode request: %s", request->data.c_str());
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(obstacle_mode_blackboard_id_, request->data);
+  response->success = true;
+}
+
 
 // void
 // NavigateToPathNavigator::onBTCommandReceived(

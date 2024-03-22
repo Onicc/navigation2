@@ -26,6 +26,7 @@
 #include "nav2_behavior_tree/bt_action_server.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 #include "nav2_util/node_utils.hpp"
+#include <boost/stacktrace.hpp>
 
 namespace nav2_behavior_tree
 {
@@ -244,6 +245,10 @@ void BtActionServer<ActionT>::executeCallback()
 
   switch (rc) {
     case nav2_behavior_tree::BtStatus::SUCCEEDED:
+      RCLCPP_INFO(logger_, "boost::stacktrace::stacktrace();");
+      std::cout << boost::stacktrace::stacktrace();
+      // std::string stacktrace = boost::stacktrace::stacktrace().str();
+      // RCLCPP_INFO(logger_, stacktrace);
       RCLCPP_INFO(logger_, "Goal succeeded");
       action_server_->succeeded_current(result);
       break;

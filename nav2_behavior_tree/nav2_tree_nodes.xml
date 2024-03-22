@@ -333,6 +333,19 @@
     <Action ID="SetCleaningModeUsingWaypoint">
       <input_port name="waypoint"> Nearest waypoint to robot</input_port>
     </Action>
+
+    <Action ID="SetPathEmpty">
+      <output_port name="path"> Empty path </output_port>
+    </Action>
+
+    <Action ID="SetTurnSignal">
+      <input_port name="turn_signal"> left | right | off </input_port>
+    </Action>
+
+    <Action ID="SetPath">
+      <input_port name="input_path"> Input path </input_port>
+      <output_port name="output_path"> Output path </output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
@@ -434,11 +447,17 @@
       <input_port name="max_position_covariance"> Maximum value of GPS position covariance </input_port>
       <input_port name="max_angle_covariance"> Maximum value of GPS angle covariance </input_port>
       <input_port name="waypoint"> The nearest waypoint </input_port>
+      <input_port name="obstacle_mode"> Mode selection when encountering obstacles </input_port>
     </Condition>
 
     <Condition ID="IsExceptionUpdated">
       <input_port name="topic_name"> The input topic name that needs to be checked</input_port>
       <input_port name="update_time"> Maximum update time interval for the topic </input_port>
+    </Condition>
+
+    <Condition ID="ObstacleOption">
+      <input_port name="waypoint"> The nearest waypoint </input_port>
+      <input_port name="obstacle_mode"> Mode selection when encountering obstacles </input_port>
     </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>

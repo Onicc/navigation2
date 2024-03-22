@@ -32,6 +32,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "nav2_util/odometry_utils.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/float32.hpp"
 #include "nav2_msgs/srv/set_string.hpp"
 #include "nav2_msgs/srv/set_waypoints.hpp"
 #include "nav2_msgs/msg/waypoint.hpp"
@@ -85,6 +86,7 @@ public:
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
+  void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -102,7 +104,9 @@ public:
   void onLoadWaypointsSrv(
     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
-
+  void onObstacleModeReceived(
+      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   /**
    * @brief Get action name for this navigator
    * @return string Name of action server
@@ -165,6 +169,7 @@ protected:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_gps_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
   rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
@@ -173,6 +178,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_start_service_;
   rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr load_waypoints_service_;
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_obstacle_mode_service_;
 
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
@@ -194,6 +200,8 @@ protected:
   std::string global_costmap_blackboard_id_;
   std::string exception_blackboard_id_;
   std::string goals_truncate_blackboard_id_;
+  std::string obstacle_mode_blackboard_id_;
+  std::string detect_obstacle_distance_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

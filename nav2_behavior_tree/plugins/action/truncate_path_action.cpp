@@ -43,6 +43,7 @@ inline BT::NodeStatus TruncatePath::tick()
   nav_msgs::msg::Path input_path;
 
   getInput("input_path", input_path);
+  getInput("distance", distance_);
 
   if (input_path.poses.empty()) {
     setOutput("output_path", input_path);

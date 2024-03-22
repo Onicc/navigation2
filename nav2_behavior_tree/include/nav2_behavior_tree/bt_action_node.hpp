@@ -273,6 +273,7 @@ public:
     BT::NodeStatus status;
     switch (result_.code) {
       case rclcpp_action::ResultCode::SUCCEEDED:
+        RCLCPP_INFO(node_->get_logger(), "Folow Path Succeeded");
         status = on_success();
         break;
 

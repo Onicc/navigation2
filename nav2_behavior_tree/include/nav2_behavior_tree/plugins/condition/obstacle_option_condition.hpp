@@ -30,19 +30,19 @@ namespace nav2_behavior_tree
  * @brief A BT::ConditionNode that returns SUCCESS when goal is
  * updated on the blackboard and FAILURE otherwise
  */
-class PathToBypassObstacleCondition : public BT::ConditionNode
+class ObstacleOptionCondition : public BT::ConditionNode
 {
 public:
   /**
-   * @brief A constructor for nav2_behavior_tree::PathToBypassObstacleCondition
+   * @brief A constructor for nav2_behavior_tree::ObstacleOptionCondition
    * @param condition_name Name for the XML tag for this node
    * @param conf BT node configuration
    */
-  PathToBypassObstacleCondition(
+  ObstacleOptionCondition(
     const std::string & condition_name,
     const BT::NodeConfiguration & conf);
 
-  PathToBypassObstacleCondition() = delete;
+  ObstacleOptionCondition() = delete;
 
   /**
    * @brief The main override required by a BT action
@@ -57,9 +57,6 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<nav_msgs::msg::Odometry>("odometry_gps", "GPS position"),
-      BT::InputPort<double>("max_position_covariance", 1.0, "Maximum value of GPS position covariance"),
-      BT::InputPort<double>("max_angle_covariance", 1.0, "Maximum value of GPS angle covariance"),
       BT::InputPort<nav2_msgs::msg::Waypoint>("waypoint", "The nearest waypoint"),
       BT::InputPort<std::string>("obstacle_mode", std::string("audo"), "Mode selection when encountering obstacles"),
     };
