@@ -235,6 +235,8 @@ NavigateToPathNavigator::configure(
   //   "/bt/start",
   //   std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
 
+  beam_pub_ = node->create_publisher<std_msgs::msg::String>("vehicle/command/beam", 10);
+
   last_loop_time_ = std::chrono::high_resolution_clock::now();
 
   return true;
@@ -542,6 +544,10 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
   auto waypoints = loadWaypoints(request->data);
   RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
 
+  auto beam_message = std_msgs::msg::String();
+  beam_message.data = "HAZARD_BEAM";
+  beam_pub_->publish(beam_message);
+
   ActionT::Goal goal;
   goal.waypoints = waypoints;
   self_client_->async_send_goal(goal);
@@ -574,6 +580,14 @@ NavigateToPathNavigator::onNavigationStateReceived(
   RCLCPP_INFO(logger_, "Received navigation state request: %s", request->data.c_str());
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(navigation_state_blackboard_id_, request->data);
+
+  std::string navigation_state = request->data;
+  if(navigation_state == "stop") {
+    auto beam_message = std_msgs::msg::String();
+    beam_message.data = "OFF_HAZARD_BEAM";
+    beam_pub_->publish(beam_message);
+  }
+
   response->success = true;
 }
 
@@ -649,6 +663,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
           waypoint.option_speed = transform["option"]["speed"].as<float>();
           waypoint.option_cleaning_mode = transform["option"]["cleaning_mode"].as<int>();
           waypoint.option_traffic_light = transform["option"]["traffic_light"].as<bool>();
+          waypoint.option_gps_poor_stop = transform["option"]["gps_poor_stop"].as<bool>();
 
           waypoints.push_back(waypoint);
       }

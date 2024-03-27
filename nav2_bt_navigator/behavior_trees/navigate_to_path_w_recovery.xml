@@ -93,6 +93,15 @@
                           <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                         </Fallback>
                         <TrafficLight waypoint="{waypoint}" detect_traffic_light="{traffic_light}" goal_traffic_light="green"/>
+                        <Fallback name="PoorGPSStop">
+                          <Inverter>
+                            <GPSPoor odometry_gps="{odometry_gps}" max_position_covariance="0.2" max_angle_covariance="0.1" waypoint="{waypoint}"/>
+                          </Inverter>
+                          <Sequence name="SetPathEmpty">
+                            <SetPathEmpty path="{path}"/>
+                            <Exception message="GPS质量差" error_code="1" exception="{exception}"/>
+                          </Sequence>
+                        </Fallback>
                       </Sequence>
                       <Sequence name="VoiceAndClear">
                         <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>

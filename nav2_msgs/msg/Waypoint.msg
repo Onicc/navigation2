@@ -11,3 +11,4 @@ bool option_stop_obstacle
 float64 option_speed
 uint32 option_cleaning_mode
 bool option_traffic_light
+bool option_gps_poor_stop

@@ -116,6 +116,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_set_path_action_bt_node",
     "nav2_obstacle_option_condition_bt_node",
     "nav2_traffic_light_detect_condition_bt_node",
+    "nav2_gps_poor_condition_bt_node",
   };
 
   declare_parameter_if_not_declared(

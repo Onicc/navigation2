@@ -174,6 +174,8 @@ protected:
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
 
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
+
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_navigation_state_service_;
