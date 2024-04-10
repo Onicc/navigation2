@@ -41,7 +41,7 @@ inline BT::NodeStatus TruncatePoses::tick()
   setStatus(BT::NodeStatus::RUNNING);
 
   Goals input_poses;
-
+  getInput("distance", distance_);
   getInput("input_poses", input_poses);
 
   if (input_poses.empty()) {

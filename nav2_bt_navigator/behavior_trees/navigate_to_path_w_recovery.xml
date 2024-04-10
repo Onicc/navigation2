@@ -10,7 +10,7 @@
       <PipelineSequence name="NavigateWithReplanning">
         <RateController hz="10.0">
           <Sequence name="Nav">
-            <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="base_link" distance_forward="10.0" distance_backward="0.0" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+            <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
             <SetMaximumCruisingSpeedUsingWaypoint waypoint="{waypoint}"/>
             <Inverter>
               <Fallback name="CommandSelection">
@@ -52,7 +52,7 @@
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>
-                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="4.0" pose_on_extension="{curb_traction_point_extension}"/>
+                  <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="4.0" robot_frame="{robot_frame}" pose_on_extension="{curb_traction_point_extension}"/>
                   <Fallback name="GeneratePath">
                     <RecoveryNode number_of_retries="2" name="ComputePath">
                       <Sequence name="ComputePath">
@@ -92,7 +92,6 @@
                           <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
                           <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                         </Fallback>
-                        <TrafficLight waypoint="{waypoint}" detect_traffic_light="{traffic_light}" goal_traffic_light="green"/>
                         <Fallback name="PoorGPSStop">
                           <Inverter>
                             <GPSPoor odometry_gps="{odometry_gps}" max_position_covariance="0.2" max_angle_covariance="0.1" waypoint="{waypoint}"/>
@@ -128,7 +127,7 @@
                   <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                   <Fallback name="FindGoal">
                     <RecoveryNode number_of_retries="2" name="TryFindGoal">
-                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" goal="{farthest_obstacle_point}"/>
+                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" robot_frame="{robot_frame}" goal="{farthest_obstacle_point}"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
                     <Sequence name="Exception">
@@ -138,7 +137,7 @@
                   </Fallback>
                   <Fallback name="SwitchToPathFollowingMode">
                     <Inverter>
-                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="base_link" goal_reached_tol="0.8"/>
+                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="{robot_frame}" goal_reached_tol="0.8"/>
                     </Inverter>
                     <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                   </Fallback>

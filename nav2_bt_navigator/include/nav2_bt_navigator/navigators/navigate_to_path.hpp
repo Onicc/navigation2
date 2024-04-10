@@ -44,6 +44,135 @@
 namespace nav2_bt_navigator
 {
 
+class BezierCurve {
+public:
+    std::tuple<std::array<double, 2>, std::array<double, 2>, double> cubicBezierCurves(
+      std::array<double, 2> p0, std::array<double, 2> p1,
+      std::array<double, 2> p2, std::array<double, 2> p3, double t) {
+      
+      // std::array<double, 2> P, P_prime;
+      // double curvature;
+
+      // P[0] = std::pow(1 - t, 3) * p0[0] + 3 * std::pow(1 - t, 2) * t * p1[0] +
+      //         3 * (1 - t) * std::pow(t, 2) * p2[0] + std::pow(t, 3) * p3[0];
+      // P[1] = std::pow(1 - t, 3) * p0[1] + 3 * std::pow(1 - t, 2) * t * p1[1] +
+      //         3 * (1 - t) * std::pow(t, 2) * p2[1] + std::pow(t, 3) * p3[1];
+
+      // P_prime[0] = 3 * std::pow(1 - t, 2) * (p1[0] - p0[0]) +
+      //               6 * t * (1 - t) * (p2[0] - p1[0]) +
+      //               3 * std::pow(t, 2) * (p3[0] - p2[0]);
+      // P_prime[1] = 3 * std::pow(1 - t, 2) * (p1[1] - p0[1]) +
+      //               6 * t * (1 - t) * (p2[1] - p1[1]) +
+      //               3 * std::pow(t, 2) * (p3[1] - p2[1]);
+
+      // double P_prime_norm = std::sqrt(std::pow(P_prime[0], 2) + std::pow(P_prime[1], 2));
+
+      // curvature = std::sqrt(std::pow((P_prime[0] * (3 * (1 - t) * (p2[1] - 2 * p1[1] + p0[1]) +
+      //                                             3 * t * (p3[1] - 2 * p2[1] + p1[1])) -
+      //                                 P_prime[1] * (3 * (1 - t) * (p2[0] - 2 * p1[0] + p0[0]) +
+      //                                               3 * t * (p3[0] - 2 * p2[0] + p1[0]))),
+      //                         2) /
+      //                       std::pow(P_prime_norm, 3));
+
+      // return std::make_tuple(P, P_prime, curvature);
+
+      // P(t) = (1-t)^3 * P0 + 3t(1-t)^2 * P1 + 3t^2(1-t) * P2 + t^3 * P3
+      std::array<double, 2> P = {std::pow(1 - t, 3) * p0[0] + 3 * std::pow(1 - t, 2) * t * p1[0] + 3 * (1 - t) * std::pow(t, 2) * p2[0] + std::pow(t, 3) * p3[0],
+                                  std::pow(1 - t, 3) * p0[1] + 3 * std::pow(1 - t, 2) * t * p1[1] + 3 * (1 - t) * std::pow(t, 2) * p2[1] + std::pow(t, 3) * p3[1]};
+      
+      // P'(t) = 3(1-t)^2 * (P1 - P0) + 6t(1-t) * (P2 - P1) + 3t^2 * (P3 - P2)
+      std::array<double, 2> P_prime = {3 * std::pow(1 - t, 2) * (p1[0] - p0[0]) + 6 * t * (1 - t) * (p2[0] - p1[0]) + 3 * std::pow(t, 2) * (p3[0] - p2[0]),
+                                        3 * std::pow(1 - t, 2) * (p1[1] - p0[1]) + 6 * t * (1 - t) * (p2[1] - p1[1]) + 3 * std::pow(t, 2) * (p3[1] - p2[1])};
+      
+      // P''(t) = 6(1-t) * (P2 - 2 * P1 + P0) + 6t * (P3 - 2 * P2 + P1)
+      std::array<double, 2> P_double_prime = {6 * (1 - t) * (p2[0] - 2 * p1[0] + p0[0]) + 6 * t * (p3[0] - 2 * p2[0] + p1[0]),
+                                              6 * (1 - t) * (p2[1] - 2 * p1[1] + p0[1]) + 6 * t * (p3[1] - 2 * p2[1] + p1[1])};
+      
+      // P'(t) x P''(t)
+      double cross_product = P_prime[0] * P_double_prime[1] - P_prime[1] * P_double_prime[0];
+      
+      // |P'(t)|^3
+      double norm_prime_cubed = std::pow(std::sqrt(std::pow(P_prime[0], 2) + std::pow(P_prime[1], 2)), 3);
+      
+      // K(t) = |P'(t) x P''(t)| / |P'(t)|^3
+      double curvature = std::abs(cross_product) / norm_prime_cubed;
+
+      return std::make_tuple(P, P_prime, curvature);
+    }
+
+    std::tuple<bool, std::vector<std::array<double, 2>>, std::vector<double>> bezierCurve(
+        std::array<double, 2> p0, std::array<double, 2> p3, double heading0,
+        double heading3, double max_curvature, int num_points = 100) {
+        
+        std::vector<double> t(num_points);
+        for (int i = 0; i < num_points; ++i)
+            t[i] = static_cast<double>(i) / (num_points - 1);
+
+        std::array<double, 2> direction1 = {std::cos(heading0), std::sin(heading0)};
+        std::array<double, 2> direction2 = {std::cos(heading3), std::sin(heading3)};
+
+        std::array<double, 2> finally_p0_p1, finally_p2_p3;
+        finally_p0_p1 = {0.0, 0.0};
+        finally_p2_p3 = {0.0, 0.0};
+        double finally_J = 0.0;
+
+        int max_mn = static_cast<int>(std::sqrt(std::pow(p3[0] - p0[0], 2) + std::pow(p3[1] - p0[1], 2)));
+
+        for (int j = 1; j < max_mn; ++j) {
+          for (int k = 1; k < max_mn; ++k) {
+            std::vector<std::array<double, 2>> curve_points;
+            std::vector<double> curvatures;
+            std::array<double, 2> p1, p2;
+            p1[0] = p0[0] + j * direction1[0];
+            p1[1] = p0[1] + j * direction1[1];
+            p2[0] = p3[0] - k * direction2[0];
+            p2[1] = p3[1] - k * direction2[1];
+            double total_length = 0.0;
+            std::array<double, 2> p_i_1;
+            for (int i = 0; i < num_points; ++i) {
+              std::array<double, 2> p_i, p_prime_i;
+              double curvature;
+              std::tie(p_i, p_prime_i, curvature) = cubicBezierCurves(p0, p1, p2, p3, t[i]);
+              if (i > 0) {
+                double segment_length = std::sqrt(std::pow(p_i[0] - p_i_1[0], 2) + std::pow(p_i[1] - p_i_1[1], 2));
+                total_length += segment_length;
+              }
+              p_i_1 = p_i;
+              curve_points.push_back(p_i);
+              curvatures.push_back(curvature);
+            }
+            if (*std::max_element(curvatures.begin(), curvatures.end()) < max_curvature) {
+                double J_ = (1 / total_length) * (1 / (*std::max_element(curvatures.begin(), curvatures.end())));
+                if (J_ >= finally_J) {
+                    finally_J = J_;
+                    finally_p0_p1 = {p0[0] + j * direction1[0], p0[1] + j * direction1[1]};
+                    finally_p2_p3 = {p3[0] - k * direction2[0], p3[1] - k * direction2[1]};
+                }
+            }
+          }
+        }
+
+        if (std::fabs(finally_p0_p1[0]) < 0.000001 && std::fabs(finally_p0_p1[1]) < 0.000001)
+            return std::make_tuple(false, std::vector<std::array<double, 2>>(), std::vector<double>());
+
+        std::vector<std::array<double, 2>> curve_points;
+        std::vector<double> orientations;
+        std::vector<double> curvatures;
+        for (int i = 0; i < num_points; ++i) {
+            std::array<double, 2> p_i, p_prime_i;
+            double curvature;
+            std::tie(p_i, p_prime_i, curvature) = cubicBezierCurves(p0, finally_p0_p1, finally_p2_p3, p3, t[i]);
+            curve_points.push_back(p_i);
+            orientations.push_back(std::fmod(std::atan2(p_prime_i[1], p_prime_i[0]) + 2 * M_PI, 2 * M_PI));
+            curvatures.push_back(curvature);
+        }
+
+        std::cout << "max curvature: " << *std::max_element(curvatures.begin(), curvatures.end()) << std::endl;
+
+        return std::make_tuple(true, curve_points, orientations);
+    }
+};
+
 /**
  * @class NavigateToPathNavigator
  * @brief A navigator for navigating to a specified path
@@ -107,6 +236,9 @@ public:
     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   void onObstacleModeReceived(
+      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  void onRobotFrameReceived(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   /**
@@ -184,6 +316,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr load_waypoints_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_obstacle_mode_service_;
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_robot_frame_service_;
 
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
@@ -208,11 +341,14 @@ protected:
   std::string obstacle_mode_blackboard_id_;
   std::string detect_obstacle_distance_blackboard_id_;
   std::string traffic_light_blackboard_id_;
+  std::string robot_frame_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
 
   std::chrono::high_resolution_clock::time_point last_loop_time_;
+
+  double max_curvature = 0.2;
 };
 
 }  // namespace nav2_bt_navigator

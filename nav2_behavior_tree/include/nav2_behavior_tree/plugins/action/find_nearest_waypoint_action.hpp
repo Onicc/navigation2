@@ -121,6 +121,9 @@ private:
 
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_local_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_index_pub_;
+
+  // int waypoints_size_;
+  // int last_waypoints_size_;
 };
 
 }  // namespace nav2_behavior_tree

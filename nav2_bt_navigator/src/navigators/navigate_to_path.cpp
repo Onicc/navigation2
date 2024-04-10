@@ -161,6 +161,12 @@ NavigateToPathNavigator::configure(
   traffic_light_blackboard_id_ = node->get_parameter("traffic_light_blackboard_id").as_string();
   blackboard->set<std::string>(traffic_light_blackboard_id_, "none");
 
+  if (!node->has_parameter("robot_frame_blackboard_id")) {
+    node->declare_parameter("robot_frame_blackboard_id", std::string("robot_frame"));
+  }
+  robot_frame_blackboard_id_ = node->get_parameter("robot_frame_blackboard_id").as_string();
+  blackboard->set<std::string>(robot_frame_blackboard_id_, "base_link");
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -226,6 +232,10 @@ NavigateToPathNavigator::configure(
   bt_obstacle_mode_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/bt/obstacle_mode",
     std::bind(&NavigateToPathNavigator::onObstacleModeReceived, this, std::placeholders::_1, std::placeholders::_2));
+
+  bt_robot_frame_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/bt/robot_frame",
+    std::bind(&NavigateToPathNavigator::onRobotFrameReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   // bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
   //   "/bt/command",
@@ -450,6 +460,7 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
 
     // Update the waypoints on the blackboard
     blackboard->set<nav2_msgs::msg::WaypointArray>(waypoints_blackboard_id_, goal->waypoints);
+    blackboard->set<int>(waypoint_index_blackboard_id_, -1);
   }
 
   // if(goal->command.data != "") {
@@ -543,6 +554,10 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
   RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
   auto waypoints = loadWaypoints(request->data);
   RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
+  if(waypoints.waypoints.size() == 0) {
+    response->success = false;
+    return;
+  }
 
   auto beam_message = std_msgs::msg::String();
   beam_message.data = "HAZARD_BEAM";
@@ -602,6 +617,15 @@ NavigateToPathNavigator::onObstacleModeReceived(
   response->success = true;
 }
 
+void
+NavigateToPathNavigator::onRobotFrameReceived(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(robot_frame_blackboard_id_, request->data);
+  response->success = true;
+}
 
 // void
 // NavigateToPathNavigator::onBTCommandReceived(
@@ -670,6 +694,102 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
       RCLCPP_INFO(logger_, "Waypoints loaded, total: %zu", waypoints.size());
   } catch (const std::exception& e) {
       RCLCPP_INFO(logger_, "Failed to load waypoints: %s", e.what());
+  }
+
+  std::string robot_frame;
+  blackboard->get<std::string>(robot_frame_blackboard_id_, robot_frame);
+  
+  // 查找最近点索引
+  geometry_msgs::msg::PoseStamped current_pose;
+  nav2_util::getCurrentPose(
+    current_pose, *feedback_utils_.tf,
+    feedback_utils_.global_frame, robot_frame,
+    feedback_utils_.transform_tolerance);
+
+  RCLCPP_INFO(logger_, "Current pose: (%.2f, %.2f)", current_pose.pose.position.x, current_pose.pose.position.y);
+  RCLCPP_INFO(logger_, "robot_frame: %s", robot_frame.c_str());
+
+
+  try {
+    // Get current path points
+    nav_msgs::msg::Path current_path;
+    for (size_t i = 0; i < waypoints.size(); ++i) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.header = waypoints[i].header;
+      pose.pose = waypoints[i].pose;
+      current_path.poses.push_back(pose);
+    }
+
+    // Find the closest pose to current pose on global path
+    size_t closest_pose_idx = 0;
+    double curr_min_dist = std::numeric_limits<double>::max();
+    for (size_t curr_idx = 0; curr_idx < current_path.poses.size(); ++curr_idx) {
+      double curr_dist = nav2_util::geometry_utils::euclidean_distance(
+        current_pose, current_path.poses[curr_idx]);
+      if (curr_dist < curr_min_dist) {
+        curr_min_dist = curr_dist;
+        closest_pose_idx = curr_idx;
+      }
+    }
+
+    RCLCPP_INFO(logger_, "Closest pose index: %ld", closest_pose_idx);
+
+    BezierCurve curve;
+    std::array<double, 2> p0 = {current_pose.pose.position.x, current_pose.pose.position.y};
+    double w = current_pose.pose.orientation.w;
+    double x = current_pose.pose.orientation.x;
+    double y = current_pose.pose.orientation.y;
+    double z = current_pose.pose.orientation.z;
+    double heading0 = atan2(2*(w*z+x*y), 1-2*(y*y+z*z));
+    if(robot_frame == "rear_base_link") {
+      heading0 += M_PI;
+    }
+
+    for (size_t i = closest_pose_idx; i < current_path.poses.size(); i += 1) {
+        std::array<double, 2> p3 = {current_path.poses[i].pose.position.x, current_path.poses[i].pose.position.y};
+        double heading3 = atan2(2*(current_path.poses[i].pose.orientation.w*current_path.poses[i].pose.orientation.z+current_path.poses[i].pose.orientation.x*current_path.poses[i].pose.orientation.y), 1-2*(current_path.poses[i].pose.orientation.y*current_path.poses[i].pose.orientation.y+current_path.poses[i].pose.orientation.z*current_path.poses[i].pose.orientation.z));
+        std::tuple<bool, std::vector<std::array<double, 2>>, std::vector<double>> curvePointsOrientations = curve.bezierCurve(p0, p3, heading0, heading3, max_curvature, 100);
+        if(std::get<0>(curvePointsOrientations) == true) {
+          RCLCPP_INFO(logger_, "Search pose index: %ld", i);
+          std::vector<std::array<double, 2>> curvePoints = std::get<1>(curvePointsOrientations);
+          std::vector<double> curveOrientations = std::get<2>(curvePointsOrientations);
+          std::vector<nav2_msgs::msg::Waypoint> curveWaypoints;
+          for (size_t j = 0; j < curvePoints.size(); ++j) {
+            nav2_msgs::msg::Waypoint waypoint;
+            waypoint.header.frame_id = "map";
+            waypoint.header.stamp = node->get_clock()->now();
+            waypoint.pose.position.x = curvePoints[j][0];
+            waypoint.pose.position.y = curvePoints[j][1];
+            waypoint.pose.position.z = 0.0;
+            waypoint.pose.orientation.x = 0.0;
+            waypoint.pose.orientation.y = 0.0;
+            waypoint.pose.orientation.z = sin(curveOrientations[j]/2);
+            waypoint.pose.orientation.w = cos(curveOrientations[j]/2);
+            waypoint.curb_distance = 0.0;
+            waypoint.curb_direction = 0.0;
+            waypoint.curb_residual = 0.0;
+            waypoint.option_curb_direction_fix = false;
+            waypoint.option_curb_horizontal_fix = false;
+            waypoint.option_curb_traction_fix = false;
+            waypoint.option_bypass_obstacle = waypoints[0].option_bypass_obstacle;
+            waypoint.option_stop_obstacle = waypoints[0].option_stop_obstacle;
+            waypoint.option_speed = waypoints[0].option_speed;
+            waypoint.option_cleaning_mode = waypoints[0].option_cleaning_mode;
+            waypoint.option_traffic_light = waypoints[0].option_traffic_light;
+            waypoint.option_gps_poor_stop = waypoints[0].option_gps_poor_stop;
+            curveWaypoints.push_back(waypoint);
+          }
+          curveWaypoints.insert(curveWaypoints.end(), waypoints.begin()+i, waypoints.end());
+          RCLCPP_INFO(logger_, "Curve waypoints: %ld", curveWaypoints.size());
+          nav2_msgs::msg::WaypointArray waypointsMsg;
+          waypointsMsg.header.frame_id = "map";
+          waypointsMsg.header.stamp = node->get_clock()->now();
+          waypointsMsg.waypoints = curveWaypoints;
+          return waypointsMsg;
+        }
+    }
+  } catch (...) {
+    // Ignore
   }
 
   nav2_msgs::msg::WaypointArray waypointsMsg;

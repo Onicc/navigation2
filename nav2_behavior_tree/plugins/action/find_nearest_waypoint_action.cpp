@@ -80,6 +80,12 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     return BT::NodeStatus::FAILURE;
   }
 
+  // waypoints_size_ = waypoints.waypoints.size();
+  // if(last_waypoints_size_ != waypoints_size_) {
+  //   last_waypoints_size_ = waypoints_size_;
+  //   input_closest_index = -1;
+  // }
+
   if (input_closest_index == -1) {
     // find the closest pose on the path
     auto closest_pose = nav2_util::geometry_utils::min_by(
@@ -147,6 +153,19 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
         return poseDistance(pose, ps, angular_distance_weight);
       });
     closest_pose_index = std::distance(path.poses.begin(), closest_pose);
+    double min_dist = 0.3;
+    for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
+      if(nav2_util::geometry_utils::euclidean_distance(
+        path.poses[closest_pose_index].pose.position, path.poses[i].pose.position) > min_dist) {
+        closest_pose_index = i;
+        closest_pose = std::next(path.poses.begin(), i);
+        break;
+      }
+      if(i == path.poses.size()-1) {
+        closest_pose_index = i;
+        closest_pose = std::next(path.poses.begin(), i);
+      }
+    }
     setOutput("waypoint_index", closest_pose_index);
     setOutput("waypoint", waypoints.waypoints[closest_pose_index]);
     std_msgs::msg::Int32 closest_index;
