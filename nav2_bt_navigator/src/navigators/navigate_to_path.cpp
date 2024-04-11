@@ -212,6 +212,11 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onTrafficLightReceived, this, std::placeholders::_1));
 
+  robot_frame_sub_ = node->create_subscription<std_msgs::msg::String>(
+    "/robot_frame",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onRobotFrameReceived1, this, std::placeholders::_1));
+
   // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
   //   "/bt_navigator/start",
   //   rclcpp::SystemDefaultsQoS(),
@@ -534,6 +539,12 @@ NavigateToPathNavigator::onTrafficLightReceived(const std_msgs::msg::Int32::Shar
   if(traffic_light == 3) blackboard->set<std::string>(traffic_light_blackboard_id_, "green");
 }
 
+void
+NavigateToPathNavigator::onRobotFrameReceived1(const std_msgs::msg::String::SharedPtr msg)
+{
+  robot_frame_ = msg->data;
+}
+
 void 
 NavigateToPathNavigator::onWaypointsReceivedSrv(
   const std::shared_ptr<nav2_msgs::srv::SetWaypoints::Request> request, 
@@ -741,7 +752,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
     double y = current_pose.pose.orientation.y;
     double z = current_pose.pose.orientation.z;
     double heading0 = atan2(2*(w*z+x*y), 1-2*(y*y+z*z));
-    if(robot_frame == "rear_base_link") {
+    if(robot_frame_ == "rear_base_link") {
       heading0 += M_PI;
     }
 

@@ -218,6 +218,7 @@ public:
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
   void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
+  void onRobotFrameReceived1(const std_msgs::msg::String::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -305,6 +306,7 @@ protected:
   rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_frame_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
 
@@ -349,6 +351,7 @@ protected:
   std::chrono::high_resolution_clock::time_point last_loop_time_;
 
   double max_curvature = 0.2;
+  std::string robot_frame_ = "front_base_link";
 };
 
 }  // namespace nav2_bt_navigator
