@@ -291,6 +291,7 @@
       <input_port name="transform_tolerance">Transform lookup tolerance</input_port>
       <input_port name="distance_forward">Distance in forward direction</input_port>
       <input_port name="distance_backward">Distance in backward direction</input_port>
+      <input_port name="goal_reached_tol">goal reached tol</input_port>
       <output_port name="waypoint_index">Outpuut closest waypoint index</output_port>
       <output_port name="goals">Set of goals after removing any passed</output_port>
       <output_port name="waypoint">Nearest waypoint</output_port>
@@ -345,6 +346,11 @@
     <Action ID="SetPath">
       <input_port name="input_path"> Input path </input_port>
       <output_port name="output_path"> Output path </output_port>
+    </Action>
+
+    <Action ID="ToggleForwardBackwardMode">
+      <input_port name="waypoint"> Nearest waypoint </input_port>
+      <output_port name="base_link_frame"> Base link frame </output_port>
     </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">

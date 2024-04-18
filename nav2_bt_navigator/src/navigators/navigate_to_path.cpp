@@ -167,6 +167,12 @@ NavigateToPathNavigator::configure(
   robot_frame_blackboard_id_ = node->get_parameter("robot_frame_blackboard_id").as_string();
   blackboard->set<std::string>(robot_frame_blackboard_id_, "base_link");
 
+  if (!node->has_parameter("base_link_frame_id")) {
+    node->declare_parameter("base_link_frame_id", std::string("base_link_frame"));
+  }
+  base_link_frame_id_ = node->get_parameter("base_link_frame_id").as_string();
+  blackboard->set<std::string>(base_link_frame_id_, "front_base_link");
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -543,6 +549,9 @@ void
 NavigateToPathNavigator::onRobotFrameReceived1(const std_msgs::msg::String::SharedPtr msg)
 {
   robot_frame_ = msg->data;
+
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(base_link_frame_id_, robot_frame_);
 }
 
 void 

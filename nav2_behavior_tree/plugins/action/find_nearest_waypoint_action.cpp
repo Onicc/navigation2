@@ -56,6 +56,7 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
   double max_search_dist, angular_distance_weight;
   int input_closest_index, closest_pose_index;
   double distance_forward, distance_backward;
+  double goal_reached_tol;
 
   getInput("waypoints", waypoints);
   getInput("max_search_dist", max_search_dist);
@@ -63,6 +64,7 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
   getInput("input_closest_index", input_closest_index);
   getInput("distance_forward", distance_forward);
   getInput("distance_backward", distance_backward);
+  getInput("goal_reached_tol", goal_reached_tol);
 
   Goals goal_poses;
 
@@ -118,15 +120,37 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     
     return BT::NodeStatus::SUCCESS;
   } else {
-    int begin_index, end_index;
+    int begin_index = 0;
+    int end_index = path.poses.size()-1;
     double sum_dist = 0;
+
+    int segment_waypoint_start_index = 0;
+    int segment_waypoint_end_index = path.poses.size()-1;
+    for(int i = input_closest_index; i >= 0; i--) {
+      if(!((waypoints.waypoints[input_closest_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
+           (waypoints.waypoints[input_closest_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
+        segment_waypoint_start_index = i+1;
+        break;
+      }
+    }
+    for(size_t i = input_closest_index; i < path.poses.size(); i++) {
+      if(!((waypoints.waypoints[input_closest_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
+           (waypoints.waypoints[input_closest_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
+        segment_waypoint_end_index = i-1;
+        break;
+      }
+    }
+
     if(input_closest_index > 0) {
-      for (int i = (input_closest_index-1); i >= 0; i--) {
+      for (int i = (input_closest_index-1); i >= segment_waypoint_start_index; i--) {
         sum_dist += nav2_util::geometry_utils::euclidean_distance(
           path.poses[i+1].pose.position, path.poses[i].pose.position);
         if (sum_dist > max_search_dist) {
           begin_index = i;
           break;
+        }
+        if (i == segment_waypoint_start_index) {
+          begin_index = i;
         }
       }
     } else {
@@ -134,13 +158,17 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     }
 
     sum_dist = 0;
-    if(input_closest_index < static_cast<int>(path.poses.size()-1)) {
-      for (size_t i = (input_closest_index+1); i < path.poses.size(); i++) {
+    if(input_closest_index < static_cast<int>(path.poses.size()-1) && 
+       segment_waypoint_end_index < static_cast<int>(path.poses.size()-1)) {
+      for (size_t i = (input_closest_index+1); i < segment_waypoint_end_index; i++) {
         sum_dist += nav2_util::geometry_utils::euclidean_distance(
           path.poses[i-1].pose.position, path.poses[i].pose.position);
         if (sum_dist > max_search_dist) {
           end_index = i;
           break;
+        }
+        if (i == segment_waypoint_end_index-1) {
+          end_index = i;
         }
       }
     } else {
@@ -153,6 +181,7 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
         return poseDistance(pose, ps, angular_distance_weight);
       });
     closest_pose_index = std::distance(path.poses.begin(), closest_pose);
+    // 将waypoint向运行方向移动0.3m，因为有时候会出现机器人在路径上的情况导致引导向后运动
     double min_dist = 0.3;
     for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
       if(nav2_util::geometry_utils::euclidean_distance(
@@ -166,6 +195,45 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
         closest_pose = std::next(path.poses.begin(), i);
       }
     }
+
+    // find the end waypoint
+    int end_waypoint_index = path.poses.size()-1;
+    for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
+      if(!((waypoints.waypoints[closest_pose_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
+           (waypoints.waypoints[closest_pose_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
+        end_waypoint_index = i-1;
+        break;
+      }
+    }
+
+    // calculate the remain distance from the closest waypoint to the end waypoint
+    double remain_dist = 0;
+    for(size_t i = closest_pose_index; i < end_waypoint_index; i++) {
+      remain_dist += nav2_util::geometry_utils::euclidean_distance(
+        path.poses[i].pose.position, path.poses[i+1].pose.position);
+    }
+
+    // if the remain distance is less than goal_reached_tol m, then the end waypoint is the closest waypoint
+    if(remain_dist < goal_reached_tol && end_waypoint_index < path.poses.size()-2) {
+      closest_pose_index = end_waypoint_index + 1;
+      closest_pose = std::next(path.poses.begin(), end_waypoint_index);
+      end_waypoint_index = path.poses.size()-1;
+      for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
+        if(!((waypoints.waypoints[closest_pose_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
+            (waypoints.waypoints[closest_pose_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
+          end_waypoint_index = i-1;
+          break;
+        }
+      }
+    }
+    closest_pose = std::next(path.poses.begin(), closest_pose_index);
+
+    // // create a segment path
+    // nav_msgs::msg::Path segment_path;
+    // segment_path.header = path.header;
+    // segment_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(
+    //   path.poses.begin() + closest_pose_index, path.poses.begin() + end_waypoint_index);
+
     setOutput("waypoint_index", closest_pose_index);
     setOutput("waypoint", waypoints.waypoints[closest_pose_index]);
     std_msgs::msg::Int32 closest_index;
@@ -173,7 +241,7 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     closest_index_pub_->publish(closest_index);
     
     auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-      closest_pose, path.poses.end(), distance_forward);
+      closest_pose, path.poses.begin() + end_waypoint_index, distance_forward);
     auto backward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
       std::reverse_iterator(closest_pose + 1), path.poses.rend(), distance_backward);
     

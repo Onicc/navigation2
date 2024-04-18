@@ -302,6 +302,9 @@ list(APPEND plugin_libs nav2_traffic_light_detect_condition_bt_node)
 add_library(nav2_gps_poor_condition_bt_node SHARED plugins/condition/gps_poor_condition.cpp)
 list(APPEND plugin_libs nav2_gps_poor_condition_bt_node)
 
+add_library(nav2_toggle_forward_backward_mode_bt_node SHARED plugins/action/toggle_forward_backward_mode.cpp)
+list(APPEND plugin_libs nav2_toggle_forward_backward_mode_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)

@@ -78,6 +78,9 @@ public:
       BT::InputPort<double>(
         "distance_backward", 4.0,
         "Distance in backward direction"),
+      BT::InputPort<double>(
+        "goal_reached_tol", 0.3,
+        "goal reached tol"),
       BT::OutputPort<int>("waypoint_index", "Outpuut closest waypoint index"),
       BT::OutputPort<Goals>("goals", "Goals with passed viapoints removed"),
       BT::OutputPort<nav2_msgs::msg::Waypoint>("waypoint", "Goals with passed viapoints removed"),

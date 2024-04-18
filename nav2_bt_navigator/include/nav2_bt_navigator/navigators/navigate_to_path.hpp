@@ -344,6 +344,7 @@ protected:
   std::string detect_obstacle_distance_blackboard_id_;
   std::string traffic_light_blackboard_id_;
   std::string robot_frame_blackboard_id_;
+  std::string base_link_frame_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
