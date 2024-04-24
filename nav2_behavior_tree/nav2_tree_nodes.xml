@@ -335,6 +335,10 @@
       <input_port name="waypoint"> Nearest waypoint to robot</input_port>
     </Action>
 
+    <Action ID="SetCleaningMode">
+      <input_port name="cleaning_mode"> Cleaning mode</input_port>
+    </Action>
+
     <Action ID="SetPathEmpty">
       <output_port name="path"> Empty path </output_port>
     </Action>

@@ -138,7 +138,8 @@
                   <Sequence name="PathPlanningBypassObstaclesMode">
                     <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
                     <SetTurnSignal turn_signal="left"/>
-                    <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
+                    <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
+                    <SetCleaningMode cleaning_mode="0"/>
                     <Fallback name="FindGoal">
                       <RecoveryNode number_of_retries="2" name="TryFindGoal">
                         <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" robot_frame="{robot_frame}" goal="{farthest_obstacle_point}"/>

@@ -284,6 +284,9 @@ list(APPEND plugin_libs nav2_set_maximum_cruising_speed_using_waypoint_action_bt
 add_library(nav2_set_cleaning_mode_using_waypoint_action_bt_node SHARED plugins/action/set_cleaning_mode_using_waypoint.cpp)
 list(APPEND plugin_libs nav2_set_cleaning_mode_using_waypoint_action_bt_node)
 
+add_library(nav2_set_cleaning_mode_action_bt_node SHARED plugins/action/set_cleaning_mode.cpp)
+list(APPEND plugin_libs nav2_set_cleaning_mode_action_bt_node)
+
 add_library(nav2_set_path_empty_action_bt_node SHARED plugins/action/set_path_empty.cpp)
 list(APPEND plugin_libs nav2_set_path_empty_action_bt_node)
 

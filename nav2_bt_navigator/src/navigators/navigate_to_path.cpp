@@ -582,6 +582,8 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
   auto beam_message = std_msgs::msg::String();
   beam_message.data = "HAZARD_BEAM";
   beam_pub_->publish(beam_message);
+  beam_message.data = "EMERGENCY_BEAM";
+  beam_pub_->publish(beam_message);
 
   ActionT::Goal goal;
   goal.waypoints = waypoints;
@@ -620,6 +622,8 @@ NavigateToPathNavigator::onNavigationStateReceived(
   if(navigation_state == "stop") {
     auto beam_message = std_msgs::msg::String();
     beam_message.data = "OFF_HAZARD_BEAM";
+    beam_pub_->publish(beam_message);
+    beam_message.data = "OFF_EMERGENCY_BEAM";
     beam_pub_->publish(beam_message);
   }
 
