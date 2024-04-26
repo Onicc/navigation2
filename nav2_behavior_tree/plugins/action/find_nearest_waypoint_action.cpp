@@ -158,16 +158,15 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     }
 
     sum_dist = 0;
-    if(input_closest_index < static_cast<int>(path.poses.size()-1) && 
-       segment_waypoint_end_index < static_cast<int>(path.poses.size()-1)) {
-      for (size_t i = (input_closest_index+1); i < segment_waypoint_end_index; i++) {
+    if(input_closest_index < static_cast<int>(path.poses.size()-1)) {
+      for (size_t i = (input_closest_index+1); i <= segment_waypoint_end_index; i++) {
         sum_dist += nav2_util::geometry_utils::euclidean_distance(
           path.poses[i-1].pose.position, path.poses[i].pose.position);
         if (sum_dist > max_search_dist) {
           end_index = i;
           break;
         }
-        if (i == segment_waypoint_end_index-1) {
+        if (i == segment_waypoint_end_index) {
           end_index = i;
         }
       }

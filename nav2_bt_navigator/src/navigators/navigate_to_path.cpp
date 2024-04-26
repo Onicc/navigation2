@@ -236,6 +236,10 @@ NavigateToPathNavigator::configure(
     "/command/load_waypoints",
     std::bind(&NavigateToPathNavigator::onLoadWaypointsSrv, this, std::placeholders::_1, std::placeholders::_2));
 
+  start_auto_cleaning_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/command/start_auto_cleaning",
+    std::bind(&NavigateToPathNavigator::onStartAutoCleaningSrv, this, std::placeholders::_1, std::placeholders::_2));
+
   bt_navigation_state_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/bt/navigation_state",
     std::bind(&NavigateToPathNavigator::onNavigationStateReceived, this, std::placeholders::_1, std::placeholders::_2));
@@ -471,7 +475,7 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
 
     // Update the waypoints on the blackboard
     blackboard->set<nav2_msgs::msg::WaypointArray>(waypoints_blackboard_id_, goal->waypoints);
-    blackboard->set<int>(waypoint_index_blackboard_id_, -1);
+    blackboard->set<int>(waypoint_index_blackboard_id_, waypoint_index_blackboard_);
   }
 
   // if(goal->command.data != "") {
@@ -572,27 +576,69 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
   std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
 {
   RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
-  auto waypoints = loadWaypoints(request->data);
-  RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
-  if(waypoints.waypoints.size() == 0) {
+  waypoints_path_ = request->data;
+
+  if(!rcpputils::fs::exists(waypoints_path_)) {
+    RCLCPP_INFO(logger_, "The waypoints path is not exist.");
     response->success = false;
     return;
   }
 
-  auto beam_message = std_msgs::msg::String();
-  beam_message.data = "HAZARD_BEAM";
-  beam_pub_->publish(beam_message);
-  beam_message.data = "EMERGENCY_BEAM";
-  beam_pub_->publish(beam_message);
-
-  ActionT::Goal goal;
-  goal.waypoints = waypoints;
-  self_client_->async_send_goal(goal);
   response->success = true;
+}
 
-  auto blackboard = bt_action_server_->getBlackboard();
-  blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
-  blackboard->set<int>(waypoint_index_blackboard_id_, -1);
+void 
+NavigateToPathNavigator::onStartAutoCleaningSrv(
+  const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
+  std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  if(waypoints_path_ == "") {
+    RCLCPP_INFO(logger_, "The waypoints path is empty.");
+    response->success = false;
+    return;
+  }
+
+  if(!rcpputils::fs::exists(waypoints_path_)) {
+    RCLCPP_INFO(logger_, "The waypoints path is not exist.");
+    response->success = false;
+    return;
+  }
+
+  if(request->data == "start_point" || request->data == "middle_point") {
+    if(request->data == "start_point") {
+      waypoint_index_blackboard_ = 0;   // 从起点起步
+      RCLCPP_INFO(logger_, "The command is not start_point.");
+    }
+    if(request->data == "middle_point") {
+      waypoint_index_blackboard_ = -1;  // 从中途起步
+      RCLCPP_INFO(logger_, "The command is not middle_point.");
+    }
+
+    RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
+    auto waypoints = loadWaypoints(waypoints_path_);
+    RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
+    if(waypoints.waypoints.size() == 0) {
+      response->success = false;
+      return;
+    }
+
+    auto beam_message = std_msgs::msg::String();
+    beam_message.data = "HAZARD_BEAM";
+    beam_pub_->publish(beam_message);
+    beam_message.data = "EMERGENCY_BEAM";
+    beam_pub_->publish(beam_message);
+
+    ActionT::Goal goal;
+    goal.waypoints = waypoints;
+    self_client_->async_send_goal(goal);
+    response->success = true;
+
+    auto blackboard = bt_action_server_->getBlackboard();
+    blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+  } else {
+    RCLCPP_INFO(logger_, "The command is not start_point or middle_point.");
+    response->success = false;
+  }
 }
 
 void
@@ -718,6 +764,9 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
       RCLCPP_INFO(logger_, "Waypoints loaded, total: %zu", waypoints.size());
   } catch (const std::exception& e) {
       RCLCPP_INFO(logger_, "Failed to load waypoints: %s", e.what());
+
+      nav2_msgs::msg::WaypointArray waypointsMsg;
+      return waypointsMsg;
   }
 
   std::string robot_frame;
@@ -757,6 +806,15 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
     }
 
     RCLCPP_INFO(logger_, "Closest pose index: %ld", closest_pose_idx);
+
+    double closest_pose_distance = nav2_util::geometry_utils::euclidean_distance(
+      current_pose, current_path.poses[closest_pose_idx]);
+    RCLCPP_INFO(logger_, "Closest pose distance: %.2f", closest_pose_distance);
+    if(closest_pose_distance > 1.0) {
+      RCLCPP_INFO(logger_, "Closest pose distance is too far, ignore waypoints.");
+      nav2_msgs::msg::WaypointArray waypointsMsg;
+      return waypointsMsg;
+    }
 
     BezierCurve curve;
     std::array<double, 2> p0 = {current_pose.pose.position.x, current_pose.pose.position.y};

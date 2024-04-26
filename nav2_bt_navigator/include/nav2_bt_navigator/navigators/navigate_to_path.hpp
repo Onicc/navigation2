@@ -236,6 +236,9 @@ public:
   void onLoadWaypointsSrv(
     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  void onStartAutoCleaningSrv(
+    const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
+    std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   void onObstacleModeReceived(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
@@ -317,6 +320,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_start_service_;
   rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr load_waypoints_service_;
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr start_auto_cleaning_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_obstacle_mode_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_robot_frame_service_;
 
@@ -353,6 +357,9 @@ protected:
 
   double max_curvature = 0.2;
   std::string robot_frame_ = "front_base_link";
+
+  std::string waypoints_path_ = "";
+  int waypoint_index_blackboard_ = -1;
 };
 
 }  // namespace nav2_bt_navigator
