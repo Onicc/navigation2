@@ -245,8 +245,8 @@ void BtActionServer<ActionT>::executeCallback()
 
   switch (rc) {
     case nav2_behavior_tree::BtStatus::SUCCEEDED:
-      RCLCPP_INFO(logger_, "boost::stacktrace::stacktrace();");
-      std::cout << boost::stacktrace::stacktrace();
+      // RCLCPP_INFO(logger_, "boost::stacktrace::stacktrace();");
+      // std::cout << boost::stacktrace::stacktrace();
       // std::string stacktrace = boost::stacktrace::stacktrace().str();
       // RCLCPP_INFO(logger_, stacktrace);
       RCLCPP_INFO(logger_, "Goal succeeded");

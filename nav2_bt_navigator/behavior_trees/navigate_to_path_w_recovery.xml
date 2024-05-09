@@ -10,7 +10,7 @@
       <PipelineSequence name="NavigateWithReplanning">
         <RateController hz="10.0">
           <Sequence name="Nav">
-            <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goal_reached_tol="0.3" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+            <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goal_reached_tol="0.5" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
             <Inverter>
               <Fallback name="CommandSelection">
                 <Sequence name="Stop">
