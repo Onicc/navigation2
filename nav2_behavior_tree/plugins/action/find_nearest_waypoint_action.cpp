@@ -82,13 +82,42 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     return BT::NodeStatus::FAILURE;
   }
 
-  // waypoints_size_ = waypoints.waypoints.size();
-  // if(last_waypoints_size_ != waypoints_size_) {
-  //   last_waypoints_size_ = waypoints_size_;
-  //   input_closest_index = -1;
-  // }
+  // std::cout << "--------------------------1---------------------------" << std::endl;
+
+  // 如果waypoints的数量发生变化，则重新计算最近的waypoint和路径分段
+  waypoints_size_ = waypoints.waypoints.size();
+  if(last_waypoints_size_ != waypoints_size_) {
+    last_waypoints_size_ = waypoints_size_;
+    input_closest_index = -1;
+    waypoint_section_index_ = 0;
+
+    // 根据速度计算路径分段, ( , ] 左开右闭区间为同速区间
+    waypoint_section_index_list_.clear();
+    for(size_t i = 0; i < waypoints_size_; i++) {
+      if(i == 0) {
+        waypoint_section_index_list_.push_back(i);
+      } else {
+        if(!((waypoints.waypoints[i].option_speed >= 0 && waypoints.waypoints[i-1].option_speed >= 0) || 
+             (waypoints.waypoints[i].option_speed < 0 && waypoints.waypoints[i-1].option_speed < 0))) {
+          waypoint_section_index_list_.push_back(i-1);
+        }
+        if(i == waypoints_size_-1) {
+          waypoint_section_index_list_.push_back(i);
+        }
+      }
+    }
+
+    // for(auto d:waypoint_section_index_list_) {
+    //   std::cout << " " << d << " |";
+    // }
+    // std::cout << std::endl;
+  }
+
+  // std::cout << "--------------------------2---------------------------" << std::endl;
 
   if (input_closest_index == -1) {
+    // std::cout << "--------------------------A---------------------------" << std::endl;
+
     // find the closest pose on the path
     auto closest_pose = nav2_util::geometry_utils::min_by(
       path.poses.begin(), path.poses.end(),
@@ -96,19 +125,53 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
         return poseDistance(pose, ps, angular_distance_weight);
       });
     closest_pose_index = std::distance(path.poses.begin(), closest_pose);
+    // 根据最近的waypoint找到所在的路径分段
+    for(size_t i = 1; i < waypoint_section_index_list_.size(); i++) {
+      if(closest_pose_index <= waypoint_section_index_list_[i]) {
+        waypoint_section_index_ = i;
+        break;
+      }
+    }
+    // waypoint_section_index_==0表明分段只有(0, 0]]
+    if(waypoint_section_index_ == 0) {
+      return BT::NodeStatus::FAILURE;
+    }
+    // 取出分段内的waypoints
+    nav2_msgs::msg::WaypointArray section_waypoints;
+    for(size_t i = waypoint_section_index_list_[waypoint_section_index_-1]+1; i <= waypoint_section_index_list_[waypoint_section_index_]; i++) {
+      section_waypoints.waypoints.push_back(waypoints.waypoints[i]);
+    }
+    // 取出分段内的path
+    nav_msgs::msg::Path section_path;
+    section_path.header = waypoints.header;
+    for(size_t i = waypoint_section_index_list_[waypoint_section_index_-1]+1; i <= waypoint_section_index_list_[waypoint_section_index_]; i++) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.header = waypoints.waypoints[i].header;
+      pose.pose = waypoints.waypoints[i].pose;
+      section_path.poses.push_back(pose);
+    }
+    // 计算分段内的最近点
+    auto section_closest_pose = nav2_util::geometry_utils::min_by(
+      section_path.poses.begin(), section_path.poses.end(),
+      [&pose, angular_distance_weight](const geometry_msgs::msg::PoseStamped & ps) {
+        return poseDistance(pose, ps, angular_distance_weight);
+      });
+    // 计算分段内的最近点索引
+    int section_closest_pose_index = std::distance(section_path.poses.begin(), section_closest_pose);
+
     setOutput("waypoint_index", closest_pose_index);
-    setOutput("waypoint", waypoints.waypoints[closest_pose_index]);
+    setOutput("waypoint", section_waypoints.waypoints[section_closest_pose_index]);
     std_msgs::msg::Int32 closest_index;
     closest_index.data = closest_pose_index;
     closest_index_pub_->publish(closest_index);
 
     auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-      closest_pose, path.poses.end(), distance_forward);
+      section_closest_pose, section_path.poses.end(), distance_forward);
     auto backward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-      std::reverse_iterator(closest_pose + 1), path.poses.rend(), distance_backward);
+      std::reverse_iterator(section_closest_pose + 1), section_path.poses.rend(), distance_backward);
     
     nav_msgs::msg::Path local_path;
-    local_path.header = path.header;
+    local_path.header = section_path.header;
     local_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(
       backward_pose_it.base(), forward_pose_it);
     path_local_pub_->publish(local_path);
@@ -117,138 +180,140 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
       goal_poses.push_back(local_path.poses[curr_idx]);
     }
     setOutput("goals", goal_poses);
+
+    // std::cout << "---------------- closest_pose_index: " << closest_pose_index << "----------------" << std::endl;
+    // std::cout << "---------------- waypoint_section_index_: " << waypoint_section_index_ << "----------------" << std::endl;
     
     return BT::NodeStatus::SUCCESS;
   } else {
-    int begin_index = 0;
-    int end_index = path.poses.size()-1;
+    // std::cout << "--------------------------B---------------------------" << std::endl;
+
+    // waypoint_section_index_==0表明分段只有(0, 0]]
+    if(waypoint_section_index_ == 0) {
+      return BT::NodeStatus::FAILURE;
+    }
+
+    int section_begin_index = 0;
+    int section_end_index = waypoint_section_index_list_[waypoint_section_index_]-(waypoint_section_index_list_[waypoint_section_index_-1]+1);
+    int input_section_closest_pose_index = input_closest_index-(waypoint_section_index_list_[waypoint_section_index_-1]+1);
+    if(input_section_closest_pose_index < section_begin_index) input_section_closest_pose_index = section_begin_index;
+    if(input_section_closest_pose_index > section_end_index) input_section_closest_pose_index = section_end_index;
+
+    // std::cout << "---------------- section_begin_index: " << section_begin_index << "----------------" << std::endl;
+    // std::cout << "---------------- section_end_index: " << section_end_index << "----------------" << std::endl;
+    // std::cout << "---------------- input_section_closest_pose_index: " << input_section_closest_pose_index << "----------------" << std::endl;
+    // std::cout << "---------------- input_closest_index: " << input_section_closest_pose_index << "----------------" << std::endl;
+
+    // std::cout << "--------------------------B 1---------------------------" << std::endl;
+
+    // 取出分段内的waypoints
+    nav2_msgs::msg::WaypointArray section_waypoints;
+    for(size_t i = waypoint_section_index_list_[waypoint_section_index_-1]+1; i <= waypoint_section_index_list_[waypoint_section_index_]; i++) {
+      section_waypoints.waypoints.push_back(waypoints.waypoints[i]);
+    }
+    // 取出分段内的path
+    nav_msgs::msg::Path section_path;
+    section_path.header = waypoints.header;
+    for(size_t i = waypoint_section_index_list_[waypoint_section_index_-1]+1; i <= waypoint_section_index_list_[waypoint_section_index_]; i++) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.header = waypoints.waypoints[i].header;
+      pose.pose = waypoints.waypoints[i].pose;
+      section_path.poses.push_back(pose);
+    }
+
+    // std::cout << "--------------------------B 2---------------------------" << std::endl;
+
     double sum_dist = 0;
-
-    int segment_waypoint_start_index = 0;
-    int segment_waypoint_end_index = path.poses.size()-1;
-    for(int i = input_closest_index; i >= 0; i--) {
-      if(!((waypoints.waypoints[input_closest_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
-           (waypoints.waypoints[input_closest_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
-        segment_waypoint_start_index = i+1;
+    for (int i = input_section_closest_pose_index; i >= 0; i--) {
+      sum_dist += nav2_util::geometry_utils::euclidean_distance(
+        section_path.poses[i+1].pose.position, section_path.poses[i].pose.position);
+      if (sum_dist > max_search_dist) {
+        section_begin_index = i;
         break;
       }
     }
-    for(size_t i = input_closest_index; i < path.poses.size(); i++) {
-      if(!((waypoints.waypoints[input_closest_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
-           (waypoints.waypoints[input_closest_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
-        segment_waypoint_end_index = i-1;
-        break;
-      }
-    }
-
-    if(input_closest_index > 0) {
-      for (int i = (input_closest_index-1); i >= segment_waypoint_start_index; i--) {
-        sum_dist += nav2_util::geometry_utils::euclidean_distance(
-          path.poses[i+1].pose.position, path.poses[i].pose.position);
-        if (sum_dist > max_search_dist) {
-          begin_index = i;
-          break;
-        }
-        if (i == segment_waypoint_start_index) {
-          begin_index = i;
-        }
-      }
-    } else {
-      begin_index = 0;
-    }
-
     sum_dist = 0;
-    if(input_closest_index < static_cast<int>(path.poses.size()-1)) {
-      for (size_t i = (input_closest_index+1); i <= segment_waypoint_end_index; i++) {
-        sum_dist += nav2_util::geometry_utils::euclidean_distance(
-          path.poses[i-1].pose.position, path.poses[i].pose.position);
-        if (sum_dist > max_search_dist) {
-          end_index = i;
-          break;
-        }
-        if (i == segment_waypoint_end_index) {
-          end_index = i;
-        }
+    for (size_t i = input_section_closest_pose_index; i < section_path.poses.size(); i++) {
+      sum_dist += nav2_util::geometry_utils::euclidean_distance(
+        section_path.poses[i-1].pose.position, section_path.poses[i].pose.position);
+      if (sum_dist > max_search_dist) {
+        section_end_index = i;
+        break;
       }
-    } else {
-      end_index = path.poses.size()-1;
     }
+    // std::cout << "---------------- section_begin_index: " << section_begin_index << "----------------" << std::endl;
+    // std::cout << "---------------- section_end_index: " << section_end_index << "----------------" << std::endl;
 
-    auto closest_pose = nav2_util::geometry_utils::min_by(
-      path.poses.begin() + begin_index, path.poses.begin() + end_index,
+    // std::cout << "--------------------------B 3---------------------------" << std::endl;
+
+    // 查找最近的waypoint
+    auto section_closest_pose = nav2_util::geometry_utils::min_by(
+      section_path.poses.begin() + section_begin_index, section_path.poses.begin() + section_end_index,
       [&pose, angular_distance_weight](const geometry_msgs::msg::PoseStamped & ps) {
         return poseDistance(pose, ps, angular_distance_weight);
       });
-    closest_pose_index = std::distance(path.poses.begin(), closest_pose);
+    int section_closest_pose_index = std::distance(section_path.poses.begin(), section_closest_pose);
+
+    // std::cout << "---------------- section_closest_pose_index: " << section_closest_pose_index << "----------------" << std::endl;
+    // std::cout << "--------------------------B 4---------------------------" << std::endl;
+
     // 将waypoint向运行方向移动0.3m，因为有时候会出现机器人在路径上的情况导致引导向后运动
     double min_dist = 0.3;
-    for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
+    for(size_t i = section_closest_pose_index; i < section_path.poses.size(); i++) {
       if(nav2_util::geometry_utils::euclidean_distance(
-        path.poses[closest_pose_index].pose.position, path.poses[i].pose.position) > min_dist) {
-        closest_pose_index = i;
-        closest_pose = std::next(path.poses.begin(), i);
+        section_path.poses[section_closest_pose_index].pose.position, section_path.poses[i].pose.position) > min_dist) {
+        section_closest_pose_index = i;
+        section_closest_pose = std::next(section_path.poses.begin(), i);
         break;
       }
-      if(i == path.poses.size()-1) {
-        closest_pose_index = i;
-        closest_pose = std::next(path.poses.begin(), i);
+      if(i == section_path.poses.size()-1) {
+        section_closest_pose_index = i;
+        section_closest_pose = std::next(section_path.poses.begin(), i);
       }
     }
 
-    // find the end waypoint
-    int end_waypoint_index = path.poses.size()-1;
-    for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
-      if(!((waypoints.waypoints[closest_pose_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
-           (waypoints.waypoints[closest_pose_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
-        end_waypoint_index = i-1;
-        break;
-      }
-    }
+    // std::cout << "---------------- section_closest_pose_index: " << section_closest_pose_index << "----------------" << std::endl;
+    // std::cout << "--------------------------B 5---------------------------" << std::endl;
 
-    // calculate the remain distance from the closest waypoint to the end waypoint
-    double remain_dist = 0;
-    for(size_t i = closest_pose_index; i < end_waypoint_index; i++) {
-      remain_dist += nav2_util::geometry_utils::euclidean_distance(
-        path.poses[i].pose.position, path.poses[i+1].pose.position);
-    }
-
-    // if the remain distance is less than goal_reached_tol m, then the end waypoint is the closest waypoint
-    if(remain_dist < goal_reached_tol && end_waypoint_index < path.poses.size()-2) {
-      closest_pose_index = end_waypoint_index + 1;
-      closest_pose = std::next(path.poses.begin(), end_waypoint_index);
-      end_waypoint_index = path.poses.size()-1;
-      for(size_t i = closest_pose_index; i < path.poses.size(); i++) {
-        if(!((waypoints.waypoints[closest_pose_index].option_speed >= 0 && waypoints.waypoints[i].option_speed >= 0) || 
-            (waypoints.waypoints[closest_pose_index].option_speed < 0 && waypoints.waypoints[i].option_speed < 0))) {
-          end_waypoint_index = i-1;
-          break;
-        }
-      }
-    }
-    closest_pose = std::next(path.poses.begin(), closest_pose_index);
-
-    // // create a segment path
-    // nav_msgs::msg::Path segment_path;
-    // segment_path.header = path.header;
-    // segment_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(
-    //   path.poses.begin() + closest_pose_index, path.poses.begin() + end_waypoint_index);
-
+    closest_pose_index = section_closest_pose_index+waypoint_section_index_list_[waypoint_section_index_-1]+1;
     setOutput("waypoint_index", closest_pose_index);
-    setOutput("waypoint", waypoints.waypoints[closest_pose_index]);
+    setOutput("waypoint", section_waypoints.waypoints[section_closest_pose_index]);
+
+    // std::cout << "---------------- closest_pose_index: " << closest_pose_index << "----------------" << std::endl;
+    // std::cout << "---------------- waypoint_section_index_: " << waypoint_section_index_ << "----------------" << std::endl;
+
+    // 判断是否走完section路径
+    double section_remain_dist = 0;
+    for(size_t i = section_closest_pose_index; i < section_path.poses.size()-1; i++) {
+      section_remain_dist += nav2_util::geometry_utils::euclidean_distance(
+        section_path.poses[i].pose.position, section_path.poses[i+1].pose.position);
+    }
+    if(section_remain_dist < goal_reached_tol) {
+      if(waypoint_section_index_ < waypoint_section_index_list_.size()-1) {
+        waypoint_section_index_++;
+      }
+    }
+
+    // std::cout << "--------------------------B 6---------------------------" << std::endl;
+
     std_msgs::msg::Int32 closest_index;
     closest_index.data = closest_pose_index;
     closest_index_pub_->publish(closest_index);
-    
+
     auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-      closest_pose, path.poses.begin() + end_waypoint_index, distance_forward);
+      section_closest_pose, section_path.poses.end(), distance_forward);
     auto backward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
-      std::reverse_iterator(closest_pose + 1), path.poses.rend(), distance_backward);
+      std::reverse_iterator(section_closest_pose + 1), section_path.poses.rend(), distance_backward);
     
+    // std::cout << "--------------------------B 7---------------------------" << std::endl;
+
     nav_msgs::msg::Path local_path;
-    local_path.header = path.header;
+    local_path.header = section_path.header;
     local_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(
       backward_pose_it.base(), forward_pose_it);
     path_local_pub_->publish(local_path);
+
+    // std::cout << "--------------------------B 8---------------------------" << std::endl;
 
     for (size_t curr_idx = 0; curr_idx < local_path.poses.size(); ++curr_idx) {
       goal_poses.push_back(local_path.poses[curr_idx]);

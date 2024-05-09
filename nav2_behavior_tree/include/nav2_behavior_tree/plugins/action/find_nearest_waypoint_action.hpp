@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <limits>
+#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
@@ -125,8 +126,10 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_local_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_index_pub_;
 
-  // int waypoints_size_;
-  // int last_waypoints_size_;
+  int waypoints_size_;
+  int last_waypoints_size_;
+  int waypoint_section_index_ = 0;
+  std::vector<int> waypoint_section_index_list_;
 };
 
 }  // namespace nav2_behavior_tree
