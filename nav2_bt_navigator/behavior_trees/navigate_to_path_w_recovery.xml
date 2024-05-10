@@ -88,7 +88,7 @@
                     <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                     <Fallback name="SwitchToCurbFollowingMode">
                       <Inverter>
-                        <PathToCurbFollow odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}"/>
+                        <PathToCurbFollow odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.01" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}"/>
                       </Inverter>
                       <SetNavigationStateAction input_state="curb_following" output_state="{navigation_state}"/>
                     </Fallback>

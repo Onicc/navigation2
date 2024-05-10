@@ -128,7 +128,7 @@ private:
 
   int waypoints_size_;
   int last_waypoints_size_;
-  int waypoint_section_index_ = 0;
+  int waypoint_section_index_ = 1;
   std::vector<int> waypoint_section_index_list_;
 };
 

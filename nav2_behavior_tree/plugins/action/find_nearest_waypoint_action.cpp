@@ -88,8 +88,8 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
   waypoints_size_ = waypoints.waypoints.size();
   if(last_waypoints_size_ != waypoints_size_) {
     last_waypoints_size_ = waypoints_size_;
-    input_closest_index = -1;
-    waypoint_section_index_ = 0;
+    // input_closest_index = -1;
+    waypoint_section_index_ = 1;
 
     // 根据速度计算路径分段, ( , ] 左开右闭区间为同速区间
     waypoint_section_index_list_.clear();
@@ -191,6 +191,10 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     // waypoint_section_index_==0表明分段只有(0, 0]]
     if(waypoint_section_index_ == 0) {
       return BT::NodeStatus::FAILURE;
+    }
+
+    if(input_closest_index == 0) {
+      waypoint_section_index_ = 1;
     }
 
     int section_begin_index = 0;
