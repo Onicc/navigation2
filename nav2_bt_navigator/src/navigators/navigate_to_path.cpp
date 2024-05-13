@@ -579,10 +579,12 @@ NavigateToPathNavigator::onLoadWaypointsSrv(
   waypoints_path_ = request->data;
 
   if(!rcpputils::fs::exists(waypoints_path_)) {
-    RCLCPP_INFO(logger_, "The waypoints path is not exist.");
+    RCLCPP_ERROR(logger_, "The waypoints path is not exist.");
     response->success = false;
     return;
   }
+
+  RCLCPP_INFO(logger_, "Successfully loaded path file %s", waypoints_path_.c_str());
 
   response->success = true;
 }
