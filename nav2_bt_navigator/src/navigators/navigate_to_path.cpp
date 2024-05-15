@@ -795,10 +795,25 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
       current_path.poses.push_back(pose);
     }
 
+    int max_find_index = current_path.poses.size();
+    if(waypoint_index_blackboard_ == 0) {
+      double max_find_distance = 3;
+      double distance = 0.0;
+      for (size_t curr_idx = 1; curr_idx < current_path.poses.size(); ++curr_idx) {
+        distance += nav2_util::geometry_utils::euclidean_distance(
+          current_path.poses[curr_idx-1], current_path.poses[curr_idx]);
+        if (distance > max_find_distance) {
+          max_find_index = curr_idx;
+          break;
+        }
+      }
+    }
+
+
     // Find the closest pose to current pose on global path
     size_t closest_pose_idx = 0;
     double curr_min_dist = std::numeric_limits<double>::max();
-    for (size_t curr_idx = 0; curr_idx < current_path.poses.size(); ++curr_idx) {
+    for (size_t curr_idx = 0; curr_idx < max_find_index; ++curr_idx) {
       double curr_dist = nav2_util::geometry_utils::euclidean_distance(
         current_pose, current_path.poses[curr_idx]);
       if (curr_dist < curr_min_dist) {
@@ -812,7 +827,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
     double closest_pose_distance = nav2_util::geometry_utils::euclidean_distance(
       current_pose, current_path.poses[closest_pose_idx]);
     RCLCPP_INFO(logger_, "Closest pose distance: %.2f", closest_pose_distance);
-    if(closest_pose_distance > 1.0) {
+    if(closest_pose_distance > 3.0) {
       RCLCPP_INFO(logger_, "Closest pose distance is too far, ignore waypoints.");
       nav2_msgs::msg::WaypointArray waypointsMsg;
       return waypointsMsg;
@@ -825,7 +840,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
     double y = current_pose.pose.orientation.y;
     double z = current_pose.pose.orientation.z;
     double heading0 = atan2(2*(w*z+x*y), 1-2*(y*y+z*z));
-    if(robot_frame_ == "rear_base_link") {
+    if(waypoints[closest_pose_idx].option_speed < 0.0) {
       heading0 += M_PI;
     }
 
