@@ -12,3 +12,4 @@ float64 option_speed
 uint32 option_cleaning_mode
 bool option_traffic_light
 bool option_gps_poor_stop
+int32 option_turn_signal    # +1: 左转 0: 关闭转向灯 -1: 右转
