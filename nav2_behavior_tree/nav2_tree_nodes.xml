@@ -356,6 +356,11 @@
       <input_port name="waypoint"> Nearest waypoint </input_port>
       <output_port name="base_link_frame"> Base link frame </output_port>
     </Action>
+
+    <Action ID="AutomaticLight">
+      <input_port name="waypoint"> Nearest waypoint </input_port>
+      <output_port name="navigation_state"> Navigation state </output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>

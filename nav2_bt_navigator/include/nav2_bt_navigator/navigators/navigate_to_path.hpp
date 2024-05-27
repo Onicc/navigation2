@@ -312,6 +312,7 @@ protected:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_frame_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 

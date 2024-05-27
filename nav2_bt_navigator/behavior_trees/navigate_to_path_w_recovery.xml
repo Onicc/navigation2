@@ -11,6 +11,7 @@
         <RateController hz="10.0">
           <Sequence name="Nav">
             <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goal_reached_tol="0.8" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+            <AutomaticLight waypoint="{waypoint}" navigation_state="{navigation_state}"/>
             <Inverter>
               <Fallback name="CommandSelection">
                 <Sequence name="Stop">
@@ -59,7 +60,7 @@
                   <!-- Curb following mode -->
                   <Sequence name="CurbFollowingMode">
                     <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="curb_following"/>
-                    <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
+                    <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
                     <Fallback name="SwitchToPathFollowingMode">
                       <Inverter>
                         <CurbToPathFollow odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}" gps_recovery_hold_time="1.0"/>
@@ -80,12 +81,13 @@
                       </RecoveryNode>
                       <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                     </Fallback>
+                    <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                   </Sequence>
                   <!-- Path following mode -->
                   <Sequence name="PathFollowingMode">
                     <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
-                    <SetTurnSignal turn_signal="off"/>
-                    <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
+                    <!-- <SetTurnSignal turn_signal="off"/> -->
+                    <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
                     <Fallback name="SwitchToCurbFollowingMode">
                       <Inverter>
                         <PathToCurbFollow odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.01" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}"/>
@@ -133,11 +135,12 @@
                         </Sequence>
                       </Fallback>
                     </Fallback>
+                    <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                   </Sequence>
                   <!-- Path planning bypass obstacles mode. -->
                   <Sequence name="PathPlanningBypassObstaclesMode">
                     <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
-                    <SetTurnSignal turn_signal="left"/>
+                    <!-- <SetTurnSignal turn_signal="left"/> -->
                     <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
                     <SetCleaningMode cleaning_mode="0"/>
                     <Fallback name="FindGoal">
@@ -183,6 +186,7 @@
               <IsPathEmpty path="{path}"/>
             </Inverter>
             <Sequence name="CancelingControlAndWait">
+              <SetCleaningMode cleaning_mode="0"/>
               <CancelControl name="ControlCancel"/>
               <Wait wait_duration="1"/>
               <Inverter>
@@ -190,17 +194,6 @@
               </Inverter>
             </Sequence>
           </Fallback>
-          <!-- <Fallback name="ExceptionPause">
-            <Inverter>
-              <IsExceptionUpdated update_time="1.0"/>
-            </Inverter>
-            <RetryUntilSuccessful num_attempts="1">
-              <SequenceStar name="CancelingControlAndWait">
-                <CancelControl name="ControlCancel"/>
-                <Wait wait_duration="5"/>
-              </SequenceStar>
-            </RetryUntilSuccessful>
-          </Fallback> -->
           <Fallback name="FollowPath">
             <IsPathEmpty path="{path}"/>
             <!-- <IsExceptionUpdated update_time="1.0"/> -->

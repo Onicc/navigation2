@@ -261,6 +261,8 @@ NavigateToPathNavigator::configure(
   //   std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   beam_pub_ = node->create_publisher<std_msgs::msg::String>("vehicle/command/beam", 10);
+  voice_pub_ = node->create_publisher<std_msgs::msg::String>("/voice", 10);
+  
 
   last_loop_time_ = std::chrono::high_resolution_clock::now();
 
@@ -610,10 +612,12 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
     if(request->data == "start_point") {
       waypoint_index_blackboard_ = 0;   // 从起点起步
       RCLCPP_INFO(logger_, "The command is not start_point.");
+      voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
     }
     if(request->data == "middle_point") {
       waypoint_index_blackboard_ = -1;  // 从中途起步
       RCLCPP_INFO(logger_, "The command is not middle_point.");
+      voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
     }
 
     RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
@@ -624,11 +628,11 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
       return;
     }
 
-    auto beam_message = std_msgs::msg::String();
-    beam_message.data = "HAZARD_BEAM";
-    beam_pub_->publish(beam_message);
-    beam_message.data = "EMERGENCY_BEAM";
-    beam_pub_->publish(beam_message);
+    // auto beam_message = std_msgs::msg::String();
+    // beam_message.data = "HAZARD_BEAM";
+    // beam_pub_->publish(beam_message);
+    // beam_message.data = "EMERGENCY_BEAM";
+    // beam_pub_->publish(beam_message);
 
     ActionT::Goal goal;
     goal.waypoints = waypoints;
@@ -667,13 +671,13 @@ NavigateToPathNavigator::onNavigationStateReceived(
   blackboard->set<std::string>(navigation_state_blackboard_id_, request->data);
 
   std::string navigation_state = request->data;
-  if(navigation_state == "stop") {
-    auto beam_message = std_msgs::msg::String();
-    beam_message.data = "OFF_HAZARD_BEAM";
-    beam_pub_->publish(beam_message);
-    beam_message.data = "OFF_EMERGENCY_BEAM";
-    beam_pub_->publish(beam_message);
-  }
+  // if(navigation_state == "stop") {
+  //   auto beam_message = std_msgs::msg::String();
+  //   beam_message.data = "OFF_HAZARD_BEAM";
+  //   beam_pub_->publish(beam_message);
+  //   beam_message.data = "OFF_EMERGENCY_BEAM";
+  //   beam_pub_->publish(beam_message);
+  // }
 
   response->success = true;
 }
@@ -760,13 +764,13 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
           waypoint.option_cleaning_mode = transform["option"]["cleaning_mode"].as<int>();
           waypoint.option_traffic_light = transform["option"]["traffic_light"].as<bool>();
           waypoint.option_gps_poor_stop = transform["option"]["gps_poor_stop"].as<bool>();
+          waypoint.option_turn_signal = transform["option"]["turn_signal"].as<int>();
 
           waypoints.push_back(waypoint);
       }
       RCLCPP_INFO(logger_, "Waypoints loaded, total: %zu", waypoints.size());
   } catch (const std::exception& e) {
       RCLCPP_INFO(logger_, "Failed to load waypoints: %s", e.what());
-
       nav2_msgs::msg::WaypointArray waypointsMsg;
       return waypointsMsg;
   }
@@ -876,6 +880,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
             waypoint.option_cleaning_mode = waypoints[0].option_cleaning_mode;
             waypoint.option_traffic_light = waypoints[0].option_traffic_light;
             waypoint.option_gps_poor_stop = waypoints[0].option_gps_poor_stop;
+            waypoint.option_turn_signal = waypoints[0].option_turn_signal;
             curveWaypoints.push_back(waypoint);
           }
           curveWaypoints.insert(curveWaypoints.end(), waypoints.begin()+i, waypoints.end());
