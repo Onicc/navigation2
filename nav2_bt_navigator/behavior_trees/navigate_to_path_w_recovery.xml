@@ -33,7 +33,23 @@
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
                 </Inverter>
                 <RecoveryNode number_of_retries="1" name="ComputePathToPose">
-                  <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="GridBased"/>
+                  <Sequence name="Manual">
+                    <Fallback name="ToggleForwardBackwardMode">
+                      <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
+                      <Sequence name="Exception">
+                        <SetPathEmpty path="{path}"/>
+                        <Exception message="路径上有障碍物" error_code="1" exception="{exception}"/>
+                      </Sequence>
+                    </Fallback>
+                    <Fallback name="ToggleForwardBackwardMode">
+                      <ToggleForwardBackwardModeByCmd cmd_vel="{cmd_vel}" base_link_frame="{base_link_frame}"/>
+                      <Sequence name="SetPathEmpty">
+                        <SetPathEmpty path="{path}"/>
+                        <Exception message="切换前进或后退模式" error_code="1" exception="{exception}"/>
+                      </Sequence>
+                    </Fallback>
+                    <SetMaximumCruisingSpeedUsingCmd cmd_vel="{cmd_vel}"/>
+                  </Sequence>
                   <Sequence name="VoiceAndClear">
                     <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
                     <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
@@ -194,9 +210,6 @@
               <SetCleaningMode cleaning_mode="0"/>
               <CancelControl name="ControlCancel"/>
               <Wait wait_duration="1"/>
-              <Inverter>
-                <IsPathEmpty path="{path}"/>
-              </Inverter>
             </Sequence>
           </Fallback>
           <Fallback name="FollowPath">

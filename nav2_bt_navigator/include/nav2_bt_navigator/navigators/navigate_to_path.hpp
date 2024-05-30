@@ -24,6 +24,7 @@
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 #include "nav2_bt_navigator/navigator.hpp"
 #include "nav2_msgs/action/navigate_to_path.hpp"
 #include "nav2_util/geometry_utils.hpp"
@@ -219,6 +220,8 @@ public:
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
   void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
   void onRobotFrameReceived1(const std_msgs::msg::String::SharedPtr msg);
+  void onCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
+  void onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -310,6 +313,8 @@ protected:
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_frame_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr teleop_cmd_vel_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
@@ -350,6 +355,8 @@ protected:
   std::string traffic_light_blackboard_id_;
   std::string robot_frame_blackboard_id_;
   std::string base_link_frame_id_;
+  std::string cmd_vel_frame_id_;
+  std::string manual_mode_frame_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;

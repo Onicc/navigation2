@@ -173,6 +173,19 @@ NavigateToPathNavigator::configure(
   base_link_frame_id_ = node->get_parameter("base_link_frame_id").as_string();
   blackboard->set<std::string>(base_link_frame_id_, "front_base_link");
 
+  if (!node->has_parameter("cmd_vel_frame_id")) {
+    node->declare_parameter("cmd_vel_frame_id", std::string("cmd_vel"));
+  }
+  cmd_vel_frame_id_ = node->get_parameter("cmd_vel_frame_id").as_string();
+  geometry_msgs::msg::Twist cmd_vel;
+  blackboard->set<geometry_msgs::msg::Twist>(cmd_vel_frame_id_, cmd_vel);
+
+  // if (!node->has_parameter("manual_mode_blackboard_id")) {
+  //   node->declare_parameter("manual_mode_blackboard_id", std::string("manual_mode"));
+  // }
+  // manual_mode_frame_id_ = node->get_parameter("manual_mode_blackboard_id").as_string();
+  // blackboard->set<std::string>(manual_mode_frame_id_, "pose_mode");
+
   // Odometry smoother object for getting current speed
   odom_smoother_ = odom_smoother;
 
@@ -222,6 +235,16 @@ NavigateToPathNavigator::configure(
     "/robot_frame",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onRobotFrameReceived1, this, std::placeholders::_1));
+
+  cmd_vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
+    "/cmd_vel",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onCmdVelReceived, this, std::placeholders::_1));
+
+  // teleop_cmd_vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
+  //   "/manual/cmd_vel",
+  //   rclcpp::SystemDefaultsQoS(),
+  //   std::bind(&NavigateToPathNavigator::onTeleopCmdVelReceived, this, std::placeholders::_1));
 
   // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
   //   "/bt_navigator/start",
@@ -455,7 +478,11 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
     blackboard->set<int>("number_recoveries", 0);  // NOLINT
 
     // Update the goal path on the blackboard
-    blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
+    if(std::fabs(goal->manual_goal.pose.position.x) < 0.0001 && std::fabs(goal->manual_goal.pose.position.y) < 0.0001) {
+      blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, current_pose);
+    } else {
+      blackboard->set<geometry_msgs::msg::PoseStamped>(manual_goal_pose_blackboard_id_, goal->manual_goal);
+    }
   }
 
   if(!goal->waypoints.waypoints.empty()) {
@@ -500,6 +527,9 @@ NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStampe
   ActionT::Goal goal;
   goal.manual_goal = *pose;
   self_client_->async_send_goal(goal);
+
+  auto blackboard = bt_action_server_->getBlackboard();
+  // blackboard->set<std::string>(manual_mode_frame_id_, "pose_mode");
 }
 
 // void
@@ -559,6 +589,20 @@ NavigateToPathNavigator::onRobotFrameReceived1(const std_msgs::msg::String::Shar
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(base_link_frame_id_, robot_frame_);
 }
+
+void
+NavigateToPathNavigator::onCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<geometry_msgs::msg::Twist>(cmd_vel_frame_id_, *msg);
+}
+
+// void
+// NavigateToPathNavigator::onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg)
+// {
+//   auto blackboard = bt_action_server_->getBlackboard();
+//   blackboard->set<std::string>(manual_mode_frame_id_, "teleop_mode");
+// }
 
 void 
 NavigateToPathNavigator::onWaypointsReceivedSrv(

@@ -331,6 +331,10 @@
       <input_port name="waypoint"> Nearest waypoint to robot</input_port>
     </Action>
 
+    <Action ID="SetMaximumCruisingSpeedUsingCmd">
+      <input_port name="cmd_vel"> "command velocity </input_port>
+    </Action>
+
     <Action ID="SetCleaningModeUsingWaypoint">
       <input_port name="waypoint"> Nearest waypoint to robot</input_port>
     </Action>
@@ -354,6 +358,11 @@
 
     <Action ID="ToggleForwardBackwardMode">
       <input_port name="waypoint"> Nearest waypoint </input_port>
+      <output_port name="base_link_frame"> Base link frame </output_port>
+    </Action>
+
+    <Action ID="ToggleForwardBackwardModeByCmd">
+      <input_port name="cmd_vel"> "command velocity </input_port>
       <output_port name="base_link_frame"> Base link frame </output_port>
     </Action>
 

@@ -120,6 +120,8 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_toggle_forward_backward_mode_bt_node",
     "nav2_set_cleaning_mode_action_bt_node",
     "nav2_automatic_light_bt_node",
+    "nav2_toggle_forward_backward_mode_by_cmd_bt_node",
+    "nav2_set_maximum_cruising_speed_using_cmd_action_bt_node",
   };
 
   declare_parameter_if_not_declared(
