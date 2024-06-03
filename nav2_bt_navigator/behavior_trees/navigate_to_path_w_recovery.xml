@@ -34,6 +34,7 @@
                 </Inverter>
                 <RecoveryNode number_of_retries="1" name="ComputePathToPose">
                   <Sequence name="Manual">
+                    <SetCleaningMode cleaning_mode="0"/>
                     <Fallback name="ToggleForwardBackwardMode">
                       <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
                       <Sequence name="Exception">
@@ -43,10 +44,12 @@
                     </Fallback>
                     <Fallback name="ToggleForwardBackwardMode">
                       <ToggleForwardBackwardModeByCmd cmd_vel="{cmd_vel}" base_link_frame="{base_link_frame}"/>
-                      <Sequence name="SetPathEmpty">
-                        <SetPathEmpty path="{path}"/>
-                        <Exception message="切换前进或后退模式" error_code="1" exception="{exception}"/>
-                      </Sequence>
+                      <Inverter>
+                        <Sequence name="SetPathEmpty">
+                          <SetPathEmpty path="{path}"/>
+                          <Exception message="切换前进或后退模式" error_code="1" exception="{exception}"/>
+                        </Sequence>
+                      </Inverter>
                     </Fallback>
                     <SetMaximumCruisingSpeedUsingCmd cmd_vel="{cmd_vel}"/>
                   </Sequence>
@@ -60,7 +63,7 @@
               <Fallback name="NavigationStateComparison">
                 <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="manual"/>
                 <Sequence name="AutomaticMode">
-                  <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goal_reached_tol="0.8" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}"/>
+                  <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goal_reached_tol="0.8" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}" remaining_distance="{remaining_distance}"/>
                   <AutomaticLight waypoint="{waypoint}" navigation_state="{navigation_state}"/>
                   <SetMaximumCruisingSpeedUsingWaypoint waypoint="{waypoint}"/>
                   <Fallback name="ToggleForwardBackwardMode">
@@ -106,6 +109,7 @@
                     <!-- Path following mode -->
                     <Sequence name="PathFollowingMode">
                       <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
+                      <VehicleAutomaticExit cmd_vel="{cmd_vel}" odometry="{front_odometry}" remaining_distance="{remaining_distance}"/>
                       <!-- <SetTurnSignal turn_signal="off"/> -->
                       <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
                       <Fallback name="SwitchToCurbFollowingMode">
@@ -130,7 +134,7 @@
                             </Fallback>
                             <Fallback name="PoorGPSStop">
                               <Inverter>
-                                <GPSPoor odometry_gps="{odometry_gps}" max_position_covariance="0.2" max_angle_covariance="0.1" waypoint="{waypoint}"/>
+                                <GPSPoor odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}"/>
                               </Inverter>
                               <Sequence name="SetPathEmpty">
                                 <SetPathEmpty path="{path}"/>
@@ -210,6 +214,9 @@
               <SetCleaningMode cleaning_mode="0"/>
               <CancelControl name="ControlCancel"/>
               <Wait wait_duration="1"/>
+              <Inverter>
+                <IsPathEmpty path="{path}"/>
+              </Inverter>
             </Sequence>
           </Fallback>
           <Fallback name="FollowPath">

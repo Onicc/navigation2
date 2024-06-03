@@ -295,6 +295,7 @@
       <output_port name="waypoint_index">Outpuut closest waypoint index</output_port>
       <output_port name="goals">Set of goals after removing any passed</output_port>
       <output_port name="waypoint">Nearest waypoint</output_port>
+      <output_port name="remaining_distance">Remaining distance</output_port>
     </Action>
 
     <Action ID="Exception">
@@ -358,17 +359,23 @@
 
     <Action ID="ToggleForwardBackwardMode">
       <input_port name="waypoint"> Nearest waypoint </input_port>
-      <output_port name="base_link_frame"> Base link frame </output_port>
+      <input_port name="base_link_frame"> Base link frame </input_port>
     </Action>
 
     <Action ID="ToggleForwardBackwardModeByCmd">
       <input_port name="cmd_vel"> "command velocity </input_port>
-      <output_port name="base_link_frame"> Base link frame </output_port>
+      <input_port name="base_link_frame"> Base link frame </input_port>
     </Action>
 
     <Action ID="AutomaticLight">
       <input_port name="waypoint"> Nearest waypoint </input_port>
-      <output_port name="navigation_state"> Navigation state </output_port>
+      <input_port name="navigation_state"> Navigation state </input_port>
+    </Action>
+
+    <Action ID="VehicleAutomaticExit">
+      <input_port name="cmd_vel"> command velocity </input_port>
+      <input_port name="odometry"> odometry </input_port>
+      <input_port name="remaining_distance"> Remaining distance </input_port>
     </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">

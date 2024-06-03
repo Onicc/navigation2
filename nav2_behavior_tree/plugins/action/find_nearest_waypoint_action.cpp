@@ -324,6 +324,15 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     }
     setOutput("goals", goal_poses);
 
+    double remaining_distance = 0.0;
+    if((closest_pose_index+1) < path.poses.size()) {
+      for (int idx = closest_pose_index+1; idx < path.poses.size(); idx++) {
+        remaining_distance += nav2_util::geometry_utils::euclidean_distance(
+          path.poses[idx-1].pose.position, path.poses[idx].pose.position);
+      }
+    }
+    setOutput("remaining_distance", remaining_distance);
+
     return BT::NodeStatus::SUCCESS;
   }
   return BT::NodeStatus::FAILURE;

@@ -299,6 +299,9 @@ list(APPEND plugin_libs nav2_set_turn_signal_action_bt_node)
 add_library(nav2_set_path_action_bt_node SHARED plugins/action/set_path.cpp)
 list(APPEND plugin_libs nav2_set_path_action_bt_node)
 
+add_library(nav2_vehicle_automatic_exit_action_bt_node SHARED plugins/action/vehicle_automatic_exit.cpp)
+list(APPEND plugin_libs nav2_vehicle_automatic_exit_action_bt_node)
+
 add_library(nav2_obstacle_option_condition_bt_node SHARED plugins/condition/obstacle_option_condition.cpp)
 list(APPEND plugin_libs nav2_obstacle_option_condition_bt_node)
 

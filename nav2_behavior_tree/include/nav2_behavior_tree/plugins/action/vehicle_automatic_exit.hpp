@@ -13,23 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__FIND_NEAREST_WAYPOINT_ACTION_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__FIND_NEAREST_WAYPOINT_ACTION_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__VEHICLE_AUTO_EXIT_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__VEHICLE_AUTO_EXIT_HPP_
 
 #include <memory>
 #include <string>
 #include <limits>
-#include <vector>
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "std_msgs/msg/int32.hpp"
+#include "std_msgs/msg/float32.hpp"
 
 #include "behaviortree_cpp_v3/action_node.h"
 #include "tf2_ros/buffer.h"
 
 #include "nav2_msgs/msg/waypoint_array.hpp"
 #include "nav2_msgs/msg/waypoint.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 
 namespace nav2_behavior_tree
 {
@@ -37,17 +39,17 @@ namespace nav2_behavior_tree
 /**
  * @brief A BT::ActionNodeBase to shorten path to some distance around robot
  */
-class FindNearestWaypoint : public BT::ActionNodeBase
+class VehicleAutomaticExit : public BT::ActionNodeBase
 {
 public:
   typedef std::vector<geometry_msgs::msg::PoseStamped> Goals;
 
   /**
-   * @brief A nav2_behavior_tree::FindNearestWaypoint constructor
+   * @brief A nav2_behavior_tree::VehicleAutomaticExit constructor
    * @param xml_tag_name Name for the XML tag for this node
    * @param conf BT node configuration
    */
-  FindNearestWaypoint(
+  VehicleAutomaticExit(
     const std::string & xml_tag_name,
     const BT::NodeConfiguration & conf);
 
@@ -58,34 +60,9 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<nav2_msgs::msg::WaypointArray>("waypoints", "Original Path"),
-      BT::InputPort<double>(
-        "max_search_dist", std::numeric_limits<double>::infinity(),
-        "Maximum search distance forward and backward"),
-      BT::InputPort<double>(
-        "angular_distance_weight", 0.0,
-        "Weight of angular distance relative to positional distance when finding which path "
-        "pose is closest to robot. Not applicable on paths without orientations assigned"),
-      BT::InputPort<int>("input_closest_index", -1, "Input closest waypoint index"),
-      BT::InputPort<std::string>(
-        "robot_frame", "base_link",
-        "Robot base frame id"),
-      BT::InputPort<double>(
-        "transform_tolerance", 0.2,
-        "Transform lookup tolerance"),
-      BT::InputPort<double>(
-        "distance_forward", 8.0,
-        "Distance in forward direction"),
-      BT::InputPort<double>(
-        "distance_backward", 4.0,
-        "Distance in backward direction"),
-      BT::InputPort<double>(
-        "goal_reached_tol", 0.3,
-        "goal reached tol"),
-      BT::OutputPort<int>("waypoint_index", "Outpuut closest waypoint index"),
-      BT::OutputPort<Goals>("goals", "Goals with passed viapoints removed"),
-      BT::OutputPort<nav2_msgs::msg::Waypoint>("waypoint", "Goals with passed viapoints removed"),
-      BT::OutputPort<double>("remaining_distance", "Remaining distance"),
+      BT::InputPort<geometry_msgs::msg::Twist>("cmd_vel", "command velocity"),
+      BT::InputPort<nav_msgs::msg::Odometry>("odometry", "odometry"),
+      BT::InputPort<double>("remaining_distance", "Remaining distance"),
     };
   }
 
@@ -124,13 +101,7 @@ private:
 
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
 
-  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_local_pub_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_index_pub_;
-
-  int waypoints_size_;
-  int last_waypoints_size_;
-  int waypoint_section_index_ = 1;
-  std::vector<int> waypoint_section_index_list_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr maximum_crusing_speed_pub_;
 };
 
 }  // namespace nav2_behavior_tree

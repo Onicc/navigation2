@@ -180,6 +180,20 @@ NavigateToPathNavigator::configure(
   geometry_msgs::msg::Twist cmd_vel;
   blackboard->set<geometry_msgs::msg::Twist>(cmd_vel_frame_id_, cmd_vel);
 
+  if (!node->has_parameter("front_odometry_blackboard_id")) {
+    node->declare_parameter("front_odometry_blackboard_id", std::string("front_odometry"));
+  }
+  front_odometry_blackboard_id_ = node->get_parameter("front_odometry_blackboard_id").as_string();
+  nav_msgs::msg::Odometry front_odometry;
+  blackboard->set<nav_msgs::msg::Odometry>(front_odometry_blackboard_id_, front_odometry);
+
+  if (!node->has_parameter("remaining_distance_blackboard_id")) {
+    node->declare_parameter("remaining_distance_blackboard_id", std::string("remaining_distance"));
+  }
+  remaining_distance_blackboard_id_ = node->get_parameter("remaining_distance_blackboard_id").as_string();
+  double remaining_distance=99999.9;
+  blackboard->set<double>(remaining_distance_blackboard_id_, remaining_distance);
+
   // if (!node->has_parameter("manual_mode_blackboard_id")) {
   //   node->declare_parameter("manual_mode_blackboard_id", std::string("manual_mode"));
   // }
@@ -207,7 +221,7 @@ NavigateToPathNavigator::configure(
     std::bind(&NavigateToPathNavigator::onWaypointsReceived, this, std::placeholders::_1));
 
   odometry_gps_sub_ = node->create_subscription<nav_msgs::msg::Odometry>(
-    "/odometry/gps",
+    "/odometry/gps/raw/var",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onOdometryGPSReceived, this, std::placeholders::_1));
 
@@ -240,6 +254,11 @@ NavigateToPathNavigator::configure(
     "/cmd_vel",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onCmdVelReceived, this, std::placeholders::_1));
+
+  front_odometry_sub_ = node->create_subscription<nav_msgs::msg::Odometry>(
+    "/articulation_controller/front_odometry",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onFrontOdometryReceived, this, std::placeholders::_1));
 
   // teleop_cmd_vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
   //   "/manual/cmd_vel",
@@ -595,6 +614,13 @@ NavigateToPathNavigator::onCmdVelReceived(const geometry_msgs::msg::Twist::Share
 {
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<geometry_msgs::msg::Twist>(cmd_vel_frame_id_, *msg);
+}
+
+void
+NavigateToPathNavigator::onFrontOdometryReceived(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<nav_msgs::msg::Odometry>(front_odometry_blackboard_id_, *msg);
 }
 
 // void

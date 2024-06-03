@@ -222,6 +222,7 @@ public:
   void onRobotFrameReceived1(const std_msgs::msg::String::SharedPtr msg);
   void onCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
   void onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
+  void onFrontOdometryReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -315,6 +316,7 @@ protected:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_frame_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr teleop_cmd_vel_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr front_odometry_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
@@ -357,6 +359,8 @@ protected:
   std::string base_link_frame_id_;
   std::string cmd_vel_frame_id_;
   std::string manual_mode_frame_id_;
+  std::string front_odometry_blackboard_id_;
+  std::string remaining_distance_blackboard_id_;
 
   // Odometry smoother object
   std::shared_ptr<nav2_util::OdomSmoother> odom_smoother_;
