@@ -498,10 +498,12 @@
     </Condition>
 
     <Condition ID="GPSPoor">
+      <input_port name="odometry"> Wheel odometry</input_port>
       <input_port name="odometry_gps"> GPS position</input_port>
       <input_port name="max_position_covariance"> Maximum value of GPS position covariance </input_port>
       <input_port name="max_angle_covariance"> Maximum value of GPS angle covariance </input_port>
       <input_port name="waypoint"> The nearest waypoint </input_port>
+      <input_port name="distance_after_loss"> Distance moved after loss </input_port>
     </Condition>
     <!-- ############################### CONTROL NODES ################################ -->
     <Control ID="PipelineSequence"/>

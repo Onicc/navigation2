@@ -320,6 +320,7 @@ protected:
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 

@@ -304,6 +304,7 @@ NavigateToPathNavigator::configure(
 
   beam_pub_ = node->create_publisher<std_msgs::msg::String>("vehicle/command/beam", 10);
   voice_pub_ = node->create_publisher<std_msgs::msg::String>("/voice", 10);
+  path_pub_ = node->create_publisher<nav_msgs::msg::Path>("/entire_path", 10);
   
 
   last_loop_time_ = std::chrono::high_resolution_clock::now();
@@ -697,6 +698,17 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
       response->success = false;
       return;
     }
+
+    // Get current path points
+    nav_msgs::msg::Path entire_path;
+    entire_path.header = waypoints.header;
+    for (size_t i = 0; i < waypoints.waypoints.size(); ++i) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.header = waypoints.waypoints[i].header;
+      pose.pose = waypoints.waypoints[i].pose;
+      entire_path.poses.push_back(pose);
+    }
+    path_pub_->publish(entire_path);
 
     // auto beam_message = std_msgs::msg::String();
     // beam_message.data = "HAZARD_BEAM";

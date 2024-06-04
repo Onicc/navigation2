@@ -57,10 +57,12 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
+      BT::InputPort<nav_msgs::msg::Odometry>("odometry", "Wheel odometry"),
       BT::InputPort<nav_msgs::msg::Odometry>("odometry_gps", "GPS position"),
       BT::InputPort<double>("max_position_covariance", 1.0, "Maximum value of GPS position covariance"),
       BT::InputPort<double>("max_angle_covariance", 1.0, "Maximum value of GPS angle covariance"),
       BT::InputPort<nav2_msgs::msg::Waypoint>("waypoint", "The nearest waypoint"),
+      BT::InputPort<double>("distance_after_loss", 0.0, "Distance moved after loss"),
     };
   }
   
