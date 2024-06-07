@@ -68,6 +68,9 @@ BT::NodeStatus GPSPoorCondition::tick()
     distance = 0.0;
     return BT::NodeStatus::SUCCESS;
   }
+
+  return BT::NodeStatus::FAILURE;
+
   // RCLCPP_INFO(node_->get_logger(), "[GPSPoorCondition] Poor GPS stop option is on at the waypoints, meets stop conditions.");
 
   times++;
@@ -85,8 +88,8 @@ BT::NodeStatus GPSPoorCondition::tick()
   // RCLCPP_INFO(node_->get_logger(), "[GPSPoorCondition] Poor GPS quality. %f", distance);
 
   if(distance > distance_after_loss) {
-    std::string command = "ros2 service call /bt/navigation_state nav2_msgs/srv/SetString \"{data: stop}\";ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call /vehicle/command/power slv_msgs/srv/SetString \"{data: OFF}\"";
-    int result = system(command.c_str());
+    // std::string command = "ros2 service call /bt/navigation_state nav2_msgs/srv/SetString \"{data: stop}\";ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call /vehicle/command/power slv_msgs/srv/SetString \"{data: OFF}\"";
+    // int result = system(command.c_str());
   }
 
   return BT::NodeStatus::SUCCESS;

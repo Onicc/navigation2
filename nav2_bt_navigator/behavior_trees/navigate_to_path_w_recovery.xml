@@ -121,7 +121,7 @@
                       <Fallback name="ComputePathToPathAndSwitchState">
                         <RecoveryNode number_of_retries="2" name="ComputePathToPath">
                           <Sequence name="TurncatPoses">
-                            <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="10.0"/>
+                            <!-- <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="10.0"/> -->
                             <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
                             <Fallback name="SwitchObs">
                               <Inverter>
@@ -133,15 +133,13 @@
                               <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
                               <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                             </Fallback>
-                            <!-- <Fallback name="PoorGPSStop">
-                              <Inverter>
-                                <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="10.0"/>
-                              </Inverter>
+                            <Fallback name="PoorGPSStop">
+                              <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="0.0"/>
                               <Sequence name="SetPathEmpty">
                                 <SetPathEmpty path="{path}"/>
                                 <Exception message="GPS质量差" error_code="1" exception="{exception}"/>
                               </Sequence>
-                            </Fallback> -->
+                            </Fallback>
                           </Sequence>
                           <Sequence name="VoiceAndClear">
                             <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
