@@ -149,7 +149,7 @@ nav_msgs::msg::Path StraightLine::createPlan(
     unsigned int cost = costmap_->getCost(mx, my);
     // if (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
     //   cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
-    if (cost > 0)
+    if (cost > 0 && cost != nav2_costmap_2d::NO_INFORMATION)
     {
       RCLCPP_INFO(
         node_->get_logger(), "路径上有障碍物, cost = %d",

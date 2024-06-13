@@ -47,7 +47,7 @@ BT::NodeStatus PathToCurbFollowCondition::tick()
     odometry_gps.pose.covariance[7] < max_position_covariance &&
     odometry_gps.pose.covariance[14] < max_position_covariance &&
     odometry_gps.pose.covariance[21] < max_angle_covariance &&
-    odometry_gps.pose.covariance[28] < max_angle_covariance &&
+    // odometry_gps.pose.covariance[28] < max_angle_covariance &&
     odometry_gps.pose.covariance[35] < max_angle_covariance) {
     return BT::NodeStatus::FAILURE;
   }

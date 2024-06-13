@@ -17,6 +17,8 @@
                   <!-- <VehicleControl control="0"/> -->
                   <CancelControl name="ControlCancel"/>
                   <Wait wait_duration="0.5"/>
+                  <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                 </Sequence>
                 <Sequence name="RemoteControl">
                   <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="remote_control"/>
@@ -40,6 +42,8 @@
                       <Sequence name="Exception">
                         <SetPathEmpty path="{path}"/>
                         <Exception message="路径上有障碍物" error_code="1" exception="{exception}"/>
+                        <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                        <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                       </Sequence>
                     </Fallback>
                     <Fallback name="ToggleForwardBackwardMode">
@@ -86,7 +90,7 @@
                       <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
                       <Fallback name="SwitchToPathFollowingMode">
                         <Inverter>
-                          <CurbToPathFollow odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}" gps_recovery_hold_time="1.0"/>
+                          <CurbToPathFollow odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.00008" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}" gps_recovery_hold_time="1.0"/>
                         </Inverter>
                         <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                       </Fallback>
@@ -114,7 +118,7 @@
                       <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
                       <Fallback name="SwitchToCurbFollowingMode">
                         <Inverter>
-                          <PathToCurbFollow odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.01" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}"/>
+                          <PathToCurbFollow odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.00009" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}"/>
                         </Inverter>
                         <SetNavigationStateAction input_state="curb_following" output_state="{navigation_state}"/>
                       </Fallback>
@@ -134,7 +138,7 @@
                               <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                             </Fallback>
                             <Fallback name="PoorGPSStop">
-                              <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="0.0"/>
+                              <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.00009" waypoint="{waypoint}" distance_after_loss="0.0"/>
                               <Sequence name="SetPathEmpty">
                                 <SetPathEmpty path="{path}"/>
                                 <Exception message="GPS质量差" error_code="1" exception="{exception}"/>
@@ -148,7 +152,7 @@
                         </RecoveryNode>
                         <Fallback name="ComputePathToPathAndSwitchState">
                           <Sequence name="SwitchState">
-                            <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.0001" waypoint="{waypoint}" obstacle_mode="{obstacle_mode}"/>
+                            <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.00009" waypoint="{waypoint}" obstacle_mode="{obstacle_mode}"/>
                             <!-- <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/> -->
                             <SetNavigationStateAction input_state="bypass_obstacle" output_state="{navigation_state}"/>
                           </Sequence>

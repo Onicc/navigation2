@@ -148,7 +148,7 @@ nav_msgs::msg::Path Point::createPlan(
     goal.pose.position.x,
     goal.pose.position.y, mx, my);
   unsigned int cost = costmap_->getCost(mx, my);
-  if (cost > 0)
+  if (cost > 0 && cost != nav2_costmap_2d::NO_INFORMATION)
   {
     RCLCPP_INFO(
       node_->get_logger(), "路径点上有障碍物, cost = %d",

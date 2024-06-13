@@ -699,16 +699,16 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
       return;
     }
 
-    // Get current path points
-    nav_msgs::msg::Path entire_path;
-    entire_path.header = waypoints.header;
-    for (size_t i = 0; i < waypoints.waypoints.size(); ++i) {
-      geometry_msgs::msg::PoseStamped pose;
-      pose.header = waypoints.waypoints[i].header;
-      pose.pose = waypoints.waypoints[i].pose;
-      entire_path.poses.push_back(pose);
-    }
-    path_pub_->publish(entire_path);
+    // // Get current path points
+    // nav_msgs::msg::Path entire_path;
+    // entire_path.header = waypoints.header;
+    // for (size_t i = 0; i < waypoints.waypoints.size(); ++i) {
+    //   geometry_msgs::msg::PoseStamped pose;
+    //   pose.header = waypoints.waypoints[i].header;
+    //   pose.pose = waypoints.waypoints[i].pose;
+    //   entire_path.poses.push_back(pose);
+    // }
+    // path_pub_->publish(entire_path);
 
     // auto beam_message = std_msgs::msg::String();
     // beam_message.data = "HAZARD_BEAM";
@@ -953,9 +953,9 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
             waypoint.curb_distance = 0.0;
             waypoint.curb_direction = 0.0;
             waypoint.curb_residual = 0.0;
-            waypoint.option_curb_direction_fix = false;
-            waypoint.option_curb_horizontal_fix = false;
-            waypoint.option_curb_traction_fix = false;
+            waypoint.option_curb_direction_fix = waypoints[0].option_curb_direction_fix;
+            waypoint.option_curb_horizontal_fix = waypoints[0].option_curb_horizontal_fix;
+            waypoint.option_curb_traction_fix = waypoints[0].option_curb_traction_fix;
             waypoint.option_bypass_obstacle = waypoints[0].option_bypass_obstacle;
             waypoint.option_stop_obstacle = waypoints[0].option_stop_obstacle;
             waypoint.option_speed = waypoints[0].option_speed;

@@ -80,7 +80,7 @@ BT::NodeStatus CurbToPathFollowCondition::tick()
     odometry_gps.pose.covariance[7] < max_position_covariance &&
     odometry_gps.pose.covariance[14] < max_position_covariance &&
     odometry_gps.pose.covariance[21] < max_angle_covariance &&
-    odometry_gps.pose.covariance[28] < max_angle_covariance &&
+    // odometry_gps.pose.covariance[28] < max_angle_covariance &&
     odometry_gps.pose.covariance[35] < max_angle_covariance) {
     auto now_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now_time - gps_lost_time_);
