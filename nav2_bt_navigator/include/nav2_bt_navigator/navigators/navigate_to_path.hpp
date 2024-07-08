@@ -321,6 +321,7 @@ protected:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
+  rclcpp::Publisher<nav2_msgs::msg::WaypointArray>::SharedPtr optimized_waypoints_pub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
@@ -373,6 +374,8 @@ protected:
 
   std::string waypoints_path_ = "";
   int waypoint_index_blackboard_ = -1;
+
+  nav2_msgs::msg::WaypointArray waypoints_;
 };
 
 }  // namespace nav2_bt_navigator

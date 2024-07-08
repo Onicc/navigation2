@@ -216,7 +216,7 @@ NavigateToPathNavigator::configure(
   //   std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
 
   waypoints_sub_ = node->create_subscription<nav2_msgs::msg::WaypointArray>(
-    "/waypoints",
+    "/original_waypoints",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onWaypointsReceived, this, std::placeholders::_1));
 
@@ -274,9 +274,9 @@ NavigateToPathNavigator::configure(
     "/waypoints",
     std::bind(&NavigateToPathNavigator::onWaypointsReceivedSrv, this, std::placeholders::_1, std::placeholders::_2));
 
-  load_waypoints_service_ = node->create_service<nav2_msgs::srv::SetString>(
-    "/command/load_waypoints",
-    std::bind(&NavigateToPathNavigator::onLoadWaypointsSrv, this, std::placeholders::_1, std::placeholders::_2));
+  // load_waypoints_service_ = node->create_service<nav2_msgs::srv::SetString>(
+  //   "/command/load_waypoints",
+  //   std::bind(&NavigateToPathNavigator::onLoadWaypointsSrv, this, std::placeholders::_1, std::placeholders::_2));
 
   start_auto_cleaning_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/command/start_auto_cleaning",
@@ -304,8 +304,8 @@ NavigateToPathNavigator::configure(
 
   beam_pub_ = node->create_publisher<std_msgs::msg::String>("vehicle/command/beam", 10);
   voice_pub_ = node->create_publisher<std_msgs::msg::String>("/voice", 10);
-  path_pub_ = node->create_publisher<nav_msgs::msg::Path>("/entire_path", 10);
-  
+  path_pub_ = node->create_publisher<nav_msgs::msg::Path>("/entire_path", 10);  
+  optimized_waypoints_pub_ = node->create_publisher<nav2_msgs::msg::WaypointArray>("/optimized_waypoints", 10);
 
   last_loop_time_ = std::chrono::high_resolution_clock::now();
 
@@ -570,9 +570,11 @@ NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStampe
 void
 NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg)
 {
-  ActionT::Goal goal;
-  goal.waypoints = *msg;
-  self_client_->async_send_goal(goal);
+  // ActionT::Goal goal;
+  // goal.waypoints = *msg;
+  // self_client_->async_send_goal(goal);
+  waypoints_ = *msg;
+  RCLCPP_INFO(logger_, "Received waypoints msg");
 }
 
 void
@@ -643,38 +645,32 @@ NavigateToPathNavigator::onWaypointsReceivedSrv(
   response->success = true;
 }
 
-void 
-NavigateToPathNavigator::onLoadWaypointsSrv(
-  const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
-  std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
-{
-  RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
-  waypoints_path_ = request->data;
+// void 
+// NavigateToPathNavigator::onLoadWaypointsSrv(
+//   const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
+//   std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+// {
+//   RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
+//   waypoints_path_ = request->data;
 
-  if(!rcpputils::fs::exists(waypoints_path_)) {
-    RCLCPP_ERROR(logger_, "The waypoints path is not exist.");
-    response->success = false;
-    return;
-  }
+//   if(!rcpputils::fs::exists(waypoints_path_)) {
+//     RCLCPP_ERROR(logger_, "The waypoints path is not exist.");
+//     response->success = false;
+//     return;
+//   }
 
-  RCLCPP_INFO(logger_, "Successfully loaded path file %s", waypoints_path_.c_str());
+//   RCLCPP_INFO(logger_, "Successfully loaded path file %s", waypoints_path_.c_str());
 
-  response->success = true;
-}
+//   response->success = true;
+// }
 
 void 
 NavigateToPathNavigator::onStartAutoCleaningSrv(
   const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
   std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
 {
-  if(waypoints_path_ == "") {
+  if(waypoints_.waypoints.size() == 0) {
     RCLCPP_INFO(logger_, "The waypoints path is empty.");
-    response->success = false;
-    return;
-  }
-
-  if(!rcpputils::fs::exists(waypoints_path_)) {
-    RCLCPP_INFO(logger_, "The waypoints path is not exist.");
     response->success = false;
     return;
   }
@@ -698,6 +694,8 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
       response->success = false;
       return;
     }
+
+    optimized_waypoints_pub_->publish(waypoints);
 
     // // Get current path points
     // nav_msgs::msg::Path entire_path;
@@ -814,48 +812,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
   auto blackboard = bt_action_server_->getBlackboard();
   auto node = blackboard->get<rclcpp::Node::SharedPtr>("node");
 
-  std::vector<nav2_msgs::msg::Waypoint> waypoints;
-
-  try {
-      YAML::Node yamlData = YAML::LoadFile(waypointsFile);
-      const YAML::Node& waypointsNode = yamlData["waypoints"];
-
-      for (const YAML::Node& transform : waypointsNode) {
-          geometry_msgs::msg::Pose pose;
-          pose.position.x = transform["position"]["x"].as<double>();
-          pose.position.y = transform["position"]["y"].as<double>();
-          pose.position.z = transform["position"]["z"].as<double>();
-          pose.orientation.x = transform["orientation"]["x"].as<double>();
-          pose.orientation.y = transform["orientation"]["y"].as<double>();
-          pose.orientation.z = transform["orientation"]["z"].as<double>();
-          pose.orientation.w = transform["orientation"]["w"].as<double>();
-
-          nav2_msgs::msg::Waypoint waypoint;
-          waypoint.header.frame_id = "map";
-          waypoint.header.stamp = node->get_clock()->now();
-          waypoint.pose = pose;
-          waypoint.curb_distance = transform["curb"]["distance"].as<double>();
-          waypoint.curb_direction = transform["curb"]["direction"].as<double>();
-          waypoint.curb_residual = transform["curb"]["residual"].as<double>();
-          waypoint.option_curb_direction_fix = transform["option"]["curb_direction_fix"].as<bool>();
-          waypoint.option_curb_horizontal_fix = transform["option"]["curb_horizontal_fix"].as<bool>();
-          waypoint.option_curb_traction_fix = transform["option"]["curb_traction"].as<bool>();
-          waypoint.option_bypass_obstacle = transform["option"]["bypass_obstacle"].as<bool>();
-          waypoint.option_stop_obstacle = transform["option"]["stop_obstacle"].as<bool>();
-          waypoint.option_speed = transform["option"]["speed"].as<float>();
-          waypoint.option_cleaning_mode = transform["option"]["cleaning_mode"].as<int>();
-          waypoint.option_traffic_light = transform["option"]["traffic_light"].as<bool>();
-          waypoint.option_gps_poor_stop = transform["option"]["gps_poor_stop"].as<bool>();
-          waypoint.option_turn_signal = transform["option"]["turn_signal"].as<int>();
-
-          waypoints.push_back(waypoint);
-      }
-      RCLCPP_INFO(logger_, "Waypoints loaded, total: %zu", waypoints.size());
-  } catch (const std::exception& e) {
-      RCLCPP_INFO(logger_, "Failed to load waypoints: %s", e.what());
-      nav2_msgs::msg::WaypointArray waypointsMsg;
-      return waypointsMsg;
-  }
+  auto waypoints = waypoints_.waypoints;
 
   std::string robot_frame;
   blackboard->get<std::string>(robot_frame_blackboard_id_, robot_frame);
@@ -930,7 +887,21 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
       heading0 += M_PI;
     }
 
-    for (size_t i = closest_pose_idx; i < current_path.poses.size(); i += 1) {
+    // 在最近点后curve_max_find_distance米内查找最大曲率点
+    int curve_max_find_index = current_path.poses.size();
+    double curve_max_find_distance = 10;
+    double curve_distance = 0.0;
+    for (size_t curr_idx = (closest_pose_idx+1); curr_idx < current_path.poses.size(); ++curr_idx) {
+      curve_distance += nav2_util::geometry_utils::euclidean_distance(
+        current_path.poses[curr_idx-1], current_path.poses[curr_idx]);
+      if (curve_distance > curve_max_find_distance) {
+        curve_max_find_index = curr_idx;
+        break;
+      }
+    }
+
+    // 在最近点后查找最大曲率点
+    for (size_t i = closest_pose_idx; i < curve_max_find_index; i += 1) {
         std::array<double, 2> p3 = {current_path.poses[i].pose.position.x, current_path.poses[i].pose.position.y};
         double heading3 = atan2(2*(current_path.poses[i].pose.orientation.w*current_path.poses[i].pose.orientation.z+current_path.poses[i].pose.orientation.x*current_path.poses[i].pose.orientation.y), 1-2*(current_path.poses[i].pose.orientation.y*current_path.poses[i].pose.orientation.y+current_path.poses[i].pose.orientation.z*current_path.poses[i].pose.orientation.z));
         std::tuple<bool, std::vector<std::array<double, 2>>, std::vector<double>> curvePointsOrientations = curve.bezierCurve(p0, p3, heading0, heading3, max_curvature, 100);
@@ -977,6 +948,8 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
   } catch (...) {
     // Ignore
   }
+
+  RCLCPP_INFO(logger_, "No curvature line meets the criteria");
 
   nav2_msgs::msg::WaypointArray waypointsMsg;
   waypointsMsg.header.frame_id = "map";
