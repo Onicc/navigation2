@@ -13,3 +13,4 @@ uint32 option_cleaning_mode
 bool option_traffic_light
 bool option_gps_poor_stop
 int32 option_turn_signal    # +1: 左转 0: 关闭转向灯 -1: 右转
+uint32 option_localization_method  # 0:none | 1:GPS | 2:Lidar
