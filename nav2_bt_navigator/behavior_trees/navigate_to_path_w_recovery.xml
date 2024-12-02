@@ -151,6 +151,13 @@
                                 <Exception message="GPS质量差" error_code="1" exception="{exception}"/>
                               </Sequence>
                             </Fallback> -->
+                          <Fallback name="GpsLidarToggle">
+                            <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.01" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
+                            <Sequence name="SetPathEmpty">
+                              <SetPathEmpty path="{path}"/>
+                              <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
+                            </Sequence>
+                          </Fallback>
                           </Sequence>
                           <Sequence name="VoiceAndClear">
                             <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
