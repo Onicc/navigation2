@@ -111,6 +111,11 @@ NavigateToPathNavigator::configure(
   }
   odometry_gps_blackboard_id_ = node->get_parameter("odometry_gps_blackboard_id").as_string();
 
+  if (!node->has_parameter("odometry_lidar_blackboard_id")) {
+    node->declare_parameter("odometry_lidar_blackboard_id", std::string("odometry_lidar"));
+  }
+  odometry_lidar_blackboard_id_ = node->get_parameter("odometry_lidar_blackboard_id").as_string();
+
   if (!node->has_parameter("curb_traction_point_blackboard_id")) {
     node->declare_parameter("curb_traction_point_blackboard_id", std::string("curb_traction_point"));
   }
@@ -221,9 +226,14 @@ NavigateToPathNavigator::configure(
     std::bind(&NavigateToPathNavigator::onWaypointsReceived, this, std::placeholders::_1));
 
   odometry_gps_sub_ = node->create_subscription<nav_msgs::msg::Odometry>(
-    "/odometry/gps/raw/var",
+    "/odometry/gps",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onOdometryGPSReceived, this, std::placeholders::_1));
+
+  odometry_lidar_sub_ = node->create_subscription<nav_msgs::msg::Odometry>(
+    "/liorf_localization/mapping/odometry",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onOdometryLidarReceived, this, std::placeholders::_1));
 
   curb_traction_point_sub_ = node->create_subscription<geometry_msgs::msg::PoseStamped>(
     "/curb/traction_point",
@@ -735,6 +745,13 @@ NavigateToPathNavigator::onOdometryGPSReceived(const nav_msgs::msg::Odometry::Sh
 }
 
 void
+NavigateToPathNavigator::onOdometryLidarReceived(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<nav_msgs::msg::Odometry>(odometry_lidar_blackboard_id_, *msg);
+}
+
+void
 NavigateToPathNavigator::onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
   auto blackboard = bt_action_server_->getBlackboard();
@@ -934,6 +951,7 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
             waypoint.option_traffic_light = waypoints[0].option_traffic_light;
             waypoint.option_gps_poor_stop = waypoints[0].option_gps_poor_stop;
             waypoint.option_turn_signal = waypoints[0].option_turn_signal;
+            waypoint.option_localization_method = waypoints[0].option_localization_method;
             curveWaypoints.push_back(waypoint);
           }
           curveWaypoints.insert(curveWaypoints.end(), waypoints.begin()+i, waypoints.end());

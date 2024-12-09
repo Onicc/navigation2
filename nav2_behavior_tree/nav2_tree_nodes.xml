@@ -372,6 +372,16 @@
       <input_port name="navigation_state"> Navigation state </input_port>
     </Action>
 
+    <Action ID="GpsLidarToggle">
+      <input_port name="waypoint"> Nearest waypoint to robot </input_port>
+      <input_port name="odometry_gps"> GPS position </input_port>
+      <input_port name="odometry_lidar"> Lidar position </input_port>
+      <input_port name="gps_position_covariance_threshold"> Threshold for GPS position covariance </input_port>
+      <input_port name="gps_orientation_covariance_threshold"> Threshold for GPS orientation covariance </input_port>
+      <input_port name="lidar_position_covariance_threshold"> Threshold for Lidar position covariance </input_port>
+      <input_port name="lidar_orientation_covariance_threshold"> Threshold for Lidar orientation covariance </input_port>
+    </Action>
+
     <Action ID="VehicleAutomaticExit">
       <input_port name="cmd_vel"> command velocity </input_port>
       <input_port name="odometry"> odometry </input_port>

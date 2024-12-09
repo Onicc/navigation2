@@ -214,6 +214,7 @@ public:
   void onCommandReceived(const std_msgs::msg::String::SharedPtr command);
   void onBTNavigatorStartReceived(const std_msgs::msg::String::SharedPtr msg);
   void onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void onOdometryLidarReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
@@ -309,6 +310,7 @@ protected:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr bt_navigator_start_sub_;
   rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_gps_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_lidar_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
   rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
@@ -348,6 +350,7 @@ protected:
   std::string waypoints_blackboard_id_;
   std::string waypoint_blackboard_id_;
   std::string odometry_gps_blackboard_id_;
+  std::string odometry_lidar_blackboard_id_;
   std::string curb_traction_point_blackboard_id_;
   std::string curb_traction_point_extension_blackboard_id_;
   std::string curb_path_extension_blackboard_id_;
