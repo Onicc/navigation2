@@ -36,7 +36,7 @@
                 </Inverter>
                 <RecoveryNode number_of_retries="1" name="ComputePathToPose">
                   <Sequence name="Manual">
-                    <SetCleaningMode cleaning_mode="0"/>
+                    <!-- <SetCleaningMode cleaning_mode="0"/> -->
                     <Fallback name="ToggleForwardBackwardMode">
                       <ComputePathToPose goal="{manual_goal}" path="{path}" planner_id="StraightLine"/>
                       <Sequence name="Exception">
@@ -183,7 +183,7 @@
                       <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
                       <!-- <SetTurnSignal turn_signal="left"/> -->
                       <!-- <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/> -->
-                      <SetCleaningMode cleaning_mode="0"/>
+                      <!-- <SetCleaningMode cleaning_mode="0"/> -->
                       <Fallback name="FindGoal">
                         <RecoveryNode number_of_retries="2" name="TryFindGoal">
                           <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" robot_frame="{robot_frame}" goal="{farthest_obstacle_point}"/>
@@ -228,7 +228,7 @@
               <IsPathEmpty path="{path}"/>
             </Inverter>
             <Sequence name="CancelingControlAndWait">
-              <SetCleaningMode cleaning_mode="0"/>
+              <!-- <SetCleaningMode cleaning_mode="0"/> -->
               <CancelControl name="ControlCancel"/>
               <Wait wait_duration="1"/>
               <Inverter>
