@@ -225,6 +225,11 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onWaypointsReceived, this, std::placeholders::_1));
 
+  waypoints_bypass_sub_ = node->create_subscription<nav2_msgs::msg::WaypointArray>(
+    "/assist_waypoints",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onWaypointsBypassReceived, this, std::placeholders::_1));
+
   odometry_gps_sub_ = node->create_subscription<nav_msgs::msg::Odometry>(
     "/odometry/gps",
     rclcpp::SystemDefaultsQoS(),
@@ -347,6 +352,7 @@ bool
 NavigateToPathNavigator::cleanup()
 {
   waypoints_sub_.reset();
+  waypoints_bypass_sub_.reset();
   self_client_.reset();
   goal_sub_.reset();
   command_sub_.reset();
@@ -588,6 +594,16 @@ NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray
 }
 
 void
+NavigateToPathNavigator::onWaypointsBypassReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg)
+{
+  // ActionT::Goal goal;
+  // goal.waypoints = *msg;
+  // self_client_->async_send_goal(goal);
+  waypoints_bypass_ = *msg;
+  RCLCPP_INFO(logger_, "Received waypoints msg");
+}
+
+void
 NavigateToPathNavigator::onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg)
 {
   auto blackboard = bt_action_server_->getBlackboard();
@@ -685,20 +701,37 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
     return;
   }
 
-  if(request->data == "start_point" || request->data == "middle_point") {
-    if(request->data == "start_point") {
-      waypoint_index_blackboard_ = 0;   // 从起点起步
-      RCLCPP_INFO(logger_, "The command is not start_point.");
-      voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+  if(request->data == "start_point" || request->data == "middle_point" || request->data == "start_point_bypass" || request->data == "middle_point_bypass") {
+    nav2_msgs::msg::WaypointArray waypoints;
+    if(request->data == "start_point" || request->data == "middle_point") {
+      if(request->data == "start_point") {
+        waypoint_index_blackboard_ = 0;   // 从起点起步
+        RCLCPP_INFO(logger_, "The command is not start_point.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      if(request->data == "middle_point") {
+        waypoint_index_blackboard_ = -1;  // 从中途起步
+        RCLCPP_INFO(logger_, "The command is not middle_point.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      waypoints = loadWaypoints(waypoints_path_);
     }
-    if(request->data == "middle_point") {
-      waypoint_index_blackboard_ = -1;  // 从中途起步
-      RCLCPP_INFO(logger_, "The command is not middle_point.");
-      voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+
+    if(request->data == "start_point_bypass" || request->data == "middle_point_bypass") {
+      if(request->data == "start_point_bypass") {
+        waypoint_index_blackboard_ = 0;   // 从起点起步
+        RCLCPP_INFO(logger_, "The command is not start_point_bypass.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      if(request->data == "middle_point_bypass") {
+        waypoint_index_blackboard_ = -1;  // 从中途起步
+        RCLCPP_INFO(logger_, "The command is not middle_point_bypass.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      waypoints = loadBypassWaypoints();
     }
 
     RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", request->data.c_str());
-    auto waypoints = loadWaypoints(waypoints_path_);
     RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
     if(waypoints.waypoints.size() == 0) {
       response->success = false;
@@ -969,6 +1002,25 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
 
   RCLCPP_INFO(logger_, "No curvature line meets the criteria");
 
+  nav2_msgs::msg::WaypointArray waypointsMsg;
+  waypointsMsg.header.frame_id = "map";
+  waypointsMsg.header.stamp = node->get_clock()->now();
+  waypointsMsg.waypoints = waypoints;
+
+  return waypointsMsg;
+}
+
+
+nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadBypassWaypoints()
+{
+  auto blackboard = bt_action_server_->getBlackboard();
+  auto node = blackboard->get<rclcpp::Node::SharedPtr>("node");
+
+  auto waypoints = waypoints_bypass_.waypoints;
+
+  std::string robot_frame;
+  blackboard->get<std::string>(robot_frame_blackboard_id_, robot_frame);
+  
   nav2_msgs::msg::WaypointArray waypointsMsg;
   waypointsMsg.header.frame_id = "map";
   waypointsMsg.header.stamp = node->get_clock()->now();

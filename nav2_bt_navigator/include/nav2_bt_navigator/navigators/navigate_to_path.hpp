@@ -217,6 +217,7 @@ public:
   void onOdometryLidarReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
+  void onWaypointsBypassReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
   void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
@@ -302,6 +303,7 @@ protected:
   void initializeGoalPath(ActionT::Goal::ConstSharedPtr goal);
 
   nav2_msgs::msg::WaypointArray loadWaypoints(const std::string& waypointsFile);
+  nav2_msgs::msg::WaypointArray loadBypassWaypoints();
 
   rclcpp::Time start_time_;
 
@@ -309,6 +311,7 @@ protected:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr bt_navigator_start_sub_;
   rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_sub_;
+  rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_bypass_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_gps_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_lidar_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
@@ -379,6 +382,7 @@ protected:
   int waypoint_index_blackboard_ = -1;
 
   nav2_msgs::msg::WaypointArray waypoints_;
+  nav2_msgs::msg::WaypointArray waypoints_bypass_;
 };
 
 }  // namespace nav2_bt_navigator
