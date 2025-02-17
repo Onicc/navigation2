@@ -227,14 +227,14 @@
             <Inverter>
               <IsPathEmpty path="{path}"/>
             </Inverter>
-            <Sequence name="CancelingControlAndWait">
+            <SequenceStar name="CancelingControlAndWait">
               <!-- <SetCleaningMode cleaning_mode="0"/> -->
               <CancelControl name="ControlCancel"/>
               <Wait wait_duration="1"/>
               <Inverter>
                 <IsPathEmpty path="{path}"/>
               </Inverter>
-            </Sequence>
+            </SequenceStar>
           </Fallback>
           <Fallback name="FollowPath">
             <IsPathEmpty path="{path}"/>
