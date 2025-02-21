@@ -64,10 +64,10 @@ inline BT::NodeStatus VehicleAutomaticExit::tick()
     times = 0;
   }
 
-  if(times > 50) {
+  if(times > 30) {
     // exit
     RCLCPP_INFO(config().blackboard->get<rclcpp::Node::SharedPtr>("node")->get_logger(), "-------退出自动运行-------");
-    std::string command = "ros2 service call /bt/navigation_state nav2_msgs/srv/SetString \"{data: stop}\";ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call /vehicle/command/power slv_msgs/srv/SetString \"{data: OFF}\"";
+    std::string command = "ros2 service call /bt/navigation_state nav2_msgs/srv/SetString \"{data: stop}\";ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call vehicle/command/gear slv_msgs/srv/SetString \"{data: N}\";bash /home/starlight/slv_ws/bin/close_clean;ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call vehicle/command/epb_break slv_msgs/srv/SetString \"{data: ON}\";ros2 service call vehicle/command/driving_mode slv_msgs/srv/SetString \"{data: MANUAL}\";ros2 service call /location_selector/set slv_msgs/srv/SetString \"{data: gps}\"";
     int result = system(command.c_str());
     times = 0;
   }

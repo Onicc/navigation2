@@ -115,7 +115,7 @@
                       <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
                       <VehicleAutomaticExit cmd_vel="{cmd_vel}" odometry="{front_odometry}" remaining_distance="{remaining_distance}"/>
                       <Fallback name="GpsLidarToggle">
-                        <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.01" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
+                        <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.0001" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
                         <Sequence name="SetPathEmpty">
                           <SetPathEmpty path="{path}"/>
                           <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
@@ -130,7 +130,8 @@
                         <SetNavigationStateAction input_state="curb_following" output_state="{navigation_state}"/>
                       </Fallback>
                       <Fallback name="ComputePathToPathAndSwitchState">
-                        <RecoveryNode number_of_retries="2" name="ComputePathToPath">
+                        <!-- number_of_retries = 25 = 5s -->
+                        <RecoveryNode number_of_retries="25" name="ComputePathToPath">
                           <Sequence name="TurncatPoses">
                             <!-- <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="10.0"/> -->
                             <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
@@ -152,7 +153,7 @@
                               </Sequence>
                             </Fallback> -->
                           <Fallback name="GpsLidarToggle">
-                            <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.01" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
+                            <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.0001" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
                             <Sequence name="SetPathEmpty">
                               <SetPathEmpty path="{path}"/>
                               <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
@@ -200,21 +201,47 @@
                         </Inverter>
                         <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
                       </Fallback>
-                      <RateController hz="2.0">
-                        <Fallback name="ComputePoseToPath">
-                          <RecoveryNode number_of_retries="2" name="ComputePoseToPath">
+                      <Fallback name="ComputePoseToPath">
+                        <RecoveryNode number_of_retries="2" name="ComputePoseToPath">
+                          <!-- <ComputePathToPose goal="{farthest_obstacle_point}" path="{path}" planner_id="GridBased"/> -->
+                          <!-- <Sequence name="ComputePathToPose">
                             <ComputePathToPose goal="{farthest_obstacle_point}" path="{path}" planner_id="GridBased"/>
-                            <Sequence name="VoiceAndClear">
-                              <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
-                              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-                            </Sequence>
-                          </RecoveryNode>
-                          <Sequence name="Exception">
-                            <SetPathEmpty path="{path}"/>
-                            <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
+                            <SmoothPath smoothed_path="{path}" unsmoothed_path="{path}" smoother_id="SmoothPath"/>
+                          </Sequence> -->
+                          <Sequence name="ComputePathToPose">
+                            <ComputePathToPose goal="{farthest_obstacle_point}" path="{temp_path}" planner_id="GridBased"/>
+                            <SetPath input_path="{temp_path}" interval="3.0" output_path="{path}"/>
                           </Sequence>
-                        </Fallback>
-                      </RateController>
+                          <Sequence name="VoiceAndClear">
+                            <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                          </Sequence>
+                        </RecoveryNode>
+                        <Sequence name="Exception">
+                          <SetPathEmpty path="{path}"/>
+                          <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
+                        </Sequence>
+                      </Fallback>
+                      <Fallback name="GpsLidarToggle">
+                        <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.0001" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
+                        <Sequence name="SetPathEmpty">
+                          <SetPathEmpty path="{path}"/>
+                          <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
+                        </Sequence>
+                      </Fallback>
+                      <Fallback name="ComputePathToPathAndSwitchState">
+                        <RecoveryNode number_of_retries="2" name="FindObs">
+                          <PathObstacleCheck path="{path}" distance="2.0" costmap_msg="{global_costmap}"/>
+                          <Sequence name="ClearingActions">
+                            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                          </Sequence>
+                        </RecoveryNode>
+                        <Sequence name="Exception">
+                          <SetPathEmpty path="{path}"/>
+                          <Exception message="前方有运动障碍物" error_code="1" exception="{exception}"/>
+                        </Sequence>
+                      </Fallback>
                     </Sequence>
                   </Fallback>
                 </Sequence>
@@ -238,7 +265,6 @@
           </Fallback>
           <Fallback name="FollowPath">
             <IsPathEmpty path="{path}"/>
-            <!-- <IsExceptionUpdated update_time="1.0"/> -->
             <RecoveryNode number_of_retries="1" name="FollowPath">
               <FollowPath path="{path}" controller_id="FollowPath"/>
               <Sequence name="ClearingActions">
@@ -246,6 +272,40 @@
                 <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
               </Sequence>
             </RecoveryNode>
+            <!-- <Sequence name="FollowPath">
+              <Fallback name="BypassFollowPath">
+                <Inverter>
+                  <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
+                </Inverter>
+                <ReactiveSequence name="MonitorAndFollowPath">
+                  <PathChange path="{temp_path}" prox_len="1.0" length_factor="100.0" angular_distance_weight="0.0">
+                    <RetryUntilSuccessful num_attempts="1">
+                      <SequenceStar name="CancelingControlAndWait">
+                        <CancelControl name="ControlCancel"/>
+                        <Wait wait_duration="3"/>
+                      </SequenceStar>
+                    </RetryUntilSuccessful>
+                  </PathChange>
+                  <RecoveryNode number_of_retries="1" name="FollowPath">
+                    <FollowPath path="{path}" controller_id="FollowPath"/>
+                    <Sequence name="ClearingActions">
+                      <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                      <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    </Sequence>
+                  </RecoveryNode>
+                </ReactiveSequence>
+              </Fallback>
+              <Fallback name="NormPath">
+                <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="bypass_obstacle"/>
+                <RecoveryNode number_of_retries="1" name="FollowPath">
+                  <FollowPath path="{path}" controller_id="FollowPath"/>
+                  <Sequence name="ClearingActions">
+                    <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                    <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                  </Sequence>
+                </RecoveryNode>
+              </Fallback>
+            </Sequence> -->
           </Fallback>
         </Sequence>
       </PipelineSequence>
@@ -256,7 +316,7 @@
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
           </Sequence> -->
-          <Wait wait_duration="0.5"/>
+          <Wait wait_duration="1.0"/>
         </RoundRobin>
       </ReactiveFallback>
     </RecoveryNode>

@@ -76,6 +76,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_goal_checker_selector_bt_node",
     "nav2_controller_cancel_bt_node",
     "nav2_path_longer_on_approach_bt_node",
+    "nav2_path_change_bt_node",
     "nav2_wait_cancel_bt_node",
     "nav2_spin_cancel_bt_node",
     "nav2_assisted_teleop_cancel_bt_node",
@@ -124,6 +125,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_set_maximum_cruising_speed_using_cmd_action_bt_node",
     "nav2_vehicle_automatic_exit_action_bt_node",
     "nav2_gps_lidar_toggle_bt_node",
+    "nav2_path_obstacle_check_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

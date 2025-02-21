@@ -46,6 +46,11 @@ NavigateToPathNavigator::configure(
   }
   path_blackboard_id_ = node->get_parameter("path_blackboard_id").as_string();
 
+  if (!node->has_parameter("temp_path_blackboard_id")) {
+    node->declare_parameter("temp_path_blackboard_id", std::string("temp_path"));
+  }
+  temp_path_blackboard_id_ = node->get_parameter("temp_path_blackboard_id").as_string();
+
   if (!node->has_parameter("navigation_state_blackboard_id")) {
     node->declare_parameter("navigation_state_blackboard_id", std::string("navigation_state"));
   }

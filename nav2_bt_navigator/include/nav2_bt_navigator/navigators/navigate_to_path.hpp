@@ -341,6 +341,7 @@ protected:
 
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;
+  std::string temp_path_blackboard_id_;
   std::string path_local_blackboard_id_;
   std::string navigation_state_blackboard_id_;
   std::string waypoint_index_blackboard_id_;

@@ -29,15 +29,34 @@ SetPath::SetPath(
   const BT::NodeConfiguration & conf)
 : BT::ActionNodeBase(name, conf)
 {
+  node_ = config().blackboard->get<rclcpp::Node::SharedPtr>("node");
+  current_time_ = node_->now();
+  last_time_ = node_->now();
+
+  rclcpp::QoS qos(rclcpp::KeepLast(1));
+  qos.transient_local().reliable();
+  bypass_path_now_ =
+    node_->create_publisher<nav_msgs::msg::Path>("/bypass_path_now", qos);
+  bypass_path_last_ =
+    node_->create_publisher<nav_msgs::msg::Path>("/bypass_path_last", qos);
 }
 
 inline BT::NodeStatus SetPath::tick()
 {
   setStatus(BT::NodeStatus::RUNNING);
 
-  nav_msgs::msg::Path input_path;
-  getInput("input_path", input_path);
-  setOutput("output_path", input_path);
+  getInput("input_path", input_path_);
+  getInput("interval", time_interval_);
+
+  bypass_path_now_->publish(input_path_);
+
+  current_time_ = node_->now();
+  if ((current_time_ - last_time_).seconds() > time_interval_) {
+    last_time_ = current_time_;
+    bypass_path_last_->publish(input_path_);
+    setOutput("output_path", input_path_);
+    return BT::NodeStatus::SUCCESS;
+  }
 
   return BT::NodeStatus::SUCCESS;
 }

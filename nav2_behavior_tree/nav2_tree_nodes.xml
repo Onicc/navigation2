@@ -354,6 +354,7 @@
 
     <Action ID="SetPath">
       <input_port name="input_path"> Input path </input_port>
+      <input_port name="interval"> Time interval </input_port>
       <output_port name="output_path"> Output path </output_port>
     </Action>
 
@@ -386,6 +387,12 @@
       <input_port name="cmd_vel"> command velocity </input_port>
       <input_port name="odometry"> odometry </input_port>
       <input_port name="remaining_distance"> Remaining distance </input_port>
+    </Action>
+
+    <Action ID="PathObstacleCheck">
+      <input_port name="path"> Path to follow</input_port>
+      <input_port name="distance"> Maximum value of GPS angle covariance </input_port>
+      <input_port name="costmap_msg"> Maximum value of GPS position covariance </input_port>
     </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
@@ -558,6 +565,13 @@
       <input_port name="path">Planned Path</input_port>
       <input_port name="prox_len">Proximity length (m) for the path to be longer on approach</input_port>
       <input_port name="length_factor">Length multiplication factor to check if the path is significantly longer </input_port>
+    </Decorator>
+
+    <Decorator ID="PathChange">
+      <input_port name="path">Planned Path</input_port>
+      <input_port name="prox_len">Proximity length (m) for the path to be longer on approach</input_port>
+      <input_port name="length_factor">Length multiplication factor to check if the path is significantly longer </input_port>
+      <input_port name="angular_distance_weight"> Weight for angular distance in path distance calculation </input_port>
     </Decorator>
 
     <Decorator ID="GoalUpdatedController">
