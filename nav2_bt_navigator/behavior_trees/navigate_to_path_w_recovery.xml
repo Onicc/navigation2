@@ -220,6 +220,8 @@
                         <Sequence name="Exception">
                           <SetPathEmpty path="{path}"/>
                           <Exception message="无法生成绕障碍路径" error_code="1" exception="{exception}"/>
+                          <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                          <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
                         </Sequence>
                       </Fallback>
                       <Fallback name="GpsLidarToggle">
@@ -240,6 +242,16 @@
                         <Sequence name="Exception">
                           <SetPathEmpty path="{path}"/>
                           <Exception message="前方有运动障碍物" error_code="1" exception="{exception}"/>
+                          <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                          <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+                        </Sequence>
+                      </Fallback>
+                      <Fallback name="DeviationFromDistanceLimitAroundObstacle">
+                        <OffPathDetection goals="{goals}" path="{path}" distance="{max_bypass_deviation_distance}"/>
+                       <Sequence name="ClearingActions">
+                          <SetPathEmpty path="{path}"/>
+                          <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                          <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
                         </Sequence>
                       </Fallback>
                     </Sequence>

@@ -139,7 +139,7 @@ inline BT::NodeStatus PathObstacleCheck::tick()
   //   }
   // }
 
-  for(int i = 0; i < end_index; i++) {
+  for(int i = 20; i < end_index; i++) {
     unsigned int mx = 0;
     unsigned int my = 0;
     costmap_->worldToMap(

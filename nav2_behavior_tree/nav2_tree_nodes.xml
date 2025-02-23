@@ -394,6 +394,12 @@
       <input_port name="distance"> Maximum value of GPS angle covariance </input_port>
       <input_port name="costmap_msg"> Maximum value of GPS position covariance </input_port>
     </Action>
+
+    <Action ID="OffPathDetection">
+      <input_port name="goals"> The pose of the point on the path</input_port>
+      <input_port name="path"> Input path </input_port>
+      <input_port name="distance"> Maximum value of deviation distance </input_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
