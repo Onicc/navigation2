@@ -354,6 +354,7 @@
 
     <Action ID="SetPath">
       <input_port name="input_path"> Input path </input_port>
+      <input_port name="interval"> Time interval </input_port>
       <output_port name="output_path"> Output path </output_port>
     </Action>
 
@@ -386,6 +387,18 @@
       <input_port name="cmd_vel"> command velocity </input_port>
       <input_port name="odometry"> odometry </input_port>
       <input_port name="remaining_distance"> Remaining distance </input_port>
+    </Action>
+
+    <Action ID="PathObstacleCheck">
+      <input_port name="path"> Path to follow</input_port>
+      <input_port name="distance"> Maximum value of GPS angle covariance </input_port>
+      <input_port name="costmap_msg"> Maximum value of GPS position covariance </input_port>
+    </Action>
+
+    <Action ID="OffPathDetection">
+      <input_port name="goals"> The pose of the point on the path</input_port>
+      <input_port name="path"> Input path </input_port>
+      <input_port name="distance"> Maximum value of deviation distance </input_port>
     </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">

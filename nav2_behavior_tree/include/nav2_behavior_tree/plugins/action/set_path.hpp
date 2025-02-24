@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_PATH_EMPTY_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_PATH_EMPTY_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_PATH_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_PATH_HPP_
 
 #include <vector>
 #include <memory>
@@ -42,6 +42,7 @@ public:
   {
     return {
       BT::InputPort<nav_msgs::msg::Path>("input_path", "Input path"),
+      BT::InputPort<double>("interval", 2.0, "Time interval"),
       BT::OutputPort<nav_msgs::msg::Path>("output_path", "Output path"),
     };
   }
@@ -51,9 +52,14 @@ private:
   BT::NodeStatus tick() override;
 
   rclcpp::Node::SharedPtr node_;
-  std::string input_state_, output_state_;
+  nav_msgs::msg::Path input_path_;
+  double time_interval_;
 
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr navigation_state_pub_;
+  rclcpp::Time last_time_;
+  rclcpp::Time current_time_;
+
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr bypass_path_now_;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr bypass_path_last_;
 };
 
 }  // namespace nav2_behavior_tree

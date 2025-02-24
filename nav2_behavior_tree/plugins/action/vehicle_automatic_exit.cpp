@@ -64,7 +64,7 @@ inline BT::NodeStatus VehicleAutomaticExit::tick()
     times = 0;
   }
 
-  if(times > 50) {
+  if(times > 30) {
     // exit
     RCLCPP_INFO(config().blackboard->get<rclcpp::Node::SharedPtr>("node")->get_logger(), "-------退出自动运行-------");
     std::string command = "ros2 service call /bt/navigation_state nav2_msgs/srv/SetString \"{data: stop}\";ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call /vehicle/command/power slv_msgs/srv/SetString \"{data: OFF}\"";
