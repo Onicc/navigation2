@@ -46,6 +46,11 @@ NavigateToPathNavigator::configure(
   }
   path_blackboard_id_ = node->get_parameter("path_blackboard_id").as_string();
 
+  if (!node->has_parameter("temp_path_blackboard_id")) {
+    node->declare_parameter("temp_path_blackboard_id", std::string("temp_path"));
+  }
+  temp_path_blackboard_id_ = node->get_parameter("temp_path_blackboard_id").as_string();
+
   if (!node->has_parameter("navigation_state_blackboard_id")) {
     node->declare_parameter("navigation_state_blackboard_id", std::string("navigation_state"));
   }
@@ -199,6 +204,12 @@ NavigateToPathNavigator::configure(
   double remaining_distance=99999.9;
   blackboard->set<double>(remaining_distance_blackboard_id_, remaining_distance);
 
+  if (!node->has_parameter("max_bypass_deviation_distance_id")) {
+    node->declare_parameter("max_bypass_deviation_distance_id", std::string("max_bypass_deviation_distance"));
+  }
+  max_bypass_deviation_distance_id_ = node->get_parameter("max_bypass_deviation_distance_id").as_string();
+  blackboard->set<double>(max_bypass_deviation_distance_id_, 3.0);
+  
   // if (!node->has_parameter("manual_mode_blackboard_id")) {
   //   node->declare_parameter("manual_mode_blackboard_id", std::string("manual_mode"));
   // }
@@ -274,6 +285,11 @@ NavigateToPathNavigator::configure(
     "/articulation_controller/front_odometry",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onFrontOdometryReceived, this, std::placeholders::_1));
+
+  max_bypass_deviation_distance_sub_ = node->create_subscription<std_msgs::msg::Float32>(
+    "/max_bypass_deviation_distance",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onMaxBypassDeviationDistanceReceived, this, std::placeholders::_1));
 
   // teleop_cmd_vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
   //   "/manual/cmd_vel",
@@ -651,6 +667,15 @@ NavigateToPathNavigator::onFrontOdometryReceived(const nav_msgs::msg::Odometry::
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<nav_msgs::msg::Odometry>(front_odometry_blackboard_id_, *msg);
 }
+
+void
+NavigateToPathNavigator::onMaxBypassDeviationDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg)
+{
+  double max_bypass_deviation_distance = msg->data;
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<double>(max_bypass_deviation_distance_id_, max_bypass_deviation_distance);
+}
+
 
 // void
 // NavigateToPathNavigator::onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg)
