@@ -55,7 +55,7 @@
                         </Sequence>
                       </Inverter>
                     </Fallback>
-                    <SetMaximumCruisingSpeedUsingCmd cmd_vel="{cmd_vel}"/>
+                    <!-- <SetMaximumCruisingSpeedUsingCmd cmd_vel="{cmd_vel}"/> -->
                   </Sequence>
                   <Sequence name="VoiceAndClear">
                     <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
@@ -115,7 +115,7 @@
                       <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
                       <VehicleAutomaticExit cmd_vel="{cmd_vel}" odometry="{front_odometry}" remaining_distance="{remaining_distance}"/>
                       <Fallback name="GpsLidarToggle">
-                        <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.01" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
+                        <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.00009" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
                         <Sequence name="SetPathEmpty">
                           <SetPathEmpty path="{path}"/>
                           <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
@@ -227,14 +227,14 @@
             <Inverter>
               <IsPathEmpty path="{path}"/>
             </Inverter>
-            <SequenceStar name="CancelingControlAndWait">
+            <Sequence name="CancelingControlAndWait">
               <!-- <SetCleaningMode cleaning_mode="0"/> -->
               <CancelControl name="ControlCancel"/>
               <Wait wait_duration="1"/>
               <Inverter>
                 <IsPathEmpty path="{path}"/>
               </Inverter>
-            </SequenceStar>
+            </Sequence>
           </Fallback>
           <Fallback name="FollowPath">
             <IsPathEmpty path="{path}"/>
