@@ -355,7 +355,7 @@ geometry_msgs::msg::TwistStamped RegulatedPurePursuitController::computeVelocity
 
   // Collision checking on this velocity heading
   const double & carrot_dist = hypot(carrot_pose.pose.position.x, carrot_pose.pose.position.y);
-  if (use_collision_detection_ && isCollisionImminent(pose, linear_vel, angular_vel, carrot_dist)) {
+  if (use_collision_detection_ && isCollisionImminent(pose, linear_vel*0.4, angular_vel*0.1, carrot_dist)) {
     throw nav2_core::PlannerException("RegulatedPurePursuitController detected collision ahead!");
   }
 
@@ -474,11 +474,14 @@ bool RegulatedPurePursuitController::isCollisionImminent(
   // Note(stevemacenski): This may be a bit unusual, but the robot_pose is in
   // odom frame and the carrot_pose is in robot base frame.
 
+  // RCLCPP_INFO(logger_, "linear_vel = %f, angular_vel = %f, carrot_dist = %f", linear_vel, angular_vel, carrot_dist);
+
   // check current point is OK
   if (inCollision(
       robot_pose.pose.position.x, robot_pose.pose.position.y,
       tf2::getYaw(robot_pose.pose.orientation)))
   {
+    // RCLCPP_INFO(logger_, "Robot is in collision at current pose");
     return true;
   }
 
@@ -505,6 +508,8 @@ bool RegulatedPurePursuitController::isCollisionImminent(
     // Normal path tracking
     projection_time = costmap_->getResolution() / fabs(linear_vel);
   }
+
+  // RCLCPP_INFO(logger_, "projection_time = %f", projection_time);
 
   const geometry_msgs::msg::Point & robot_xy = robot_pose.pose.position;
   geometry_msgs::msg::Pose2D curr_pose;
