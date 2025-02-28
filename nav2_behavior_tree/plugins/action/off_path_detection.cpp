@@ -52,7 +52,7 @@ inline BT::NodeStatus OffPathDetection::tick()
   getInput("distance", distance_);
 
   std::string frame_id = "map";
-  int step = path_.poses.size() / 10;
+  int step = path_.poses.size() / 30;
 
   if(step == 0) {
     return BT::NodeStatus::SUCCESS;
