@@ -208,7 +208,7 @@ NavigateToPathNavigator::configure(
     node->declare_parameter("max_bypass_deviation_distance_id", std::string("max_bypass_deviation_distance"));
   }
   max_bypass_deviation_distance_id_ = node->get_parameter("max_bypass_deviation_distance_id").as_string();
-  blackboard->set<double>(max_bypass_deviation_distance_id_, 3.0);
+  blackboard->set<double>(max_bypass_deviation_distance_id_, 1.2);
   
   // if (!node->has_parameter("manual_mode_blackboard_id")) {
   //   node->declare_parameter("manual_mode_blackboard_id", std::string("manual_mode"));
