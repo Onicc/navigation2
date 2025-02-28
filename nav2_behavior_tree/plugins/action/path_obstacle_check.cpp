@@ -128,25 +128,26 @@ inline BT::NodeStatus PathObstacleCheck::tick()
   /******************************* cal ***********************************/
 
   /** Find the target point n meters away from the robot **/
-  double sum_distance = 0.0;
   int end_index = transformed_goals.size()-1;
-  // for(int i = 0; i < transformed_goals.size()-1; i++) {
-  //   sum_distance += nav2_util::geometry_utils::euclidean_distance(
-  //     transformed_goals[i], transformed_goals[i+1]);
-  //   if (sum_distance > distance_) {
-  //     end_index = i;
-  //     break;
-  //   }
-  // }
+  for(int i = 0; i < transformed_goals.size(); i++) {
+    double end_distance = nav2_util::geometry_utils::euclidean_distance(
+      transformed_goals[0], transformed_goals[i]);
+    if (end_distance > distance_) {
+      end_index = i;
+      break;
+    }
+  }
 
-  for(int i = 20; i < end_index; i++) {
+  std::cout << "end_index: " << end_index << std::endl; 
+
+  for(int i = 10; i < end_index; i++) {
     unsigned int mx = 0;
     unsigned int my = 0;
     costmap_->worldToMap(
       transformed_goals[i].pose.position.x,
       transformed_goals[i].pose.position.y, mx, my);
     unsigned int cost = costmap_->getCost(mx, my);
-    if (cost > 0) {
+    if (cost > 180) {
       RCLCPP_INFO(
         node_->get_logger(),
         "[PathObstacleCheck] The goal is in the obstacle");
