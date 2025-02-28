@@ -51,15 +51,7 @@ inline BT::NodeStatus AutomaticLight::tick()
   std_msgs::msg::String beam_msg;
   std_msgs::msg::String voice_msg;
 
-  //   auto beam_msg = std_msgs::msg::String();
-  //   beam_msg.data = "OFF_HAZARD_BEAM";
-  //   beam_pub_->publish(beam_msg);
-  //   beam_msg.data = "OFF_EMERGENCY_BEAM";
-  //   beam_pub_->publish(beam_msg);
-
   if(navigation_state == "stop") {
-    beam_msg.data = "OFF_ALL";
-    beam_pub_->publish(beam_msg);
     turn_signal_msg.data = "off";
     turn_signal_pub_->publish(turn_signal_msg);
     if(last_navigation_state != navigation_state) {
@@ -69,10 +61,6 @@ inline BT::NodeStatus AutomaticLight::tick()
   }
 
   if(navigation_state == "manual") {
-    beam_msg.data = "HAZARD_BEAM";
-    beam_pub_->publish(beam_msg);
-    beam_msg.data = "EMERGENCY_BEAM";
-    beam_pub_->publish(beam_msg);
     turn_signal_msg.data = "off";
     turn_signal_pub_->publish(turn_signal_msg);
     if(last_navigation_state != navigation_state) {
@@ -82,28 +70,25 @@ inline BT::NodeStatus AutomaticLight::tick()
   }
 
   if(navigation_state == "path_following") {
-    beam_msg.data = "EMERGENCY_BEAM";
-    beam_pub_->publish(beam_msg);
     if(waypoint.option_turn_signal < 0) {
       turn_signal_msg.data = "right";
       turn_signal_pub_->publish(turn_signal_msg);
-      beam_msg.data = "OFF_HAZARD_BEAM";
-      beam_pub_->publish(beam_msg);
       voice_msg.data = "右转弯请注意";
       voice_text_pub_->publish(voice_msg);
     } else if(waypoint.option_turn_signal > 0) {
       turn_signal_msg.data = "left";
       turn_signal_pub_->publish(turn_signal_msg);
-      beam_msg.data = "OFF_HAZARD_BEAM";
-      beam_pub_->publish(beam_msg);
       voice_msg.data = "左转弯请注意";
       voice_text_pub_->publish(voice_msg);
     } else {
       turn_signal_msg.data = "off";
       turn_signal_pub_->publish(turn_signal_msg);
-      beam_msg.data = "HAZARD_BEAM";
-      beam_pub_->publish(beam_msg);
     }
+  }
+
+  if (navigation_state == "bypass_obstacle") {
+    turn_signal_msg.data = "EMERGENCY_FLASHERS";
+    turn_signal_pub_->publish(turn_signal_msg);
   }
 
   last_navigation_state = navigation_state;
