@@ -727,6 +727,8 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
   }
 
   if(request->data == "start_point" || request->data == "middle_point" || request->data == "start_point_bypass" || request->data == "middle_point_bypass") {
+    std::string command = "ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: ON}\"";
+    int result = system(command.c_str());
     nav2_msgs::msg::WaypointArray waypoints;
     if(request->data == "start_point" || request->data == "middle_point") {
       if(request->data == "start_point") {
