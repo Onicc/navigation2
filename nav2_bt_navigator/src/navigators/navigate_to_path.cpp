@@ -291,6 +291,16 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onMaxBypassDeviationDistanceReceived, this, std::placeholders::_1));
 
+  bt_navigation_state_sub_ = node->create_subscription<std_msgs::msg::String>(
+    "/bt/navigation_state/set",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onBtNavigationReceived, this, std::placeholders::_1));
+
+  start_auto_cleaning_sub_ = node->create_subscription<std_msgs::msg::String>(
+    "/bt/start_auto_cleaning/set",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onAutoStartReceived, this, std::placeholders::_1));
+
   // teleop_cmd_vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
   //   "/manual/cmd_vel",
   //   rclcpp::SystemDefaultsQoS(),
@@ -598,6 +608,98 @@ NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStampe
 //   auto blackboard = bt_action_server_->getBlackboard();
 //   blackboard->set<std::string>(start_blackboard_id_, msg->data);
 // }
+
+
+void
+NavigateToPathNavigator::onBtNavigationReceived(const std_msgs::msg::String::SharedPtr msg)
+{
+  std::string msg_data = msg->data;
+
+  RCLCPP_INFO(logger_, "Received navigation state request: %s", msg_data.c_str());
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(navigation_state_blackboard_id_, msg_data);
+
+  std::string navigation_state = msg_data;
+}
+
+
+void
+NavigateToPathNavigator::onAutoStartReceived(const std_msgs::msg::String::SharedPtr msg)
+{
+  std::string msg_data = msg->data;
+
+  if(waypoints_.waypoints.size() == 0) {
+    RCLCPP_INFO(logger_, "The waypoints path is empty.");
+    return;
+  }
+
+  if(msg_data == "start_point" || msg_data == "middle_point" || msg_data == "start_point_bypass" || msg_data == "middle_point_bypass") {
+    std::string command = "ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: ON}\"";
+    int result = system(command.c_str());
+    nav2_msgs::msg::WaypointArray waypoints;
+    if(msg_data == "start_point" || msg_data == "middle_point") {
+      if(msg_data == "start_point") {
+        waypoint_index_blackboard_ = 0;   // 从起点起步
+        RCLCPP_INFO(logger_, "The command is not start_point.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      if(msg_data == "middle_point") {
+        waypoint_index_blackboard_ = -1;  // 从中途起步
+        RCLCPP_INFO(logger_, "The command is not middle_point.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      waypoints = loadWaypoints(waypoints_path_);
+    }
+
+    if(msg_data == "start_point_bypass" || msg_data == "middle_point_bypass") {
+      if(msg_data == "start_point_bypass") {
+        waypoint_index_blackboard_ = 0;   // 从起点起步
+        RCLCPP_INFO(logger_, "The command is not start_point_bypass.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      if(msg_data == "middle_point_bypass") {
+        waypoint_index_blackboard_ = -1;  // 从中途起步
+        RCLCPP_INFO(logger_, "The command is not middle_point_bypass.");
+        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+      }
+      waypoints = loadBypassWaypoints();
+    }
+
+    RCLCPP_INFO(logger_, "Received waypoints request, The waypoints path is %s", msg_data.c_str());
+    RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints.waypoints.size());
+    if(waypoints.waypoints.size() == 0) {
+      return;
+    }
+
+    optimized_waypoints_pub_->publish(waypoints);
+
+    // // Get current path points
+    // nav_msgs::msg::Path entire_path;
+    // entire_path.header = waypoints.header;
+    // for (size_t i = 0; i < waypoints.waypoints.size(); ++i) {
+    //   geometry_msgs::msg::PoseStamped pose;
+    //   pose.header = waypoints.waypoints[i].header;
+    //   pose.pose = waypoints.waypoints[i].pose;
+    //   entire_path.poses.push_back(pose);
+    // }
+    // path_pub_->publish(entire_path);
+
+    // auto beam_message = std_msgs::msg::String();
+    // beam_message.data = "HAZARD_BEAM";
+    // beam_pub_->publish(beam_message);
+    // beam_message.data = "EMERGENCY_BEAM";
+    // beam_pub_->publish(beam_message);
+
+    ActionT::Goal goal;
+    goal.waypoints = waypoints;
+    self_client_->async_send_goal(goal);
+
+    auto blackboard = bt_action_server_->getBlackboard();
+    blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+  } else {
+    RCLCPP_INFO(logger_, "The command is not start_point or middle_point.");
+  }
+}
 
 void
 NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg)
