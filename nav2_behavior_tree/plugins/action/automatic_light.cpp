@@ -81,13 +81,16 @@ inline BT::NodeStatus AutomaticLight::tick()
       voice_msg.data = "左转弯请注意";
       voice_text_pub_->publish(voice_msg);
     } else {
-      turn_signal_msg.data = "off";
+      // turn_signal_msg.data = "off";
+      // turn_signal_pub_->publish(turn_signal_msg);
+      turn_signal_msg.data = "EMERGENCY_FLASHERS";
       turn_signal_pub_->publish(turn_signal_msg);
     }
-  }
-
-  if (navigation_state == "bypass_obstacle") {
+  } else if (navigation_state == "bypass_obstacle") {
     turn_signal_msg.data = "EMERGENCY_FLASHERS";
+    turn_signal_pub_->publish(turn_signal_msg);
+  } else {
+    turn_signal_msg.data = "off";
     turn_signal_pub_->publish(turn_signal_msg);
   }
 

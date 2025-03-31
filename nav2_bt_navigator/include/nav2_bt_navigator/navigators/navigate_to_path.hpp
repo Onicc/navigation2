@@ -254,6 +254,9 @@ public:
   void onRobotFrameReceived(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  void onMaxBypassDeviationDistanceSrv(
+      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   /**
    * @brief Get action name for this navigator
    * @return string Name of action server
@@ -344,6 +347,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr start_auto_cleaning_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_obstacle_mode_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_robot_frame_service_;
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr max_bypass_deviation_distance_service_;
 
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;

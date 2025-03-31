@@ -27,6 +27,7 @@
 
 #include "behaviortree_cpp_v3/action_node.h"
 #include "tf2_ros/buffer.h"
+#include "tf2/utils.h"
 
 #include "nav2_msgs/msg/waypoint_array.hpp"
 #include "nav2_msgs/msg/waypoint.hpp"
@@ -95,6 +96,8 @@ private:
 
   bool transformPoseToFrame(const std::string frame_id, const geometry_msgs::msg::PoseStamped & input_pose, geometry_msgs::msg::PoseStamped & transformed_pose);
 
+  double computeAngleDifference(const geometry_msgs::msg::PoseStamped& pose1, const geometry_msgs::msg::PoseStamped& pose2);
+
   /**
    * @brief A custom pose distance method which takes angular distance into account
    * in addition to spatial distance (to improve picking a correct pose near cusps and loops)
@@ -114,6 +117,7 @@ private:
   std::shared_ptr<nav2_costmap_2d::Costmap2D> costmap_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
   geometry_msgs::msg::PoseStamped goal_;
+  int goal_index_in_goals_;
 };
 
 }  // namespace nav2_behavior_tree

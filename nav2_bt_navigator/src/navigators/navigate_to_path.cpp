@@ -335,6 +335,10 @@ NavigateToPathNavigator::configure(
     "/bt/robot_frame",
     std::bind(&NavigateToPathNavigator::onRobotFrameReceived, this, std::placeholders::_1, std::placeholders::_2));
 
+  max_bypass_deviation_distance_service_ = node->create_service<nav2_msgs::srv::SetString>(
+    "/bt/max_bypass_deviation_distance",
+    std::bind(&NavigateToPathNavigator::onMaxBypassDeviationDistanceSrv, this, std::placeholders::_1, std::placeholders::_2));
+
   // bt_command_service_ = node->create_service<nav2_msgs::srv::SetString>(
   //   "/bt/command",
   //   std::bind(&NavigateToPathNavigator::onBTCommandReceived, this, std::placeholders::_1, std::placeholders::_2));
@@ -796,6 +800,22 @@ NavigateToPathNavigator::onWaypointsReceivedSrv(
   goal.waypoints = request->data;
   self_client_->async_send_goal(goal);
   response->success = true;
+}
+
+void
+NavigateToPathNavigator::onMaxBypassDeviationDistanceSrv(
+  const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+  std::shared_ptr<nav2_msgs::srv::SetString::Response> response)
+{
+  try {
+    double max_bypass_deviation_distance = std::stod(request->data);
+    auto blackboard = bt_action_server_->getBlackboard();
+    blackboard->set<double>(max_bypass_deviation_distance_id_, max_bypass_deviation_distance);
+    response->success = true;
+  } catch (...) {
+    RCLCPP_ERROR(logger_, "Failed to convert max_bypass_deviation_distance to double");
+    response->success = false;
+  }
 }
 
 // void 
