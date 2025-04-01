@@ -158,7 +158,7 @@ inline BT::NodeStatus FindGoalFromCostmap::tick()
 
   /******************************* Check angle and adjust goal if necessary ***********************************/
   double distance_to_goal = nav2_util::geometry_utils::euclidean_distance(robot_pose, goal_);
-  if (distance_to_goal < 2.0 && goal_index_in_goals_ != 0 && goal_index_in_goals_ < (transformed_goals.size()-1)) {
+  if (distance_to_goal < 3.0 && goal_index_in_goals_ != 0 && goal_index_in_goals_ < (transformed_goals.size()-1)) {
     double angle_difference = computeAngleDifference(robot_pose, goal_);
     if (angle_difference > 20.0) {
       double distance = 0.0;

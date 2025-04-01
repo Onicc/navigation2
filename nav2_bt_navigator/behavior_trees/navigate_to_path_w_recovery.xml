@@ -168,7 +168,7 @@
                   </Fallback>
                   <Fallback name="SwitchToPathFollowingMode">
                     <Inverter>
-                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="{robot_frame}" goal_reached_tol="0.8"/>
+                      <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="{robot_frame}" goal_reached_tol="1.2"/>
                     </Inverter>
                     <Sequence name="SwitchState">
                       <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>

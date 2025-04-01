@@ -18,6 +18,9 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -60,6 +63,11 @@ private:
 
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr bypass_path_now_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr bypass_path_last_;
+
+  nav_msgs::msg::Path trim_path(const nav_msgs::msg::Path& path, double distance_threshold);
+  double detect_maximum_curvature(const nav_msgs::msg::Path& path);
+  nav_msgs::msg::Path smooth_path(const nav_msgs::msg::Path& path, int window_size = 5);
+  nav_msgs::msg::Path smooth_path_spline(const nav_msgs::msg::Path& path, double smoothness = 0.5);
 };
 
 }  // namespace nav2_behavior_tree
