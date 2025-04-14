@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__AUTOMATIC_LIGHT_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__AUTOMATIC_LIGHT_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_OBSTACLE_MODE_ACTION_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_OBSTACLE_MODE_ACTION_HPP_
 
 #include <vector>
 #include <memory>
@@ -26,15 +26,14 @@
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_util/robot_utils.hpp"
 #include "behaviortree_cpp_v3/action_node.h"
-#include "nav2_msgs/msg/waypoint.hpp"
 
 namespace nav2_behavior_tree
 {
 
-class AutomaticLight : public BT::ActionNodeBase
+class SetObstacleModeAction : public BT::ActionNodeBase
 {
 public:
-  AutomaticLight(
+  SetObstacleModeAction(
     const std::string & xml_tag_name,
     const BT::NodeConfiguration & conf);
 
@@ -42,8 +41,8 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<nav2_msgs::msg::Waypoint>("waypoint", "Nearest waypoint"),
-      BT::InputPort<std::string>("navigation_state", std::string("none"), "Navigation state"),
+      BT::InputPort<std::string>("input", "Input String"),
+      BT::OutputPort<std::string>("output", "Output String"),
     };
   }
 
@@ -52,10 +51,9 @@ private:
   BT::NodeStatus tick() override;
 
   rclcpp::Node::SharedPtr node_;
+  std::string input_state_, output_state_;
 
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr turn_signal_pub_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_text_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr obstacle_mode_state_pub_;
 };
 
 }  // namespace nav2_behavior_tree

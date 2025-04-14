@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_NAVIGATION_STATE_ACTION_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_NAVIGATION_STATE_ACTION_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_TURN_SIGNAL_ACTION_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_TURN_SIGNAL_ACTION_HPP_
 
 #include <vector>
 #include <memory>

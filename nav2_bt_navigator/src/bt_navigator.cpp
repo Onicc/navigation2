@@ -128,6 +128,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_path_obstacle_check_action_bt_node",
     "nav2_off_path_detection_action_bt_node",
     "nav2_command_executor_bt_node",
+    "nav2_set_obstacle_mode_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

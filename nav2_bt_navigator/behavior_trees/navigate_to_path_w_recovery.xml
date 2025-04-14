@@ -172,6 +172,7 @@
                     </Inverter>
                     <Sequence name="SwitchState">
                       <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                      <SetObstacleModeAction input="auto" output_state="{obstacle_mode}"/>
                       <!-- <CommandExecutor command="ros2 param set /global_costmap/global_costmap inflation_layer.inflation_radius 0.85"/>
                       <CommandExecutor command="ros2 param set /local_costmap/local_costmap inflation_layer.inflation_radius 0.85"/> -->
                     </Sequence>

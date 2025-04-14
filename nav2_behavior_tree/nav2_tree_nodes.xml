@@ -404,6 +404,11 @@
     <Action ID="CommandExecutor">
       <input_port name="command"> Command </input_port>
     </Action>
+
+    <Action ID="SetObstacleModeAction">
+      <input_port name="input">Input String</input_port>
+      <output_port name="output">Output String</output_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>
