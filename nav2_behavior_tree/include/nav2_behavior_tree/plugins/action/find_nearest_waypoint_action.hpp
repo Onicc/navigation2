@@ -125,7 +125,8 @@ private:
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
 
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_local_pub_;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_index_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_section_waypoint_index_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr closest_waypoint_index_pub_;
 
   int waypoints_size_;
   int last_waypoints_size_;
