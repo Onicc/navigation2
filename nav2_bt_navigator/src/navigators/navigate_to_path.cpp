@@ -170,7 +170,7 @@ NavigateToPathNavigator::configure(
     node->declare_parameter("robot_frame_blackboard_id", std::string("robot_frame"));
   }
   robot_frame_blackboard_id_ = node->get_parameter("robot_frame_blackboard_id").as_string();
-  blackboard->set<std::string>(robot_frame_blackboard_id_, "base_link");
+  blackboard->set<std::string>(robot_frame_blackboard_id_, "base_footprint");
 
   if (!node->has_parameter("base_link_frame_id")) {
     node->declare_parameter("base_link_frame_id", std::string("base_link_frame"));
