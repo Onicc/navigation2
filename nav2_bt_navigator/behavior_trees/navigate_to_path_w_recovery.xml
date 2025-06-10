@@ -30,7 +30,7 @@
             </Inverter>
             <!-- Automatic mode -->
             <Sequence name="AutomaticMode">
-              <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="10.0" distance_backward="0.0" goal_reached_tol="0.8" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}" remaining_distance="{remaining_distance}"/>
+              <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="20.0" distance_backward="0.0" goal_reached_tol="0.8" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}" remaining_distance="{remaining_distance}"/>
               <!-- Path following mode -->
               <Sequence name="PathFollowingMode">
                 <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
