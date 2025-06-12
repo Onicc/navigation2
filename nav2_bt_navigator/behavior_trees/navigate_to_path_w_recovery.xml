@@ -31,6 +31,15 @@
             <!-- Automatic mode -->
             <Sequence name="AutomaticMode">
               <FindNearestWaypoint waypoints="{waypoints}" angular_distance_weight="1" max_search_dist="5" input_closest_index="{waypoint_index}" robot_frame="{robot_frame}" distance_forward="20.0" distance_backward="0.0" goal_reached_tol="0.8" goals="{goals}" waypoint_index="{waypoint_index}" waypoint="{waypoint}" remaining_distance="{remaining_distance}"/>
+              <Fallback name="ToggleForwardBackwardMode">
+                <ToggleForwardBackwardMode waypoint="{waypoint}" base_link_frame="{base_link_frame}"/>
+                <Inverter>
+                  <Sequence name="SetPathEmpty">
+                    <SetPathEmpty path="{path}"/>
+                    <Exception message="切换前进或后退模式" error_code="1" exception="{exception}"/>
+                  </Sequence>
+                </Inverter>
+              </Fallback>
               <!-- Path following mode -->
               <Sequence name="PathFollowingMode">
                 <NavigationStateComparison current_navigation_state="{navigation_state}" navigation_state="path_following"/>
