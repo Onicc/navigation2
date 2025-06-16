@@ -590,7 +590,10 @@ NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray
   // goal.waypoints = *msg;
   // self_client_->async_send_goal(goal);
   waypoints_ = *msg;
+  RCLCPP_INFO(logger_, "-----------------------------------------");
   RCLCPP_INFO(logger_, "Received waypoints msg");
+  RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints_.waypoints.size());
+  RCLCPP_INFO(logger_, "-----------------------------------------");
 }
 
 void
