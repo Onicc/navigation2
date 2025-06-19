@@ -46,7 +46,7 @@ inline BT::NodeStatus ToggleForwardBackwardMode::tick()
   getInput("waypoint", waypoint);
   getInput("base_link_frame", base_link_frame);
 
-  if(waypoint.option_speed >= 0) {
+  if (waypoint.option_speed > 0.0001) {
     if(base_link_frame != "front_base_link") {
       std_msgs::msg::String msg;
       msg.data = "front_base_link";
@@ -56,7 +56,7 @@ inline BT::NodeStatus ToggleForwardBackwardMode::tick()
 
       return BT::NodeStatus::FAILURE;
     }
-  } else {
+  } else if (waypoint.option_speed < -0.0001) {
     if(base_link_frame != "rear_base_link") {
       std_msgs::msg::String msg;
       msg.data = "rear_base_link";

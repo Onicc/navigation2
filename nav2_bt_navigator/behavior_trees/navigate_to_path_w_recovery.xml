@@ -50,7 +50,7 @@
                       <Inverter>
                         <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
                       </Inverter>
-                      <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="Navfn"/>
+                      <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                     </Fallback>
                     <Fallback name="SwitchObs">
                       <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
