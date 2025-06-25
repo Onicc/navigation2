@@ -124,6 +124,7 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_set_maximum_cruising_speed_using_cmd_action_bt_node",
     "nav2_vehicle_automatic_exit_action_bt_node",
     "nav2_gps_lidar_toggle_bt_node",
+    "nav2_has_obstacle_on_path_action_bt_node",
   };
 
   declare_parameter_if_not_declared(

@@ -246,7 +246,7 @@ NavigateToPathNavigator::configure(
     std::bind(&NavigateToPathNavigator::onCurbTractionPointReceived, this, std::placeholders::_1));
 
   global_costmap_sub_ = node->create_subscription<nav2_msgs::msg::Costmap>(
-    "/global_costmap/costmap_raw",
+    "/local_costmap/costmap_raw",
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onGlobalCostmapReceived, this, std::placeholders::_1));
 

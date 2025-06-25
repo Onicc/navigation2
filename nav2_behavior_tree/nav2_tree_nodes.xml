@@ -322,6 +322,14 @@
       <output_port name="goal"> The nearest waypoint </output_port>
     </Action>
 
+    <Action ID="HasObstacleOnPath">
+      <input_port name="goals"> GPS position</input_port>
+      <input_port name="costmap_msg"> Costmap message </input_port>
+      <input_port name="goal_inflation_radius"> Goal inflation radius </input_port>
+      <input_port name="robot_frame"> Robot base frame id </input_port>
+      <input_port name="transform_tolerance"> The nearest waypoint </input_port>
+    </Action>
+
     <Action ID="TruncatePoses">
       <input_port name="input_poses"> Original Poses</input_port>
       <input_port name="distance"> Poses truncated to a certain distance </input_port>

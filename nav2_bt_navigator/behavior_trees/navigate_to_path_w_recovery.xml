@@ -46,20 +46,13 @@
                 <Fallback name="ComputePathToPathAndSwitchState">
                   <Sequence name="TurncatPoses">
                     <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
-                    <Fallback name="SwitchObs">
-                      <Inverter>
-                        <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
-                      </Inverter>
-                      <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
-                    </Fallback>
-                    <Fallback name="SwitchObs">
-                      <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
-                      <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
-                    </Fallback>
+                    <HasObstacleOnPath goals="{goals_truncated}" costmap_msg="{global_costmap}" goal_inflation_radius="1.0" robot_frame="{robot_frame}"/>
+                    <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
                   </Sequence>
                   <Sequence name="Exception">
                     <SetPathEmpty path="{path}"/>
-                    <Exception message="前方有障碍物但路径不支持绕障碍" error_code="1" exception="{exception}"/>
+                    <Exception message="路径上有障碍物" error_code="1" exception="{exception}"/>
+                    <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
                   </Sequence>
                 </Fallback>
               </Sequence>
