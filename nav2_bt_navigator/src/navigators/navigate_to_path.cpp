@@ -158,7 +158,7 @@ NavigateToPathNavigator::configure(
     node->declare_parameter("detect_obstacle_distance_blackboard_id", std::string("detect_obstacle_distance"));
   }
   detect_obstacle_distance_blackboard_id_ = node->get_parameter("detect_obstacle_distance_blackboard_id").as_string();
-  blackboard->set<double>(detect_obstacle_distance_blackboard_id_, 10.0);
+  blackboard->set<double>(detect_obstacle_distance_blackboard_id_, 7.0);
 
   if (!node->has_parameter("traffic_light_blackboard_id")) {
     node->declare_parameter("traffic_light_blackboard_id", std::string("traffic_light"));

@@ -138,26 +138,26 @@ nav_msgs::msg::Path StraightLine::createPlan(
   goal_pose.header.frame_id = global_frame_;
   global_path.poses.push_back(goal_pose);
 
-  // 通过global costmap判断路径上是否有障碍物
-  std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap_->getMutex()));
-  unsigned int mx = 0;
-  unsigned int my = 0;
-  for (size_t i = 0; i < global_path.poses.size(); ++i) {
-    costmap_->worldToMap(
-      global_path.poses[i].pose.position.x,
-      global_path.poses[i].pose.position.y, mx, my);
-    unsigned int cost = costmap_->getCost(mx, my);
-    // if (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
-    //   cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
-    if (cost > 0 && cost != nav2_costmap_2d::NO_INFORMATION)
-    {
-      RCLCPP_INFO(
-        node_->get_logger(), "路径上有障碍物, cost = %d",
-        cost);
-      nav_msgs::msg::Path path;
-      return path;
-    }
-  }
+  // // 通过global costmap判断路径上是否有障碍物
+  // std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap_->getMutex()));
+  // unsigned int mx = 0;
+  // unsigned int my = 0;
+  // for (size_t i = 0; i < global_path.poses.size(); ++i) {
+  //   costmap_->worldToMap(
+  //     global_path.poses[i].pose.position.x,
+  //     global_path.poses[i].pose.position.y, mx, my);
+  //   unsigned int cost = costmap_->getCost(mx, my);
+  //   // if (cost == nav2_costmap_2d::LETHAL_OBSTACLE ||
+  //   //   cost == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE)
+  //   if (cost > 0 && cost != nav2_costmap_2d::NO_INFORMATION)
+  //   {
+  //     RCLCPP_INFO(
+  //       node_->get_logger(), "路径上有障碍物, cost = %d",
+  //       cost);
+  //     nav_msgs::msg::Path path;
+  //     return path;
+  //   }
+  // }
 
   return global_path;
 }
