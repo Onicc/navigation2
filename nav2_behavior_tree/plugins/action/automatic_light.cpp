@@ -62,10 +62,6 @@ inline BT::NodeStatus AutomaticLight::tick()
     beam_pub_->publish(beam_msg);
     turn_signal_msg.data = "off";
     turn_signal_pub_->publish(turn_signal_msg);
-    if(last_navigation_state != navigation_state) {
-      voice_msg.data = "停止自动运行";
-      voice_text_pub_->publish(voice_msg);
-    }
   }
 
   if(navigation_state == "manual") {
@@ -75,10 +71,6 @@ inline BT::NodeStatus AutomaticLight::tick()
     beam_pub_->publish(beam_msg);
     turn_signal_msg.data = "off";
     turn_signal_pub_->publish(turn_signal_msg);
-    if(last_navigation_state != navigation_state) {
-      voice_msg.data = "进入远程人工模式";
-      voice_text_pub_->publish(voice_msg);
-    }
   }
 
   if(navigation_state == "path_following") {

@@ -226,6 +226,8 @@ public:
   void onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
   void onFrontOdometryReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onMaxBypassDeviationDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
+  void onBtNavigationReceived(const std_msgs::msg::String::SharedPtr msg);
+  void onAutoStartReceived(const std_msgs::msg::String::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -250,6 +252,9 @@ public:
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   void onRobotFrameReceived(
+      const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
+      std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  void onMaxBypassDeviationDistanceSrv(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
   /**
@@ -324,6 +329,8 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr teleop_cmd_vel_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr front_odometry_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr max_bypass_deviation_distance_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr bt_navigation_state_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr start_auto_cleaning_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
@@ -340,6 +347,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr start_auto_cleaning_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_obstacle_mode_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_robot_frame_service_;
+  rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr max_bypass_deviation_distance_service_;
 
   std::string goals_blackboard_id_;
   std::string path_blackboard_id_;

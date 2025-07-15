@@ -400,6 +400,10 @@
       <input_port name="path"> Input path </input_port>
       <input_port name="distance"> Maximum value of deviation distance </input_port>
     </Action>
+
+    <Action ID="CommandExecutor">
+      <input_port name="command"> Command </input_port>
+    </Action>
     <!-- ############################### CONDITION NODES ############################## -->
     <Condition ID="GoalReached">
         <input_port name="goal">Destination</input_port>

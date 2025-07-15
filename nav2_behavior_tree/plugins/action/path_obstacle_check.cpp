@@ -147,7 +147,7 @@ inline BT::NodeStatus PathObstacleCheck::tick()
       transformed_goals[i].pose.position.x,
       transformed_goals[i].pose.position.y, mx, my);
     unsigned int cost = costmap_->getCost(mx, my);
-    if (cost > 180) {
+    if (cost > 170) {
       RCLCPP_INFO(
         node_->get_logger(),
         "[PathObstacleCheck] The goal is in the obstacle");

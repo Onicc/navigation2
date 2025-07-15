@@ -43,6 +43,7 @@ FindGoalFromCostmap::FindGoalFromCostmap(
   qos.transient_local().reliable();
   pose_pub_ =
     node_->create_publisher<geometry_msgs::msg::PoseStamped>("/obstacle/goal", qos);
+    goal_index_in_goals_ = 0;
 }
 
 inline BT::NodeStatus FindGoalFromCostmap::tick()
@@ -148,12 +149,38 @@ inline BT::NodeStatus FindGoalFromCostmap::tick()
         transformed_goals[i], transformed_goals[i+1]);
       if (distance > safe_distance) {
         goal_index_in_goals = i+1;
+        goal_index_in_goals_ = goal_index_in_goals;
         break;
       }
     }
     goal_ = transformed_goals[goal_index_in_goals];
   }
 
+  /******************************* Check angle and adjust goal if necessary ***********************************/
+  double distance_to_goal = nav2_util::geometry_utils::euclidean_distance(robot_pose, goal_);
+  if (distance_to_goal < 3.0 && goal_index_in_goals_ != 0 && goal_index_in_goals_ < (transformed_goals.size()-1)) {
+    double angle_difference = computeAngleDifference(robot_pose, goal_);
+    if (angle_difference > 20.0) {
+      double distance = 0.0;
+      for (size_t i = goal_index_in_goals_; i < (transformed_goals.size()-2); ++i) {
+        distance += nav2_util::geometry_utils::euclidean_distance(
+          transformed_goals[i], transformed_goals[i+1]);
+        if (distance > 1.0) {
+          goal_index_in_goals_ = i+1;
+          break;
+        }
+      }
+      goal_ = transformed_goals[goal_index_in_goals_];
+
+      RCLCPP_WARN(
+        node_->get_logger(),
+        "[FindGoalFromCostmap] Adjusting goal forward by 1 meter due to large angle difference.");
+    }
+    std::cout << "angle_difference: " << angle_difference << std::endl;
+  }
+  
+  /******************************* Validate final goal ***********************************/
+  
   // Determine whether goal is one of the elements in goals
   bool is_goal_in_goals = false;
   for (auto & goal : transformed_goals) {
@@ -186,6 +213,18 @@ inline BT::NodeStatus FindGoalFromCostmap::tick()
   }
 
   return BT::NodeStatus::SUCCESS;
+}
+
+inline double FindGoalFromCostmap::computeAngleDifference(const geometry_msgs::msg::PoseStamped& pose1, const geometry_msgs::msg::PoseStamped& pose2)
+{
+  double yaw1 = tf2::getYaw(pose1.pose.orientation);
+  double yaw2 = tf2::getYaw(pose2.pose.orientation);
+  double angle_diff = fabs(yaw1 - yaw2);
+  angle_diff = fmod(angle_diff, 2 * M_PI);
+  if (angle_diff > M_PI) {
+    angle_diff = 2 * M_PI - angle_diff;
+  }
+  return angle_diff * (180.0 / M_PI); // Convert to degrees
 }
 
 inline bool FindGoalFromCostmap::getRobotPose(

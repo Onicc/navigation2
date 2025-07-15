@@ -332,6 +332,9 @@ list(APPEND plugin_libs nav2_path_obstacle_check_action_bt_node)
 add_library(nav2_off_path_detection_action_bt_node SHARED plugins/action/off_path_detection.cpp)
 list(APPEND plugin_libs nav2_off_path_detection_action_bt_node)
 
+add_library(nav2_command_executor_bt_node SHARED plugins/action/command_executor.cpp)
+list(APPEND plugin_libs nav2_command_executor_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)

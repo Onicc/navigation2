@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_PATH_HPP_
-#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__SET_PATH_HPP_
+#ifndef NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__COMMAND_EXECUTOR_ACTION_HPP_
+#define NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__COMMAND_EXECUTOR_ACTION_HPP_
 
 #include <vector>
 #include <memory>
 #include <string>
-#include <cmath>
-#include <vector>
-#include <algorithm>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -29,14 +26,15 @@
 #include "nav2_util/geometry_utils.hpp"
 #include "nav2_util/robot_utils.hpp"
 #include "behaviortree_cpp_v3/action_node.h"
+#include "nav2_msgs/msg/waypoint.hpp"
 
 namespace nav2_behavior_tree
 {
 
-class SetPath : public BT::ActionNodeBase
+class CommandExecutor : public BT::ActionNodeBase
 {
 public:
-  SetPath(
+  CommandExecutor(
     const std::string & xml_tag_name,
     const BT::NodeConfiguration & conf);
 
@@ -44,9 +42,7 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<nav_msgs::msg::Path>("input_path", "Input path"),
-      BT::InputPort<double>("interval", 2.0, "Time interval"),
-      BT::OutputPort<nav_msgs::msg::Path>("output_path", "Output path"),
+      BT::InputPort<std::string>("command", "ls", "Command"),
     };
   }
 
@@ -55,21 +51,8 @@ private:
   BT::NodeStatus tick() override;
 
   rclcpp::Node::SharedPtr node_;
-  nav_msgs::msg::Path input_path_;
-  double time_interval_;
-
-  rclcpp::Time last_time_;
-  rclcpp::Time current_time_;
-
-  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr bypass_path_now_;
-  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr bypass_path_last_;
-
-  nav_msgs::msg::Path trim_path(const nav_msgs::msg::Path& path, double distance_threshold);
-  double detect_maximum_curvature(const nav_msgs::msg::Path& path);
-  nav_msgs::msg::Path smooth_path(const nav_msgs::msg::Path& path, int window_size = 5);
-  nav_msgs::msg::Path smooth_path_spline(const nav_msgs::msg::Path& path, double smoothness = 0.5);
 };
 
 }  // namespace nav2_behavior_tree
 
-#endif  // NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__REMOVE_PASSED_GOALS_ACTION_HPP_
+#endif  // NAV2_BEHAVIOR_TREE__PLUGINS__ACTION__COMMAND_EXECUTOR_ACTION_HPP_

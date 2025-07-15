@@ -52,11 +52,23 @@ inline BT::NodeStatus OffPathDetection::tick()
   getInput("distance", distance_);
 
   std::string frame_id = "map";
-  int step = path_.poses.size() / 10;
+  int step = path_.poses.size() / 30;
 
   if(step == 0) {
     return BT::NodeStatus::SUCCESS;
   }
+
+  double min_path_distance = 1.5;
+  double path_distance = 0.0;
+  for (size_t j = 0; j < path_.poses.size()-1; j++) {
+    path_distance += nav2_util::geometry_utils::euclidean_distance(path_.poses[j], path_.poses[j+1]);
+  }
+  if (path_distance < min_path_distance) {
+    RCLCPP_INFO(node_->get_logger(), "[OffPathDetection] The goal distance is less than the minimum distance");
+    return BT::NodeStatus::SUCCESS;
+  }
+
+  std::cout << "path_distance: " << path_distance << std::endl;
 
   double max_distance = 0.0;
   double detection_distance = 2.0;

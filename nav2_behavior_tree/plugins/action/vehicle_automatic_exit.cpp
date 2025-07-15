@@ -57,6 +57,8 @@ inline BT::NodeStatus VehicleAutomaticExit::tick()
   getInput("remaining_distance", remaining_distance);
 
   static int times = 0;
+  
+  RCLCPP_INFO(config().blackboard->get<rclcpp::Node::SharedPtr>("node")->get_logger(), "remaining_distance: %f", remaining_distance);
 
   if(std::fabs(cmd_vel.linear.x) <= 0.01 && std::fabs(odometry.twist.twist.linear.x) <= 0.01 && remaining_distance < 1.0) {
     times+=1;
@@ -64,7 +66,7 @@ inline BT::NodeStatus VehicleAutomaticExit::tick()
     times = 0;
   }
 
-  if(times > 30) {
+  if(times > 5) {
     // exit
     RCLCPP_INFO(config().blackboard->get<rclcpp::Node::SharedPtr>("node")->get_logger(), "-------退出自动运行-------");
     std::string command = "ros2 service call /bt/navigation_state nav2_msgs/srv/SetString \"{data: stop}\";ros2 service call /vehicle/command/ros2_control slv_msgs/srv/SetString \"{data: OFF}\";ros2 service call /vehicle/command/power slv_msgs/srv/SetString \"{data: OFF}\"";
