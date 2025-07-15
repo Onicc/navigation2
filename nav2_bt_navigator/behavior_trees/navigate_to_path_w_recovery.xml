@@ -51,7 +51,11 @@
                     <Inverter>
                       <CurbToPathFollow odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.00008" waypoint="{waypoint}" curb_traction_point="{curb_traction_point}" gps_recovery_hold_time="1.0"/>
                     </Inverter>
-                    <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                    <Sequence name="SwitchState">
+                      <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                      <!-- <CommandExecutor command="ros2 param set /global_costmap/global_costmap inflation_layer.inflation_radius 0.85"/>
+                      <CommandExecutor command="ros2 param set /local_costmap/local_costmap inflation_layer.inflation_radius 0.85"/> -->
+                    </Sequence>
                   </Fallback>
                   <FindPoseOnExtension pose_on_path="{curb_traction_point}" distance="4.0" robot_frame="{robot_frame}" pose_on_extension="{curb_traction_point_extension}"/>
                   <Fallback name="GeneratePath">
@@ -66,7 +70,11 @@
                         <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                       </Sequence>
                     </RecoveryNode>
-                    <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                    <Sequence name="SwitchState">
+                      <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                      <!-- <CommandExecutor command="ros2 param set /global_costmap/global_costmap inflation_layer.inflation_radius 0.85"/>
+                      <CommandExecutor command="ros2 param set /local_costmap/local_costmap inflation_layer.inflation_radius 0.85"/> -->
+                    </Sequence>
                   </Fallback>
                   <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                 </Sequence>
@@ -90,53 +98,55 @@
                     <SetNavigationStateAction input_state="curb_following" output_state="{navigation_state}"/>
                   </Fallback>
                   <Fallback name="ComputePathToPathAndSwitchState">
-                    <!-- number_of_retries = 25 = 5s -->
-                    <RecoveryNode number_of_retries="25" name="ComputePathToPath">
-                      <Sequence name="TurncatPoses">
-                        <!-- <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="10.0"/> -->
-                        <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
-                        <Fallback name="SwitchObs">
-                          <Inverter>
+                    <!-- number_of_retries = 25 = 5s = 10s -->
+                    <RecoveryNode number_of_retries="10" name="ComputePathToPath">
+                      <RecoveryNode number_of_retries="2" name="ComputePathToPath">
+                        <Sequence name="TurncatPoses">
+                          <!-- <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.0003" waypoint="{waypoint}" distance_after_loss="10.0"/> -->
+                          <TruncatePoses input_poses="{goals}" output_poses="{goals_truncated}" distance="{detect_obstacle_distance}"/>
+                          <Fallback name="SwitchObs">
+                            <Inverter>
+                              <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
+                            </Inverter>
+                            <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="Navfn"/>
+                          </Fallback>
+                          <Fallback name="SwitchObs">
                             <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
-                          </Inverter>
-                          <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="Navfn"/>
-                        </Fallback>
-                        <Fallback name="SwitchObs">
-                          <ObstacleOption waypoint="{waypoint}" obstacle_mode="off"/>
-                          <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
-                        </Fallback>
-                        <!-- <Fallback name="PoorGPSStop">
-                          <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.00009" waypoint="{waypoint}" distance_after_loss="0.0"/>
+                            <ComputePathThroughPoses goals="{goals_truncated}" path="{path}" planner_id="StraightLine"/>
+                          </Fallback>
+                          <!-- <Fallback name="PoorGPSStop">
+                            <GPSPoor odometry="{front_odometry}" odometry_gps="{odometry_gps}" max_position_covariance="0.01" max_angle_covariance="0.00009" waypoint="{waypoint}" distance_after_loss="0.0"/>
+                            <Sequence name="SetPathEmpty">
+                              <SetPathEmpty path="{path}"/>
+                              <Exception message="GPS质量差" error_code="1" exception="{exception}"/>
+                            </Sequence>
+                          </Fallback> -->
+                        <Fallback name="GpsLidarToggle">
+                          <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.0001" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
                           <Sequence name="SetPathEmpty">
                             <SetPathEmpty path="{path}"/>
-                            <Exception message="GPS质量差" error_code="1" exception="{exception}"/>
+                            <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
                           </Sequence>
-                        </Fallback> -->
-                      <Fallback name="GpsLidarToggle">
-                        <GpsLidarToggle waypoint="{waypoint}" odometry_gps="{odometry_gps}" odometry_lidar="{odometry_lidar}" gps_position_covariance_threshold="0.01" gps_orientation_covariance_threshold="0.0001" lidar_position_covariance_threshold="0.01" lidar_orientation_covariance_threshold="0.01"/>
-                        <Sequence name="SetPathEmpty">
-                          <SetPathEmpty path="{path}"/>
-                          <Exception message="GPS与激光定位差" error_code="1" exception="{exception}"/>
+                        </Fallback>
                         </Sequence>
-                      </Fallback>
-                      </Sequence>
-                      <Sequence name="VoiceAndClear">
-                        <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
-                        <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
-                        <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-                      </Sequence>
-                    </RecoveryNode>
-                    <Fallback name="ComputePathToPathAndSwitchState">
-                      <Sequence name="SwitchState">
-                        <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.00009" waypoint="{waypoint}" obstacle_mode="{obstacle_mode}"/>
-                        <!-- <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/> -->
-                        <SetNavigationStateAction input_state="bypass_obstacle" output_state="{navigation_state}"/>
-                      </Sequence>
+                        <Sequence name="VoiceAndClear">
+                          <VoiceBroadcast text="智能清扫车作业中，请注意避让"/>
+                          <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                          <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                        </Sequence>
+                      </RecoveryNode>
                       <Sequence name="Exception">
                         <SetPathEmpty path="{path}"/>
                         <Exception message="前方有障碍物但路径不支持绕障碍" error_code="1" exception="{exception}"/>
                       </Sequence>
-                    </Fallback>
+                    </RecoveryNode>
+                    <Sequence name="SwitchState">
+                      <PathToBypassObstacle odometry_gps="{odometry_gps}" max_position_covariance="0.0004" max_angle_covariance="0.00009" waypoint="{waypoint}" obstacle_mode="{obstacle_mode}"/>
+                      <!-- <BetweenWaypointIndex closest_index="{waypoint_index}" upper_index="0" lower_index = "0"/> -->
+                      <SetNavigationStateAction input_state="bypass_obstacle" output_state="{navigation_state}"/>
+                      <CommandExecutor command="ros2 param set /global_costmap/global_costmap inflation_layer.inflation_radius 1.2"/>
+                      <CommandExecutor command="ros2 param set /local_costmap/local_costmap inflation_layer.inflation_radius 1.2"/>
+                    </Sequence>
                   </Fallback>
                   <SetCleaningModeUsingWaypoint waypoint="{waypoint}"/>
                 </Sequence>
@@ -148,7 +158,7 @@
                   <!-- <SetCleaningMode cleaning_mode="0"/> -->
                   <Fallback name="FindGoal">
                     <RecoveryNode number_of_retries="2" name="TryFindGoal">
-                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="4.0" robot_frame="{robot_frame}" goal="{farthest_obstacle_point}"/>
+                      <FindGoalFromCostmap goals="{goals}" costmap_msg="{global_costmap}" safe_distance="5.0" robot_frame="{robot_frame}" goal="{farthest_obstacle_point}"/>
                       <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
                     </RecoveryNode>
                     <Sequence name="Exception">
@@ -160,7 +170,11 @@
                     <Inverter>
                       <GoalReached goal="{farthest_obstacle_point}" global_frame="map" robot_base_frame="{robot_frame}" goal_reached_tol="0.8"/>
                     </Inverter>
-                    <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                    <Sequence name="SwitchState">
+                      <SetNavigationStateAction input_state="path_following" output_state="{navigation_state}"/>
+                      <!-- <CommandExecutor command="ros2 param set /global_costmap/global_costmap inflation_layer.inflation_radius 0.85"/>
+                      <CommandExecutor command="ros2 param set /local_costmap/local_costmap inflation_layer.inflation_radius 0.85"/> -->
+                    </Sequence>
                   </Fallback>
                   <Fallback name="ComputePoseToPath">
                     <RecoveryNode number_of_retries="2" name="ComputePoseToPath">
