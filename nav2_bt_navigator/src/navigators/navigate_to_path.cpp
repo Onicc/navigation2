@@ -17,6 +17,14 @@
 #include <set>
 #include <memory>
 #include <limits>
+#include <ctime>
+#include <cstdlib>
+#include <cmath>
+#include <cstdio>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+#include <cstdlib>
 #include "nav2_bt_navigator/navigators/navigate_to_path.hpp"
 
 namespace nav2_bt_navigator
@@ -275,15 +283,11 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onFrontOdometryReceived, this, std::placeholders::_1));
 
-  // teleop_cmd_vel_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
-  //   "/manual/cmd_vel",
-  //   rclcpp::SystemDefaultsQoS(),
-  //   std::bind(&NavigateToPathNavigator::onTeleopCmdVelReceived, this, std::placeholders::_1));
-
-  // bt_navigator_start_sub_ = node->create_subscription<std_msgs::msg::String>(
-  //   "/bt_navigator/start",
-  //   rclcpp::SystemDefaultsQoS(),
-  //   std::bind(&NavigateToPathNavigator::onBTNavigatorStartReceived, this, std::placeholders::_1));
+  // NEW: subscribe to roller control commands (JSON string payload)
+  roller_control_sub_ = node->create_subscription<std_msgs::msg::String>(
+    "/roller/control_command",
+    rclcpp::SystemDefaultsQoS(),
+    std::bind(&NavigateToPathNavigator::onRollerControlCommandReceived, this, std::placeholders::_1));
 
   waypoints_service_ = node->create_service<nav2_msgs::srv::SetWaypoints>(
     "/waypoints",
@@ -655,12 +659,103 @@ NavigateToPathNavigator::onFrontOdometryReceived(const nav_msgs::msg::Odometry::
   blackboard->set<nav_msgs::msg::Odometry>(front_odometry_blackboard_id_, *msg);
 }
 
-// void
-// NavigateToPathNavigator::onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg)
-// {
-//   auto blackboard = bt_action_server_->getBlackboard();
-//   blackboard->set<std::string>(manual_mode_frame_id_, "teleop_mode");
-// }
+// NEW: handler for roller control command messages
+void
+NavigateToPathNavigator::onRollerControlCommandReceived(const std_msgs::msg::String::SharedPtr msg)
+{
+  try {
+    // Parse JSON manually (simple parsing for the expected format)
+    std::string json_data = msg->data;
+    
+    // Extract command
+    std::string command;
+    size_t cmd_start = json_data.find("\"command\": \"") + 12;
+    if (cmd_start != std::string::npos + 12) {
+      size_t cmd_end = json_data.find("\"", cmd_start);
+      if (cmd_end != std::string::npos) {
+        command = json_data.substr(cmd_start, cmd_end - cmd_start);
+      }
+    }
+    
+    // Extract timestamp
+    std::string timestamp_str;
+    size_t ts_start = json_data.find("\"timestamp\": \"") + 14;
+    if (ts_start != std::string::npos + 14) {
+      size_t ts_end = json_data.find("\"", ts_start);
+      if (ts_end != std::string::npos) {
+        timestamp_str = json_data.substr(ts_start, ts_end - ts_start);
+      }
+    }
+    
+    // Extract roller_id
+    std::string roller_id;
+    size_t id_start = json_data.find("\"roller_id\": \"") + 14;
+    if (id_start != std::string::npos + 14) {
+      size_t id_end = json_data.find("\"", id_start);
+      if (id_end != std::string::npos) {
+        roller_id = json_data.substr(id_start, id_end - id_start);
+      }
+    }
+    
+    if (command.empty() || timestamp_str.empty()) {
+      RCLCPP_WARN(logger_, "Invalid roller control command format");
+      return;
+    }
+    
+    // Parse timestamp and validate (check if within 10 seconds of current time)
+    auto now = std::chrono::system_clock::now();
+    std::tm tm = {};
+    std::istringstream ss(timestamp_str);
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    
+    if (ss.fail()) {
+      RCLCPP_WARN(logger_, "Failed to parse timestamp: %s", timestamp_str.c_str());
+      return;
+    }
+    
+    auto msg_time = std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    auto time_diff = std::chrono::duration_cast<std::chrono::seconds>(now - msg_time).count();
+    
+    if (std::abs(time_diff) > 10) {
+      RCLCPP_WARN(logger_, "Roller command timestamp too old/future: %ld seconds difference", time_diff);
+      return;
+    }
+    
+    RCLCPP_INFO(logger_, "Received roller control command: %s from %s", command.c_str(), roller_id.c_str());
+    
+    auto blackboard = bt_action_server_->getBlackboard();
+    
+    if (command == "pause_task") {
+      // Handle pause task command
+      RCLCPP_INFO(logger_, "Processing pause_task command");
+      blackboard->set<std::string>(navigation_state_blackboard_id_, "pause");
+      
+    } else if (command == "resume_task") {
+      // Handle resume task command  
+      RCLCPP_INFO(logger_, "Processing resume_task command");
+      blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+      
+    } else if (command == "abort_task") {
+      // Handle abort task command
+      RCLCPP_INFO(logger_, "Processing abort_task command");
+      blackboard->set<std::string>(navigation_state_blackboard_id_, "stop");
+      
+      // Execute off_power script in background
+      int result = std::system("bash /home/starlight/slv_ws/bin/off_power &");
+      if (result == -1) {
+        RCLCPP_ERROR(logger_, "Failed to execute off_power script");
+      } else {
+        RCLCPP_INFO(logger_, "off_power script executed in background");
+      }
+      
+    } else {
+      RCLCPP_WARN(logger_, "Unknown roller control command: %s", command.c_str());
+    }
+    
+  } catch (const std::exception& e) {
+    RCLCPP_ERROR(logger_, "Error processing roller control command: %s", e.what());
+  }
+}
 
 void 
 NavigateToPathNavigator::onWaypointsReceivedSrv(

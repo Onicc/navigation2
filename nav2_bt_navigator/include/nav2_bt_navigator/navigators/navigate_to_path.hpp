@@ -225,6 +225,7 @@ public:
   void onCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
   void onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
   void onFrontOdometryReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
+  void onRollerControlCommandReceived(const std_msgs::msg::String::SharedPtr msg);
 
   // ros service
   // void onBTCommandReceived(
@@ -322,6 +323,7 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr teleop_cmd_vel_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr front_odometry_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr roller_control_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
