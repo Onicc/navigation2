@@ -14,3 +14,7 @@ bool option_traffic_light
 bool option_gps_poor_stop
 int32 option_turn_signal    # +1: 左转 0: 关闭转向灯 -1: 右转
 uint32 option_localization_method  # 0:none | 1:GPS | 2:Lidar
+int32 option_direction   # 0: 前进 1: 后退
+int32 option_compaction_pass  # 第几遍压实
+int32 option_function   # 0: 转向区 1: 姿态调整区 2: 作业区
+int32 option_segment    # 作业段编号

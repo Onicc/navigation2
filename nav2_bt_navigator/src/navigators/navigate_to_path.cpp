@@ -1083,6 +1083,10 @@ nav2_msgs::msg::WaypointArray NavigateToPathNavigator::loadWaypoints(const std::
             waypoint.option_gps_poor_stop = waypoints[0].option_gps_poor_stop;
             waypoint.option_turn_signal = waypoints[0].option_turn_signal;
             waypoint.option_localization_method = waypoints[0].option_localization_method;
+            waypoint.option_direction = waypoints[0].option_direction;
+            waypoint.option_compaction_pass = waypoints[0].option_compaction_pass;
+            waypoint.option_function = waypoints[0].option_function;
+            waypoint.option_segment = waypoints[0].option_segment;
             curveWaypoints.push_back(waypoint);
           }
           curveWaypoints.insert(curveWaypoints.end(), waypoints.begin()+i, waypoints.end());

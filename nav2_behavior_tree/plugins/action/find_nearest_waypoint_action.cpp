@@ -45,6 +45,8 @@ FindNearestWaypoint::FindNearestWaypoint(
     node->create_publisher<nav_msgs::msg::Path>("/goal/path_local", qos);
   closest_index_pub_ = 
     node->create_publisher<std_msgs::msg::Int32>("/goal/closest_index", qos);
+  waypoint_pub_ = 
+    node->create_publisher<nav2_msgs::msg::Waypoint>("/goal/waypoint", qos);
 }
 
 inline BT::NodeStatus FindNearestWaypoint::tick()
@@ -164,6 +166,7 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     std_msgs::msg::Int32 closest_index;
     closest_index.data = closest_pose_index;
     closest_index_pub_->publish(closest_index);
+    waypoint_pub_->publish(section_waypoints.waypoints[section_closest_pose_index]);
 
     auto forward_pose_it = nav2_util::geometry_utils::first_after_integrated_distance(
       section_closest_pose, section_path.poses.end(), distance_forward);
@@ -282,6 +285,7 @@ inline BT::NodeStatus FindNearestWaypoint::tick()
     closest_pose_index = section_closest_pose_index+waypoint_section_index_list_[waypoint_section_index_-1]+1;
     setOutput("waypoint_index", closest_pose_index);
     setOutput("waypoint", section_waypoints.waypoints[section_closest_pose_index]);
+    waypoint_pub_->publish(section_waypoints.waypoints[section_closest_pose_index]);
 
     // std::cout << "---------------- closest_pose_index: " << closest_pose_index << "----------------" << std::endl;
     // std::cout << "---------------- waypoint_section_index_: " << waypoint_section_index_ << "----------------" << std::endl;
