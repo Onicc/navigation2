@@ -228,10 +228,10 @@ NavigateToPathNavigator::configure(
   //   rclcpp::SystemDefaultsQoS(),
   //   std::bind(&NavigateToPathNavigator::onCommandReceived, this, std::placeholders::_1));
 
-  waypoints_sub_ = node->create_subscription<nav2_msgs::msg::WaypointArray>(
-    "/original_waypoints",
+  waypoints_sub_ = node->create_subscription<nav2_msgs::msg::RouteBlockArray>(
+    "/original_route_block_array",
     rclcpp::SystemDefaultsQoS(),
-    std::bind(&NavigateToPathNavigator::onWaypointsReceived, this, std::placeholders::_1));
+    std::bind(&NavigateToPathNavigator::onRouteBlockArrayReceived, this, std::placeholders::_1));
 
   waypoints_bypass_sub_ = node->create_subscription<nav2_msgs::msg::WaypointArray>(
     "/assist_waypoints",
@@ -300,6 +300,10 @@ NavigateToPathNavigator::configure(
   start_auto_cleaning_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/command/start_auto_cleaning",
     std::bind(&NavigateToPathNavigator::onStartAutoCleaningSrv, this, std::placeholders::_1, std::placeholders::_2));
+
+  start_block_line_service_ = node->create_service<nav2_msgs::srv::SetRouteBlockLine>(
+    "/command/start_block_line",
+    std::bind(&NavigateToPathNavigator::onStartBlockLineSrv, this, std::placeholders::_1, std::placeholders::_2));
 
   bt_navigation_state_service_ = node->create_service<nav2_msgs::srv::SetString>(
     "/bt/navigation_state",
@@ -588,16 +592,131 @@ NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStampe
 // }
 
 void
-NavigateToPathNavigator::onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg)
+NavigateToPathNavigator::onRouteBlockArrayReceived(const nav2_msgs::msg::RouteBlockArray::SharedPtr msg)
 {
-  // ActionT::Goal goal;
-  // goal.waypoints = *msg;
-  // self_client_->async_send_goal(goal);
-  waypoints_ = *msg;
+  route_block_array_ = *msg;
+
+  nav2_msgs::msg::WaypointArray waypoints;
+  waypoints.header = msg->header;
+
+  if (waypoints.header.frame_id.empty()) {
+    waypoints.header.frame_id = "map";
+  }
+
+  for (const auto & block : msg->blocks) {
+    for (const auto & line : block.lines) {
+      for (const auto & segment : line.segments) {
+        for (const auto & point : segment.points) {
+          nav2_msgs::msg::Waypoint waypoint;
+          waypoint.header.frame_id = waypoints.header.frame_id;
+          waypoint.header.stamp = waypoints.header.stamp;
+          waypoint.pose = point.pose;
+          waypoint.option_segment = static_cast<int32_t>(segment.segment_id);
+          waypoints.waypoints.push_back(waypoint);
+        }
+      }
+    }
+  }
+
+  waypoints_ = waypoints;
   RCLCPP_INFO(logger_, "-----------------------------------------");
-  RCLCPP_INFO(logger_, "Received waypoints msg");
+  RCLCPP_INFO(logger_, "Received route block array msg");
   RCLCPP_INFO(logger_, "The path has %ld waypoints.", waypoints_.waypoints.size());
   RCLCPP_INFO(logger_, "-----------------------------------------");
+}
+
+void
+NavigateToPathNavigator::onStartBlockLineSrv(
+  const std::shared_ptr<nav2_msgs::srv::SetRouteBlockLine::Request> request,
+  std::shared_ptr<nav2_msgs::srv::SetRouteBlockLine::Response> response)
+{
+  if (route_block_array_.blocks.empty()) {
+    RCLCPP_ERROR(logger_, "Route block array is empty, cannot start block line task.");
+    response->success = false;
+    return;
+  }
+
+  nav2_msgs::msg::WaypointArray selected_waypoints;
+  selected_waypoints.header = route_block_array_.header;
+  selected_waypoints.header.stamp = clock_->now();
+  if (selected_waypoints.header.frame_id.empty()) {
+    selected_waypoints.header.frame_id = "map";
+  }
+
+  bool block_found = false;
+  bool line_found = false;
+
+  for (const auto & block : route_block_array_.blocks) {
+    if (block.block_id != request->block_id) {
+      continue;
+    }
+
+    block_found = true;
+    for (const auto & line : block.lines) {
+      if (line.line_id != request->line_id) {
+        continue;
+      }
+
+      line_found = true;
+      for (const auto & segment : line.segments) {
+        for (const auto & point : segment.points) {
+          nav2_msgs::msg::Waypoint waypoint;
+          waypoint.header = selected_waypoints.header;
+          waypoint.pose = point.pose;
+          waypoint.option_segment = static_cast<int32_t>(segment.segment_id);
+          selected_waypoints.waypoints.push_back(waypoint);
+        }
+      }
+      break;
+    }
+    break;
+  }
+
+  if (!block_found) {
+    RCLCPP_ERROR(logger_, "Block id %u not found in route blocks.", request->block_id);
+    response->success = false;
+    return;
+  }
+
+  if (!line_found) {
+    RCLCPP_ERROR(
+      logger_, "Line id %u not found in block id %u.", request->line_id, request->block_id);
+    response->success = false;
+    return;
+  }
+
+  if (selected_waypoints.waypoints.empty()) {
+    RCLCPP_ERROR(
+      logger_, "Selected line is empty, block id %u line id %u.", request->block_id,
+      request->line_id);
+    response->success = false;
+    return;
+  }
+
+  waypoints_ = selected_waypoints;
+  waypoint_index_blackboard_ = -1;
+
+  auto waypoints = loadWaypoints(waypoints_path_);
+  if (waypoints.waypoints.empty()) {
+    RCLCPP_ERROR(logger_, "Failed to generate startup waypoints from selected block line.");
+    response->success = false;
+    return;
+  }
+
+  voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
+  optimized_waypoints_pub_->publish(waypoints);
+
+  ActionT::Goal goal;
+  goal.waypoints = waypoints;
+  self_client_->async_send_goal(goal);
+
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+
+  RCLCPP_INFO(
+    logger_, "Started navigation for block id %u, line id %u, waypoints %zu.",
+    request->block_id, request->line_id, waypoints.waypoints.size());
+  response->success = true;
 }
 
 void

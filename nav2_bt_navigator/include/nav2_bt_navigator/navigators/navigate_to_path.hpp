@@ -36,9 +36,11 @@
 #include "std_msgs/msg/float32.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include "nav2_msgs/srv/set_string.hpp"
+#include "nav2_msgs/srv/set_route_block_line.hpp"
 #include "nav2_msgs/srv/set_waypoints.hpp"
 #include "nav2_msgs/msg/waypoint.hpp"
 #include "nav2_msgs/msg/waypoint_array.hpp"
+#include "nav2_msgs/msg/route_block_array.hpp"
 #include "nav2_msgs/msg/costmap.hpp"
 #include "nav2_msgs/msg/exception.hpp"
 
@@ -216,7 +218,7 @@ public:
   void onOdometryGPSReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onOdometryLidarReceived(const nav_msgs::msg::Odometry::SharedPtr msg);
   void onCurbTractionPointReceived(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
-  void onWaypointsReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
+  void onRouteBlockArrayReceived(const nav2_msgs::msg::RouteBlockArray::SharedPtr msg);
   void onWaypointsBypassReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
@@ -246,6 +248,9 @@ public:
   void onStartAutoCleaningSrv(
     const std::shared_ptr<nav2_msgs::srv::SetString::Request> request, 
     std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
+  void onStartBlockLineSrv(
+    const std::shared_ptr<nav2_msgs::srv::SetRouteBlockLine::Request> request,
+    std::shared_ptr<nav2_msgs::srv::SetRouteBlockLine::Response> response);
   void onObstacleModeReceived(
       const std::shared_ptr<nav2_msgs::srv::SetString::Request> request,
       std::shared_ptr<nav2_msgs::srv::SetString::Response> response);
@@ -311,7 +316,7 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr command_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr bt_navigator_start_sub_;
-  rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_sub_;
+  rclcpp::Subscription<nav2_msgs::msg::RouteBlockArray>::SharedPtr waypoints_sub_;
   rclcpp::Subscription<nav2_msgs::msg::WaypointArray>::SharedPtr waypoints_bypass_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_gps_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_lidar_sub_;
@@ -338,6 +343,7 @@ protected:
   rclcpp::Service<nav2_msgs::srv::SetWaypoints>::SharedPtr waypoints_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr load_waypoints_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr start_auto_cleaning_service_;
+  rclcpp::Service<nav2_msgs::srv::SetRouteBlockLine>::SharedPtr start_block_line_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_obstacle_mode_service_;
   rclcpp::Service<nav2_msgs::srv::SetString>::SharedPtr bt_robot_frame_service_;
 
@@ -383,6 +389,7 @@ protected:
   std::string waypoints_path_ = "";
   int waypoint_index_blackboard_ = -1;
 
+  nav2_msgs::msg::RouteBlockArray route_block_array_;
   nav2_msgs::msg::WaypointArray waypoints_;
   nav2_msgs::msg::WaypointArray waypoints_bypass_;
 };
