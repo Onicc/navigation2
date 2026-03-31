@@ -301,6 +301,7 @@ NavigateToPathNavigator::configure(
     "/command/start_auto_cleaning",
     std::bind(&NavigateToPathNavigator::onStartAutoCleaningSrv, this, std::placeholders::_1, std::placeholders::_2));
 
+  // ros2 service call /command/start_block_line nav2_msgs/srv/SetRouteBlockLine "{block_id: 1, line_id: 1}"
   start_block_line_service_ = node->create_service<nav2_msgs::srv::SetRouteBlockLine>(
     "/command/start_block_line",
     std::bind(&NavigateToPathNavigator::onStartBlockLineSrv, this, std::placeholders::_1, std::placeholders::_2));
@@ -329,6 +330,16 @@ NavigateToPathNavigator::configure(
   voice_pub_ = node->create_publisher<std_msgs::msg::String>("/voice", 10);
   path_pub_ = node->create_publisher<nav_msgs::msg::Path>("/entire_path", 10);  
   optimized_waypoints_pub_ = node->create_publisher<nav2_msgs::msg::WaypointArray>("/optimized_waypoints", 10);
+  slr_task_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/task_id", 10);
+  slr_path_block_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/path_block_id", 10);
+  slr_line_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/line_id", 10);
+  slr_waypoint_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/waypoint_id", 10);
+  slr_line_progress_pub_ = node->create_publisher<std_msgs::msg::Float32>("/slr/line_progress", 10);
+  slr_remaining_distance_pub_ = node->create_publisher<std_msgs::msg::Float32>("/slr/remaining_distance", 10);
+  slr_device_state_pub_ = node->create_publisher<std_msgs::msg::String>("/slr/device_state", 10);
+  slr_work_mode_pub_ = node->create_publisher<std_msgs::msg::String>("/slr/work_mode", 10);
+
+  publishFleetLinkStatus();
 
   last_loop_time_ = std::chrono::high_resolution_clock::now();
 
@@ -443,9 +454,11 @@ NavigateToPathNavigator::onLoop()
         return closest_pose_idx;
       };
 
+    const size_t closest_pose_idx = find_closest_pose_idx();
+
     // Calculate distance on the path
     double distance_remaining =
-      nav2_util::geometry_utils::calculate_path_length(current_path, find_closest_pose_idx());
+      nav2_util::geometry_utils::calculate_path_length(current_path, closest_pose_idx);
 
     // Default value for time remaining
     rclcpp::Duration estimated_time_remaining = rclcpp::Duration::from_seconds(0.0);
@@ -463,6 +476,33 @@ NavigateToPathNavigator::onLoop()
 
     feedback_msg->distance_remaining = distance_remaining;
     feedback_msg->estimated_time_remaining = estimated_time_remaining;
+
+    slr_waypoint_id_ = static_cast<int32_t>(closest_pose_idx);
+    slr_remaining_distance_ = static_cast<float>(distance_remaining);
+    if (current_path.poses.size() <= 1) {
+      slr_line_progress_ = 1.0F;
+    } else {
+      slr_line_progress_ = static_cast<float>(closest_pose_idx) /
+        static_cast<float>(current_path.poses.size() - 1);
+    }
+
+    std::string navigation_state;
+    blackboard->get<std::string>(navigation_state_blackboard_id_, navigation_state);
+    if (navigation_state == "path_following") {
+      slr_device_state_ = "WORKING";
+      slr_work_mode_ = "AUTONOMOUS";
+    } else if (navigation_state == "pause") {
+      slr_device_state_ = "PAUSED";
+      slr_work_mode_ = "AUTONOMOUS";
+    } else if (navigation_state == "stop") {
+      slr_device_state_ = "STANDBY";
+      slr_work_mode_ = "IDLE";
+    } else {
+      slr_device_state_ = "READY";
+      slr_work_mode_ = "AUTONOMOUS";
+    }
+
+    publishFleetLinkStatus();
   } catch (...) {
     // Ignore
   }
@@ -563,6 +603,23 @@ NavigateToPathNavigator::initializeGoalPath(ActionT::Goal::ConstSharedPtr goal)
   //   // Update the goal path on the blackboard
   //   blackboard->set<std_msgs::msg::String>(command_blackboard_id_, goal->command);
   // }
+}
+
+void
+NavigateToPathNavigator::publishFleetLinkStatus()
+{
+  if (!slr_task_id_pub_) {
+    return;
+  }
+
+  slr_task_id_pub_->publish(std_msgs::msg::Int32().set__data(slr_task_id_));
+  slr_path_block_id_pub_->publish(std_msgs::msg::Int32().set__data(slr_path_block_id_));
+  slr_line_id_pub_->publish(std_msgs::msg::Int32().set__data(slr_line_id_));
+  slr_waypoint_id_pub_->publish(std_msgs::msg::Int32().set__data(slr_waypoint_id_));
+  slr_line_progress_pub_->publish(std_msgs::msg::Float32().set__data(slr_line_progress_));
+  slr_remaining_distance_pub_->publish(std_msgs::msg::Float32().set__data(slr_remaining_distance_));
+  slr_device_state_pub_->publish(std_msgs::msg::String().set__data(slr_device_state_));
+  slr_work_mode_pub_->publish(std_msgs::msg::String().set__data(slr_work_mode_));
 }
 
 void
@@ -695,6 +752,13 @@ NavigateToPathNavigator::onStartBlockLineSrv(
 
   waypoints_ = selected_waypoints;
   waypoint_index_blackboard_ = -1;
+  ++slr_task_id_;
+  slr_path_block_id_ = static_cast<int32_t>(request->block_id);
+  slr_line_id_ = static_cast<int32_t>(request->line_id);
+  slr_waypoint_id_ = 0;
+  slr_line_progress_ = 0.0F;
+  slr_device_state_ = "READY";
+  slr_work_mode_ = "AUTONOMOUS";
 
   auto waypoints = loadWaypoints(waypoints_path_);
   if (waypoints.waypoints.empty()) {
@@ -712,6 +776,7 @@ NavigateToPathNavigator::onStartBlockLineSrv(
 
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+  publishFleetLinkStatus();
 
   RCLCPP_INFO(
     logger_, "Started navigation for block id %u, line id %u, waypoints %zu.",
@@ -981,6 +1046,14 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
 
     auto blackboard = bt_action_server_->getBlackboard();
     blackboard->set<std::string>(navigation_state_blackboard_id_, "path_following");
+    ++slr_task_id_;
+    slr_path_block_id_ = 0;
+    slr_line_id_ = 0;
+    slr_waypoint_id_ = 0;
+    slr_line_progress_ = 0.0F;
+    slr_device_state_ = "READY";
+    slr_work_mode_ = "AUTONOMOUS";
+    publishFleetLinkStatus();
   } else {
     RCLCPP_INFO(logger_, "The command is not start_point or middle_point.");
     response->success = false;
@@ -1016,6 +1089,18 @@ NavigateToPathNavigator::onNavigationStateReceived(
   RCLCPP_INFO(logger_, "Received navigation state request: %s", request->data.c_str());
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<std::string>(navigation_state_blackboard_id_, request->data);
+
+  if (request->data == "path_following") {
+    slr_device_state_ = "WORKING";
+    slr_work_mode_ = "AUTONOMOUS";
+  } else if (request->data == "pause") {
+    slr_device_state_ = "PAUSED";
+    slr_work_mode_ = "AUTONOMOUS";
+  } else if (request->data == "stop") {
+    slr_device_state_ = "STANDBY";
+    slr_work_mode_ = "IDLE";
+  }
+  publishFleetLinkStatus();
 
   std::string navigation_state = request->data;
   // if(navigation_state == "stop") {

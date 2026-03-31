@@ -307,6 +307,7 @@ protected:
    * @param goal Action template's goal message to process
    */
   void initializeGoalPath(ActionT::Goal::ConstSharedPtr goal);
+  void publishFleetLinkStatus();
 
   nav2_msgs::msg::WaypointArray loadWaypoints(const std::string& waypointsFile);
   nav2_msgs::msg::WaypointArray loadBypassWaypoints();
@@ -334,6 +335,14 @@ protected:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<nav2_msgs::msg::WaypointArray>::SharedPtr optimized_waypoints_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_task_id_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_path_block_id_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_line_id_pub_;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_waypoint_id_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr slr_line_progress_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr slr_remaining_distance_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr slr_device_state_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr slr_work_mode_pub_;
 
   rclcpp_action::Client<ActionT>::SharedPtr self_client_;
 
@@ -392,6 +401,15 @@ protected:
   nav2_msgs::msg::RouteBlockArray route_block_array_;
   nav2_msgs::msg::WaypointArray waypoints_;
   nav2_msgs::msg::WaypointArray waypoints_bypass_;
+
+  int32_t slr_task_id_ = 0;
+  int32_t slr_path_block_id_ = 0;
+  int32_t slr_line_id_ = 0;
+  int32_t slr_waypoint_id_ = 0;
+  float slr_line_progress_ = 0.0F;
+  float slr_remaining_distance_ = 0.0F;
+  std::string slr_device_state_ = "STANDBY";
+  std::string slr_work_mode_ = "IDLE";
 };
 
 }  // namespace nav2_bt_navigator
