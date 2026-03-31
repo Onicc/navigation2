@@ -330,6 +330,9 @@ NavigateToPathNavigator::configure(
   voice_pub_ = node->create_publisher<std_msgs::msg::String>("/voice", 10);
   path_pub_ = node->create_publisher<nav_msgs::msg::Path>("/entire_path", 10);  
   optimized_waypoints_pub_ = node->create_publisher<nav2_msgs::msg::WaypointArray>("/optimized_waypoints", 10);
+  rclcpp::QoS frame_qos(rclcpp::KeepLast(1));
+  frame_qos.transient_local().reliable();
+  set_robot_frame_pub_ = node->create_publisher<std_msgs::msg::String>("/set_robot_frame", frame_qos);
   slr_task_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/task_id", 10);
   slr_path_block_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/path_block_id", 10);
   slr_line_id_pub_ = node->create_publisher<std_msgs::msg::Int32>("/slr/line_id", 10);
@@ -623,6 +626,28 @@ NavigateToPathNavigator::publishFleetLinkStatus()
 }
 
 void
+NavigateToPathNavigator::publishRobotFrameForLine(int32_t line_id)
+{
+  if (!set_robot_frame_pub_) {
+    return;
+  }
+
+  const bool is_forward = (line_id % 2) != 0;
+  const std::string target_frame = is_forward ? "front_base_link" : "rear_base_link";
+  if (robot_frame_ == target_frame) {
+    return;
+  }
+
+  std_msgs::msg::String msg;
+  msg.data = target_frame;
+  set_robot_frame_pub_->publish(msg);
+
+  robot_frame_ = target_frame;
+  auto blackboard = bt_action_server_->getBlackboard();
+  blackboard->set<std::string>(base_link_frame_id_, robot_frame_);
+}
+
+void
 NavigateToPathNavigator::onGoalPoseReceived(const geometry_msgs::msg::PoseStamped::SharedPtr pose)
 {
   ActionT::Goal goal;
@@ -759,6 +784,8 @@ NavigateToPathNavigator::onStartBlockLineSrv(
   slr_line_progress_ = 0.0F;
   slr_device_state_ = "READY";
   slr_work_mode_ = "AUTONOMOUS";
+
+  publishRobotFrameForLine(slr_line_id_);
 
   auto waypoints = loadWaypoints(waypoints_path_);
   if (waypoints.waypoints.empty()) {

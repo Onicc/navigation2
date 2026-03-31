@@ -308,6 +308,7 @@ protected:
    */
   void initializeGoalPath(ActionT::Goal::ConstSharedPtr goal);
   void publishFleetLinkStatus();
+  void publishRobotFrameForLine(int32_t line_id);
 
   nav2_msgs::msg::WaypointArray loadWaypoints(const std::string& waypointsFile);
   nav2_msgs::msg::WaypointArray loadBypassWaypoints();
@@ -335,6 +336,7 @@ protected:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<nav2_msgs::msg::WaypointArray>::SharedPtr optimized_waypoints_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr set_robot_frame_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_task_id_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_path_block_id_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr slr_line_id_pub_;
