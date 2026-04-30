@@ -24,11 +24,33 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include "nav2_bt_navigator/navigators/navigate_to_path.hpp"
 
 namespace nav2_bt_navigator
 {
+
+namespace
+{
+
+bool containsIgnoreCase(const std::string & text, const std::string & keyword)
+{
+  std::string text_lower = text;
+  std::string keyword_lower = keyword;
+
+  std::transform(
+    text_lower.begin(), text_lower.end(), text_lower.begin(),
+    [](unsigned char c) {return static_cast<char>(std::tolower(c));});
+  std::transform(
+    keyword_lower.begin(), keyword_lower.end(), keyword_lower.begin(),
+    [](unsigned char c) {return static_cast<char>(std::tolower(c));});
+
+  return text_lower.find(keyword_lower) != std::string::npos;
+}
+
+}  // namespace
 
 bool
 NavigateToPathNavigator::configure(
@@ -503,6 +525,25 @@ NavigateToPathNavigator::onLoop()
     } else {
       slr_device_state_ = "READY";
       slr_work_mode_ = "AUTONOMOUS";
+    }
+
+    nav2_msgs::msg::Exception exception;
+    blackboard->get<nav2_msgs::msg::Exception>(exception_blackboard_id_, exception);
+    const auto exception_age = clock_->now() - exception.header.stamp;
+    if (navigation_state != "stop" &&
+      exception_age < rclcpp::Duration::from_seconds(2.0))
+    {
+      const std::string exception_text = exception.message + " " + exception.traceback_info;
+      const bool obstacle_or_collision =
+        containsIgnoreCase(exception_text, "obstacle") ||
+        containsIgnoreCase(exception_text, "collision") ||
+        exception_text.find("障碍") != std::string::npos ||
+        exception_text.find("碰撞") != std::string::npos;
+
+      if (obstacle_or_collision) {
+        slr_device_state_ = "PAUSED";
+        slr_work_mode_ = "AUTONOMOUS";
+      }
     }
 
     publishFleetLinkStatus();
