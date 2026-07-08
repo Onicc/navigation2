@@ -96,7 +96,6 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_between_waypoint_index_condition_bt_node",
     "nav2_match_command_condition_bt_node",
     "nav2_set_command_action_bt_node",
-    "nav2_voice_broadcast_action_bt_node",
     "nav2_path_to_curb_follow_condition_bt_node",
     "nav2_find_nearest_waypoint_action_bt_node",
     "nav2_waypoints_updated_condition_bt_node",
@@ -115,15 +114,12 @@ BtNavigator::BtNavigator(rclcpp::NodeOptions options)
     "nav2_set_turn_signal_action_bt_node",
     "nav2_set_path_action_bt_node",
     "nav2_obstacle_option_condition_bt_node",
-    "nav2_traffic_light_detect_condition_bt_node",
     "nav2_gps_poor_condition_bt_node",
     "nav2_toggle_forward_backward_mode_bt_node",
     "nav2_set_cleaning_mode_action_bt_node",
-    "nav2_automatic_light_bt_node",
     "nav2_toggle_forward_backward_mode_by_cmd_bt_node",
     "nav2_set_maximum_cruising_speed_using_cmd_action_bt_node",
     "nav2_vehicle_automatic_exit_action_bt_node",
-    "nav2_gps_lidar_toggle_bt_node",
     "nav2_has_obstacle_on_path_action_bt_node",
   };
 

@@ -239,9 +239,6 @@ list(APPEND plugin_libs nav2_match_command_condition_bt_node)
 add_library(nav2_set_command_action_bt_node SHARED plugins/action/set_command_action.cpp)
 list(APPEND plugin_libs nav2_set_command_action_bt_node)
 
-add_library(nav2_voice_broadcast_action_bt_node SHARED plugins/action/voice_broadcast_action.cpp)
-list(APPEND plugin_libs nav2_voice_broadcast_action_bt_node)
-
 add_library(nav2_vehicle_control_action_bt_node SHARED plugins/action/vehicle_control_action.cpp)
 list(APPEND plugin_libs nav2_vehicle_control_action_bt_node)
 
@@ -308,9 +305,6 @@ list(APPEND plugin_libs nav2_vehicle_automatic_exit_action_bt_node)
 add_library(nav2_obstacle_option_condition_bt_node SHARED plugins/condition/obstacle_option_condition.cpp)
 list(APPEND plugin_libs nav2_obstacle_option_condition_bt_node)
 
-add_library(nav2_traffic_light_detect_condition_bt_node SHARED plugins/condition/traffic_light_detect_condition.cpp)
-list(APPEND plugin_libs nav2_traffic_light_detect_condition_bt_node)
-
 add_library(nav2_gps_poor_condition_bt_node SHARED plugins/condition/gps_poor_condition.cpp)
 list(APPEND plugin_libs nav2_gps_poor_condition_bt_node)
 
@@ -319,12 +313,6 @@ list(APPEND plugin_libs nav2_toggle_forward_backward_mode_bt_node)
 
 add_library(nav2_toggle_forward_backward_mode_by_cmd_bt_node SHARED plugins/action/toggle_forward_backward_mode_by_cmd.cpp)
 list(APPEND plugin_libs nav2_toggle_forward_backward_mode_by_cmd_bt_node)
-
-add_library(nav2_automatic_light_bt_node SHARED plugins/action/automatic_light.cpp)
-list(APPEND plugin_libs nav2_automatic_light_bt_node)
-
-add_library(nav2_gps_lidar_toggle_bt_node SHARED plugins/action/gps_lidar_toggle.cpp)
-list(APPEND plugin_libs nav2_gps_lidar_toggle_bt_node)
 
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})

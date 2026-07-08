@@ -222,7 +222,6 @@ public:
   void onWaypointsBypassReceived(const nav2_msgs::msg::WaypointArray::SharedPtr msg);
   void onGlobalCostmapReceived(const nav2_msgs::msg::Costmap::SharedPtr msg);
   void onDetectObstacleDistanceReceived(const std_msgs::msg::Float32::SharedPtr msg);
-  void onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg);
   void onRobotFrameReceived1(const std_msgs::msg::String::SharedPtr msg);
   void onCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
   void onTeleopCmdVelReceived(const geometry_msgs::msg::Twist::SharedPtr msg);
@@ -325,7 +324,6 @@ protected:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr curb_traction_point_sub_;
   rclcpp::Subscription<nav2_msgs::msg::Costmap>::SharedPtr global_costmap_sub_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr detect_obstacle_distance_sub_;
-  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr traffic_light_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_frame_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr teleop_cmd_vel_sub_;
@@ -333,7 +331,6 @@ protected:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr roller_control_sub_;
 
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr beam_pub_;
-  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr voice_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<nav2_msgs::msg::WaypointArray>::SharedPtr optimized_waypoints_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr set_robot_frame_pub_;
@@ -381,7 +378,6 @@ protected:
   std::string goals_truncate_blackboard_id_;
   std::string obstacle_mode_blackboard_id_;
   std::string detect_obstacle_distance_blackboard_id_;
-  std::string traffic_light_blackboard_id_;
   std::string robot_frame_blackboard_id_;
   std::string base_link_frame_id_;
   std::string cmd_vel_frame_id_;

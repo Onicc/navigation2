@@ -190,12 +190,6 @@ NavigateToPathNavigator::configure(
   detect_obstacle_distance_blackboard_id_ = node->get_parameter("detect_obstacle_distance_blackboard_id").as_string();
   blackboard->set<double>(detect_obstacle_distance_blackboard_id_, 7.0);
 
-  if (!node->has_parameter("traffic_light_blackboard_id")) {
-    node->declare_parameter("traffic_light_blackboard_id", std::string("traffic_light"));
-  }
-  traffic_light_blackboard_id_ = node->get_parameter("traffic_light_blackboard_id").as_string();
-  blackboard->set<std::string>(traffic_light_blackboard_id_, "none");
-
   if (!node->has_parameter("robot_frame_blackboard_id")) {
     node->declare_parameter("robot_frame_blackboard_id", std::string("robot_frame"));
   }
@@ -285,11 +279,6 @@ NavigateToPathNavigator::configure(
     rclcpp::SystemDefaultsQoS(),
     std::bind(&NavigateToPathNavigator::onDetectObstacleDistanceReceived, this, std::placeholders::_1));
 
-  traffic_light_sub_ = node->create_subscription<std_msgs::msg::Int32>(
-    "/traffic_light_recognition/result",
-    rclcpp::SystemDefaultsQoS(),
-    std::bind(&NavigateToPathNavigator::onTrafficLightReceived, this, std::placeholders::_1));
-
   robot_frame_sub_ = node->create_subscription<std_msgs::msg::String>(
     "/robot_frame",
     rclcpp::SystemDefaultsQoS(),
@@ -349,7 +338,6 @@ NavigateToPathNavigator::configure(
   //   std::bind(&NavigateToPathNavigator::onBTStartReceived, this, std::placeholders::_1, std::placeholders::_2));
 
   beam_pub_ = node->create_publisher<std_msgs::msg::String>("vehicle/command/beam", 10);
-  voice_pub_ = node->create_publisher<std_msgs::msg::String>("/voice", 10);
   path_pub_ = node->create_publisher<nav_msgs::msg::Path>("/entire_path", 10);  
   optimized_waypoints_pub_ = node->create_publisher<nav2_msgs::msg::WaypointArray>("/optimized_waypoints", 10);
   rclcpp::QoS frame_qos(rclcpp::KeepLast(1));
@@ -835,7 +823,6 @@ NavigateToPathNavigator::onStartBlockLineSrv(
     return;
   }
 
-  voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
   optimized_waypoints_pub_->publish(waypoints);
 
   ActionT::Goal goal;
@@ -875,17 +862,6 @@ NavigateToPathNavigator::onDetectObstacleDistanceReceived(const std_msgs::msg::F
   double detect_obstacle_distance = msg->data;
   auto blackboard = bt_action_server_->getBlackboard();
   blackboard->set<double>(detect_obstacle_distance_blackboard_id_, detect_obstacle_distance);
-}
-
-void
-NavigateToPathNavigator::onTrafficLightReceived(const std_msgs::msg::Int32::SharedPtr msg)
-{
-  int traffic_light = msg->data;
-  auto blackboard = bt_action_server_->getBlackboard();
-  if(traffic_light == 0) blackboard->set<std::string>(traffic_light_blackboard_id_, "none");
-  if(traffic_light == 1) blackboard->set<std::string>(traffic_light_blackboard_id_, "red");
-  if(traffic_light == 2) blackboard->set<std::string>(traffic_light_blackboard_id_, "yellow");
-  if(traffic_light == 3) blackboard->set<std::string>(traffic_light_blackboard_id_, "green");
 }
 
 void
@@ -1057,12 +1033,10 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
       if(request->data == "start_point") {
         waypoint_index_blackboard_ = 0;   // 从起点起步
         RCLCPP_INFO(logger_, "The command is not start_point.");
-        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
       }
       if(request->data == "middle_point") {
         waypoint_index_blackboard_ = -1;  // 从中途起步
         RCLCPP_INFO(logger_, "The command is not middle_point.");
-        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
       }
       waypoints = loadWaypoints(waypoints_path_);
     }
@@ -1071,12 +1045,10 @@ NavigateToPathNavigator::onStartAutoCleaningSrv(
       if(request->data == "start_point_bypass") {
         waypoint_index_blackboard_ = 0;   // 从起点起步
         RCLCPP_INFO(logger_, "The command is not start_point_bypass.");
-        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
       }
       if(request->data == "middle_point_bypass") {
         waypoint_index_blackboard_ = -1;  // 从中途起步
         RCLCPP_INFO(logger_, "The command is not middle_point_bypass.");
-        voice_pub_->publish(std_msgs::msg::String().set__data("车辆准备运行，请注意避让"));
       }
       waypoints = loadBypassWaypoints();
     }

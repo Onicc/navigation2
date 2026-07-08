@@ -274,10 +274,6 @@
       <output_port name="output_command">Output command</output_port>
     </Action>
 
-    <Action ID="VoiceBroadcast">
-      <input_port name="text">Voice text</input_port>
-    </Action>
-
     <Action ID="VehicleControl">
       <input_port name="control">0 or 1</input_port>
     </Action>
@@ -373,21 +369,6 @@
     <Action ID="ToggleForwardBackwardModeByCmd">
       <input_port name="cmd_vel"> "command velocity </input_port>
       <input_port name="base_link_frame"> Base link frame </input_port>
-    </Action>
-
-    <Action ID="AutomaticLight">
-      <input_port name="waypoint"> Nearest waypoint </input_port>
-      <input_port name="navigation_state"> Navigation state </input_port>
-    </Action>
-
-    <Action ID="GpsLidarToggle">
-      <input_port name="waypoint"> Nearest waypoint to robot </input_port>
-      <input_port name="odometry_gps"> GPS position </input_port>
-      <input_port name="odometry_lidar"> Lidar position </input_port>
-      <input_port name="gps_position_covariance_threshold"> Threshold for GPS position covariance </input_port>
-      <input_port name="gps_orientation_covariance_threshold"> Threshold for GPS orientation covariance </input_port>
-      <input_port name="lidar_position_covariance_threshold"> Threshold for Lidar position covariance </input_port>
-      <input_port name="lidar_orientation_covariance_threshold"> Threshold for Lidar orientation covariance </input_port>
     </Action>
 
     <Action ID="VehicleAutomaticExit">
@@ -507,12 +488,6 @@
     <Condition ID="ObstacleOption">
       <input_port name="waypoint"> The nearest waypoint </input_port>
       <input_port name="obstacle_mode"> Mode selection when encountering obstacles </input_port>
-    </Condition>
-
-    <Condition ID="TrafficLight">
-      <input_port name="waypoint"> The nearest waypoint </input_port>
-      <input_port name="detect_traffic_light"> Traffic light recognition results </input_port>
-      <input_port name="goal_traffic_light"> Traffic light recognition results </input_port>
     </Condition>
 
     <Condition ID="GPSPoor">
