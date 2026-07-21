@@ -968,8 +968,8 @@ NavigateToPathNavigator::onRollerControlCommandReceived(const std_msgs::msg::Str
       RCLCPP_INFO(logger_, "Processing abort_task command");
       blackboard->set<std::string>(navigation_state_blackboard_id_, "stop");
       
-      // Execute off_power script in background
-      int result = std::system("bash /home/starlight/slv_ws/bin/off_power &");
+      // Ask the installed runtime helper to leave autonomous mode and idle the engine.
+      int result = std::system("/usr/local/bin/slr vehicle-power-off --delay 5 >/dev/null 2>&1 &");
       if (result == -1) {
         RCLCPP_ERROR(logger_, "Failed to execute off_power script");
       } else {
